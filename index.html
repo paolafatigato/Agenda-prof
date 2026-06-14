@@ -226,6 +226,39 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .cancel-modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
 .btn-confirm-cancel{background:var(--coral);color:#fff;border:none;border-radius:9px;padding:8px 22px;font-size:0.88rem;font-weight:700;cursor:pointer;}
 .btn-undo-cancel{background:#E8F4E8;color:var(--green);border:1.5px solid #A8D4A8;border-radius:9px;padding:8px 16px;font-size:0.86rem;cursor:pointer;font-weight:600;}
+
+/* DRAG & DROP */
+.drag-over{outline:2.5px dashed var(--grape)!important;background:#F8F2FF!important;}
+[draggable="true"]{cursor:grab;user-select:none;}
+[draggable="true"]:active{cursor:grabbing;}
+.dragging{opacity:.4!important;box-shadow:0 2px 12px rgba(116,79,135,.3)!important;}
+
+/* PASTE MODE */
+body.paste-active .month-day:not(.no-school):not(.other-month),
+body.paste-active .week-cell:not(.no-school){cursor:copy!important;outline:1.5px dashed var(--sky);}
+body.paste-active .month-day:not(.no-school):not(.other-month):hover,
+body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;}
+
+/* PASTE BAR */
+#pasteBar{display:none;position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%);
+  background:var(--grape);color:#fff;border-radius:16px;padding:11px 22px;
+  box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:500;
+  align-items:center;gap:12px;font-size:0.86rem;font-weight:600;
+  flex-wrap:wrap;max-width:95vw;}
+#pasteBar.open{display:flex;}
+#pasteBar select{border:none;border-radius:8px;padding:5px 9px;font-size:0.82rem;
+  color:var(--text);background:var(--white);cursor:pointer;font-family:inherit;}
+#pasteBar .pb-cancel{background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);
+  color:#fff;border-radius:8px;padding:5px 13px;font-size:0.82rem;cursor:pointer;font-weight:600;}
+.btn-copy-lesson{background:#F3EAFF;color:var(--grape);border:1.5px solid #C8A0F0;
+  border-radius:9px;padding:7px 14px;font-size:0.84rem;cursor:pointer;font-weight:600;}
+.btn-copy-lesson:hover{background:#E8D5FF;}
+
+/* TOAST */
+#toast{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;border-radius:12px;padding:9px 20px;
+  font-size:.84rem;font-weight:600;z-index:600;pointer-events:none;
+  opacity:0;transition:opacity .25s;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -330,6 +363,7 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
   </div>
   <div class="modal-actions">
     <button class="btn-clear"         onclick="clearSlot()">🗑 Svuota</button>
+    <button class="btn-copy-lesson"   onclick="copyLesson(modalKey)">📋 Copia</button>
     <button class="btn-cancel-lesson" id="cancelLessonBtn" onclick="openCancelModal()">🚫 Cancella lezione</button>
     <button class="btn-cancel"        onclick="closeModal()">Chiudi</button>
     <button class="btn-save"          onclick="saveSlot()">💾 Salva</button>
@@ -369,6 +403,15 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
   </div>
 </div>
 </div>
+
+<!-- PASTE BAR -->
+<div id="pasteBar">
+  <span>📋 Incolla lezione per:</span>
+  <select id="pbClassSel"></select>
+  <span style="font-size:.78rem;opacity:.85">→ clicca su un giorno</span>
+  <button class="pb-cancel" onclick="hidePasteBar()">✕ Annulla</button>
+</div>
+<div id="toast"></div>
 
 <!-- Firebase -->
 <script type="module">
@@ -699,11 +742,28 @@ function buildMonthCell(date, otherMonth) {
       if (data&&data.homework){const hw=document.createElement('div');hw.className='hw-hint';hw.textContent='✏️ '+data.homework.slice(0,36);pill.appendChild(hw);}
     }
     const ck=s.slotKey, cd=new Date(date);
-    pill.onclick=(e)=>{e.stopPropagation();openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null);};
+    // drag to move to another day
+    pill.draggable = true;
+    const _sk = s.slotKey;
+    pill.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk); });
+    pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
+    pill.onclick=(e)=>{
+      e.stopPropagation();
+      if (clipboard) { pasteOnDay(cd); return; }
+      openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null);
+    };
     cell.appendChild(pill);
   });
   const cd=new Date(date);
-  if (!otherMonth) cell.onclick=()=>{cursor=cd;setView('day');};
+  if (!otherMonth) {
+    cell.addEventListener('dragover', onCellDragOver);
+    cell.addEventListener('dragleave', onCellDragLeave);
+    cell.addEventListener('drop', (e)=>onCellDrop(e, cd));
+    cell.onclick=(e)=>{
+      if (clipboard) { pasteOnDay(cd); return; }
+      cursor=cd;setView('day');
+    };
+  }
   return cell;
 }
 
@@ -747,8 +807,20 @@ function renderWeek(area) {
       cell.className='week-cell'+(isToday(d)?' today-cell':'')+(slots.some(s=>canc[s.slotKey])?' cancelled-cell':'')+((!inSY)?' no-school':'');
       slots.forEach(s=>{
         const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'small',canc[s.slotKey]);
+        // drag to move to another day
+        card.draggable = true;
+        const _sk = s.slotKey;
+        card.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk); });
+        card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
         cell.appendChild(card);
       });
+      if (inSY) {
+        const _d = new Date(d);
+        cell.addEventListener('dragover', onCellDragOver);
+        cell.addEventListener('dragleave', onCellDragLeave);
+        cell.addEventListener('drop', (e)=>onCellDrop(e, _d));
+        cell.addEventListener('click', (e)=>{ if (clipboard && !e.target.closest('.slot-card')) { pasteOnDay(_d); } });
+      }
       grid.appendChild(cell);
     }
   });
@@ -820,7 +892,11 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData) {
   }
   card.innerHTML=html;
   const ck=key, cd=new Date(date), cs=patternSubj;
-  card.onclick=(e)=>{e.stopPropagation();openModal(ck,cd,cs,time,cancData?'cancelled':null);};
+  card.onclick=(e)=>{
+    e.stopPropagation();
+    if (clipboard) { pasteOnDay(cd); return; }
+    openModal(ck,cd,cs,time,cancData?'cancelled':null);
+  };
   return card;
 }
 
@@ -1046,6 +1122,137 @@ function removePatternSlot(cn,d,si){
   settingsTemp.patterns[cn][d].splice(si,1);
   if(!settingsTemp.patterns[cn][d].length) delete settingsTemp.patterns[cn][d];
   renderPatternEditor();
+}
+
+// ══════════════════════════════════════════════════════
+//  DRAG & DROP — sposta lezione su un altro giorno
+// ══════════════════════════════════════════════════════
+let dragSrc = null; // {slotKey, data, cancData}
+
+function onSlotDragStart(e, slotKey) {
+  dragSrc = {
+    slotKey,
+    data:     JSON.parse(JSON.stringify((state.lessons[activeClass]||{})[slotKey]||{})),
+    cancData: (state.cancelled[activeClass]||{})[slotKey]
+              ? JSON.parse(JSON.stringify((state.cancelled[activeClass])[slotKey])) : null
+  };
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{
+    const el = e.target.closest ? e.target.closest('[draggable]') : e.target;
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+function onSlotDragEnd(e) {
+  const el = e.target.closest ? e.target.closest('[draggable]') : e.target;
+  if (el) el.classList.remove('dragging');
+  dragSrc = null;
+}
+function onCellDragOver(e) {
+  if (!dragSrc) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onCellDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onCellDrop(e, targetDate) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragSrc) return;
+  if (!isInSchoolYear(targetDate)) return;
+  const slots = slotsOnDay(targetDate, activeClass);
+  if (!slots.length) {
+    showToast('⚠️ Nessuna ora in questo giorno per '+activeClass);
+    dragSrc = null; return;
+  }
+  const srcIdx = parseInt(dragSrc.slotKey.split('-').pop())||0;
+  const targetSlot = slots[Math.min(srcIdx, slots.length-1)];
+  if (targetSlot.slotKey === dragSrc.slotKey) { dragSrc = null; return; }
+  // warn if target already has content
+  const tData = (state.lessons[activeClass]||{})[targetSlot.slotKey];
+  if (tData && (tData.lesson||tData.material||tData.homework)) {
+    if (!confirm('Questo giorno ha già una lezione. Sovrascrivere?')) { dragSrc = null; return; }
+  }
+  // execute move
+  if (!state.lessons[activeClass]) state.lessons[activeClass]={};
+  if (!state.cancelled[activeClass]) state.cancelled[activeClass]={};
+  const src = dragSrc; dragSrc = null;
+  if (src.data && Object.values(src.data).some(v=>v)) {
+    state.lessons[activeClass][targetSlot.slotKey] = src.data;
+  } else {
+    delete state.lessons[activeClass][targetSlot.slotKey];
+  }
+  delete state.lessons[activeClass][src.slotKey];
+  if (src.cancData) {
+    state.cancelled[activeClass][targetSlot.slotKey] = src.cancData;
+  } else {
+    delete state.cancelled[activeClass][targetSlot.slotKey];
+  }
+  delete state.cancelled[activeClass][src.slotKey];
+  persist(); render();
+  showToast('✅ Lezione spostata!');
+}
+
+// ══════════════════════════════════════════════════════
+//  COPIA / INCOLLA — duplica lezione per un'altra classe
+// ══════════════════════════════════════════════════════
+let clipboard = null;
+
+function copyLesson(slotKey) {
+  if (!slotKey) return;
+  const data = (state.lessons[activeClass]||{})[slotKey];
+  if (!data||(! data.lesson && !data.material && !data.homework && !data.notes)) {
+    showToast('⚠️ Nessun contenuto da copiare.'); return;
+  }
+  clipboard = JSON.parse(JSON.stringify(data));
+  closeModal();
+  showPasteBar();
+}
+function showPasteBar() {
+  const sel = document.getElementById('pbClassSel');
+  sel.innerHTML = '';
+  state.classes.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+  const other = state.classes.find(c=>c!==activeClass);
+  if (other) sel.value = other;
+  document.getElementById('pasteBar').classList.add('open');
+  document.body.classList.add('paste-active');
+}
+function hidePasteBar() {
+  document.getElementById('pasteBar').classList.remove('open');
+  document.body.classList.remove('paste-active');
+  clipboard = null;
+  render();
+}
+function pasteOnDay(targetDate) {
+  if (!clipboard) return false;
+  if (!isInSchoolYear(targetDate)) { showToast('⚠️ Data fuori dall\'anno scolastico'); return true; }
+  const targetClass = document.getElementById('pbClassSel').value;
+  const slots = slotsOnDay(targetDate, targetClass);
+  if (!slots.length) { showToast('⚠️ Nessuna ora in questo giorno per '+targetClass); return true; }
+  const canc = state.cancelled[targetClass]||{};
+  const targetSlot = slots.find(s=>!canc[s.slotKey])||slots[0];
+  if (!state.lessons[targetClass]) state.lessons[targetClass]={};
+  state.lessons[targetClass][targetSlot.slotKey] = {...clipboard};
+  persist(); hidePasteBar();
+  showToast('✅ Lezione incollata in '+targetClass+'!');
+  return true;
+}
+
+// ══════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(()=>{ t.style.opacity='0'; }, 2800);
 }
 
 // ══════════════════════════════════════════════════════
