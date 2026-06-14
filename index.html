@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Agenda Professoressa</title>
+<style>
+:root {
+  --coral:#EE6054;--salmon:#FF9B85;--mauve:#DA9CFF;--grape:#744F87;
+  --green:#4C924C;--lime:#DEED71;--blue:#2F6690;--sky:#49ACEF;--cream:#F9EEDC;
+  --bg:#FDF6EE;--bg2:#F3E9D8;--text:#2C2018;--muted:#7A6555;
+  --border:#DDD0C0;--white:#FFFFFF;--shadow:rgba(100,70,40,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0.7rem 1.4rem;
+  display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
+header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
+.view-tabs{display:flex;gap:5px;}
+.nav-btns{display:flex;gap:5px;margin-left:auto;align-items:center;}
+.hbtn{border:1.5px solid var(--border);background:var(--bg);color:var(--text);border-radius:8px;
+  padding:5px 13px;font-size:0.83rem;cursor:pointer;font-weight:500;transition:background .14s,border-color .14s;}
+.hbtn:hover{background:var(--bg2);border-color:var(--grape);}
+.hbtn.active{background:var(--grape);color:#fff;border-color:var(--grape);}
+.hbtn.settings-btn{background:var(--bg2);font-size:1rem;padding:5px 10px;}
+.hbtn.settings-btn:hover{border-color:var(--grape);}
+#currentLabel{font-size:0.92rem;font-weight:600;color:var(--blue);min-width:150px;text-align:center;}
+#syncStatus{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
+#syncDot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;}
+#syncDot.ok{background:var(--green);}
+#syncDot.err{background:var(--coral);}
+#syncDot.loading{background:var(--sky);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CLASS BAR */
+#classBar{background:var(--white);border-bottom:1px solid var(--border);padding:0.45rem 1.4rem;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#classBar span{font-size:0.78rem;font-weight:600;color:var(--muted);}
+.class-pill{border:1.5px solid var(--border);background:var(--bg);color:var(--text);border-radius:20px;
+  padding:3px 14px;font-size:0.8rem;cursor:pointer;font-weight:500;transition:all .14s;}
+.class-pill:hover{border-color:var(--grape);}
+.class-pill.active{background:var(--grape);color:#fff;border-color:var(--grape);}
+
+/* LEGEND */
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:0.45rem 1.4rem;font-size:0.73rem;
+  border-bottom:1px solid var(--border);background:var(--white);}
+.legend-item{display:flex;align-items:center;gap:4px;}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+
+/* CAL AREA */
+#calArea{padding:1.1rem 1.4rem 3rem;}
+.out-of-school{text-align:center;padding:3rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
+
+/* YEAR */
+.year-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1rem;}
+.mini-month{background:var(--white);border-radius:13px;border:1.5px solid var(--border);
+  padding:0.75rem;cursor:pointer;transition:border-color .14s,box-shadow .14s;}
+.mini-month:hover{border-color:var(--grape);box-shadow:0 3px 14px var(--shadow);}
+.mini-month.inactive-month{opacity:0.35;pointer-events:none;}
+.mini-month-title{font-size:0.85rem;font-weight:700;color:var(--grape);margin-bottom:7px;text-align:center;}
+.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.mini-cal .dh{font-size:0.58rem;font-weight:700;color:var(--muted);text-align:center;}
+.mini-day{font-size:0.6rem;text-align:center;padding:2px 1px;border-radius:3px;cursor:pointer;
+  min-height:16px;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.mini-day:hover{background:var(--bg2);}
+.mini-day.other-month{color:var(--border);}
+.mini-day.today-cell{background:var(--lime);font-weight:700;}
+.mini-day.cancelled-cell{background:#FFE5E3;}
+.mini-day.no-school{opacity:0.25;pointer-events:none;}
+.mini-day-dot{width:3px;height:3px;border-radius:50%;}
+
+/* MONTH */
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.month-dh{font-size:0.73rem;font-weight:700;color:var(--muted);text-align:center;padding:3px 0;}
+.month-day{background:var(--white);border-radius:11px;border:1.5px solid var(--border);
+  min-height:95px;padding:5px 6px;cursor:pointer;transition:border-color .14s;overflow:hidden;}
+.month-day:hover{border-color:var(--sky);}
+.month-day.other-month{background:var(--bg2);opacity:0.5;}
+.month-day.no-school{background:var(--bg2);opacity:0.3;pointer-events:none;}
+.month-day.today-cell{border-color:var(--coral);border-width:2px;}
+.month-day.cancelled-day{background:#FFF0EF;}
+.month-day-num{font-size:0.76rem;font-weight:700;color:var(--muted);margin-bottom:3px;}
+.month-day.today-cell .month-day-num{color:var(--coral);}
+.slot-pill{border-radius:7px;padding:2px 5px 3px;font-size:0.66rem;font-weight:600;
+  margin-bottom:2px;cursor:pointer;line-height:1.3;}
+.slot-pill .hw-hint{font-size:0.6rem;font-weight:400;margin-top:1px;opacity:.85;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cancelled-pill{background:#FFE5E3;color:#B03030;border:1px solid #F5B8B5;font-style:italic;}
+
+/* WEEK */
+.week-grid{display:grid;grid-template-columns:50px repeat(7,1fr);gap:0;border:1.5px solid var(--border);
+  border-radius:13px;overflow:hidden;background:var(--border);}
+.week-dh{background:var(--white);font-size:0.72rem;font-weight:700;color:var(--muted);
+  text-align:center;padding:7px 3px;border-right:1px solid var(--border);}
+.week-dh.today-cell{background:var(--lime);}
+.week-dh.no-school{background:var(--bg2);opacity:.4;}
+.week-time{background:var(--bg2);font-size:0.63rem;color:var(--muted);text-align:right;
+  padding:4px 5px 0 0;border-right:1px solid var(--border);}
+.week-cell{background:var(--white);min-height:54px;padding:3px;border-right:1px solid var(--border);
+  cursor:pointer;transition:background .1s;}
+.week-cell:hover{background:var(--bg2);}
+.week-cell.today-cell{background:#FFFAE8;}
+.week-cell.cancelled-cell{background:#FFF0EF;}
+.week-cell.no-school{background:var(--bg2);opacity:.3;pointer-events:none;}
+.corner-cell{background:var(--bg2);border-right:1px solid var(--border);}
+
+/* DAY */
+.day-view{display:grid;grid-template-columns:50px 1fr;gap:0;border:1.5px solid var(--border);
+  border-radius:13px;overflow:hidden;background:var(--border);}
+.day-time{background:var(--bg2);font-size:0.68rem;color:var(--muted);text-align:right;
+  padding:5px 7px 0 0;border-right:1px solid var(--border);min-height:70px;}
+.day-cell{background:var(--white);min-height:70px;padding:5px 8px;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
+.day-cell:hover{background:var(--bg2);}
+.day-cell.cancelled-cell{background:#FFF0EF;}
+
+/* SLOT CARD */
+.slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
+  cursor:pointer;height:100%;min-height:58px;display:flex;flex-direction:column;gap:2px;}
+.slot-card .sc-title{font-size:0.8rem;font-weight:700;}
+.slot-card .sc-override{font-size:0.64rem;opacity:.7;font-style:italic;}
+.slot-card .sc-lesson{font-size:0.72rem;font-weight:500;}
+.slot-card .sc-hw-prev{margin-top:3px;background:rgba(255,255,255,.45);border-radius:5px;
+  padding:2px 5px;font-size:0.65rem;font-weight:400;line-height:1.4;}
+.slot-card .sc-hw-prev strong{font-weight:700;}
+.slot-card .sc-empty{font-size:0.7rem;font-weight:400;opacity:.55;font-style:italic;}
+.slot-card.cancelled-card{background:#FFE5E3;color:#8B2020;border:1.5px solid #F5B8B5;}
+.slot-card.cancelled-card .sc-title{text-decoration:line-through;opacity:.7;}
+
+/* SUBJECT COLORS */
+.subj-english{background:#E8F4FF;color:#1A5490;border:1.5px solid #92C4F0;}
+.subj-lit{background:#F3EAFF;color:#52347A;border:1.5px solid #C8A0F0;}
+.subj-none{background:var(--bg2);color:var(--muted);border:1.5px dashed var(--border);}
+.pill-english{background:#C8E6FF;color:#0D3D6E;}
+.pill-lit{background:#E8D5FF;color:#42286A;}
+
+/* SETTINGS */
+#settingsOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.45);z-index:300;
+  align-items:flex-start;justify-content:flex-end;}
+#settingsOverlay.open{display:flex;}
+#settingsPanel{background:var(--white);width:min(480px,96vw);height:100vh;overflow-y:auto;
+  padding:1.5rem;box-shadow:-6px 0 30px rgba(0,0,0,.15);}
+#settingsPanel h2{font-size:1.05rem;font-weight:700;color:var(--grape);margin-bottom:1.2rem;}
+.s-section{margin-bottom:1.5rem;}
+.s-section h3{font-size:0.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.04em;margin-bottom:.7rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);}
+.s-row{display:flex;align-items:center;gap:8px;margin-bottom:.55rem;flex-wrap:wrap;}
+.s-row label{font-size:0.8rem;font-weight:600;color:var(--text);min-width:80px;}
+.s-row input[type=text],.s-row input[type=date],.s-row select{
+  border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;
+  font-size:0.82rem;font-family:inherit;background:var(--bg);color:var(--text);transition:border-color .14s;}
+.s-row input[type=text]:focus,.s-row input[type=date]:focus,.s-row select:focus{outline:none;border-color:var(--grape);}
+.s-row input[type=text]{flex:1;}
+.pattern-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:.5rem;}
+.pattern-day-col{background:var(--bg2);border-radius:10px;padding:7px 5px;}
+.pattern-day-col .pd-name{font-size:0.72rem;font-weight:700;color:var(--muted);text-align:center;margin-bottom:5px;}
+.slot-entry{display:flex;flex-direction:column;gap:3px;margin-bottom:4px;
+  background:var(--white);border-radius:7px;padding:4px 5px;border:1px solid var(--border);}
+.slot-entry select{border:none;background:transparent;font-size:0.72rem;color:var(--text);font-weight:500;padding:0;width:100%;}
+.slot-entry input[type=time]{border:none;background:transparent;font-size:0.7rem;color:var(--muted);padding:0;width:100%;}
+.add-slot-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:6px;
+  font-size:0.7rem;color:var(--muted);cursor:pointer;padding:2px 0;}
+.add-slot-btn:hover{border-color:var(--grape);color:var(--grape);}
+.rm-slot-btn{background:none;border:none;color:var(--coral);cursor:pointer;font-size:0.75rem;padding:0 2px;align-self:flex-end;}
+.class-list{display:flex;flex-direction:column;gap:7px;margin-bottom:.7rem;}
+.class-item{background:var(--bg2);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;}
+.class-item .ci-name{font-size:0.85rem;font-weight:700;flex:1;}
+.class-item .ci-rm{background:none;border:none;color:var(--coral);cursor:pointer;font-size:1rem;}
+.class-add-row{display:flex;gap:6px;}
+.class-add-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;font-size:0.82rem;font-family:inherit;background:var(--bg);}
+.class-add-row button{background:var(--grape);color:#fff;border:none;border-radius:8px;padding:5px 14px;font-size:0.82rem;cursor:pointer;font-weight:600;}
+.s-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem;}
+.btn-save-s{background:var(--grape);color:#fff;border:none;border-radius:10px;padding:9px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;}
+.btn-save-s:hover{background:var(--blue);}
+.btn-cancel-s{background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:9px 18px;font-size:0.9rem;cursor:pointer;}
+
+/* LESSON MODAL */
+#overlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.4);z-index:200;align-items:center;justify-content:center;}
+#overlay.open{display:flex;}
+#modal{background:var(--white);border-radius:17px;padding:1.4rem;width:min(520px,95vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+#modal h2{font-size:1rem;font-weight:700;color:var(--grape);margin-bottom:3px;}
+#modal .modal-date{font-size:0.8rem;color:var(--muted);margin-bottom:.7rem;}
+.modal-badges{display:flex;align-items:center;gap:6px;margin-bottom:.9rem;flex-wrap:wrap;}
+.modal-badges .subj-badge{border-radius:20px;padding:2px 11px;font-size:0.76rem;font-weight:700;}
+.modal-badges .class-badge{background:var(--bg2);border-radius:20px;padding:2px 11px;font-size:0.74rem;font-weight:700;color:var(--muted);}
+/* Subject override row */
+.override-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:9px;
+  padding:8px 11px;margin-bottom:.9rem;}
+.override-row label{font-size:0.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
+.override-row select{border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;
+  font-size:0.82rem;font-family:inherit;background:var(--white);color:var(--text);cursor:pointer;}
+.override-row select:focus{outline:none;border-color:var(--grape);}
+.override-note{font-size:0.71rem;color:var(--muted);font-style:italic;}
+.prev-hw-box{background:var(--bg2);border-radius:9px;padding:9px 11px;font-size:0.78rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5;}
+.prev-hw-box strong{color:var(--grape);font-size:0.73rem;}
+.modal-field{margin-bottom:.9rem;}
+.modal-field label{display:block;font-size:0.77rem;font-weight:700;color:var(--muted);margin-bottom:4px;}
+.modal-field textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;
+  font-size:0.84rem;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;transition:border-color .14s;}
+.modal-field textarea:focus{outline:none;border-color:var(--grape);}
+.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem;flex-wrap:wrap;}
+.btn-save{background:var(--grape);color:#fff;border:none;border-radius:9px;padding:7px 20px;font-size:0.86rem;font-weight:700;cursor:pointer;}
+.btn-save:hover{background:var(--blue);}
+.btn-cancel{background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:9px;padding:7px 15px;font-size:0.86rem;cursor:pointer;}
+.btn-clear{background:#FDECEA;color:var(--coral);border:1.5px solid #F5C4BE;border-radius:9px;padding:7px 12px;font-size:0.84rem;cursor:pointer;margin-right:auto;}
+.btn-cancel-lesson{background:#FFF0EF;color:#B03030;border:1.5px solid #F5B8B5;border-radius:9px;padding:7px 13px;font-size:0.84rem;cursor:pointer;}
+
+/* CANCEL MODAL */
+#cancelOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
+#cancelOverlay.open{display:flex;}
+#cancelModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(440px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
+#cancelModal h2{font-size:1rem;font-weight:700;color:var(--coral);margin-bottom:.5rem;}
+#cancelModal p{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;}
+.cancel-reason{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;}
+.cancel-reason label{font-size:0.82rem;font-weight:600;color:var(--text);}
+.cancel-reason input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:6px 9px;font-size:0.82rem;font-family:inherit;background:var(--bg);color:var(--text);}
+.cancel-choices{display:flex;flex-direction:column;gap:8px;margin-bottom:1.2rem;}
+.cancel-choice{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:border-color .14s;}
+.cancel-choice:hover{border-color:var(--grape);}
+.cancel-choice.selected{border-color:var(--grape);background:#F8F2FF;}
+.cancel-choice input[type=radio]{margin-top:2px;accent-color:var(--grape);}
+.cancel-choice .cc-label{font-size:0.84rem;font-weight:600;color:var(--text);}
+.cancel-choice .cc-desc{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+.cancel-modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.btn-confirm-cancel{background:var(--coral);color:#fff;border:none;border-radius:9px;padding:8px 22px;font-size:0.88rem;font-weight:700;cursor:pointer;}
+.btn-undo-cancel{background:#E8F4E8;color:var(--green);border:1.5px solid #A8D4A8;border-radius:9px;padding:8px 16px;font-size:0.86rem;cursor:pointer;font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📅 Agenda</h1>
+  <div class="view-tabs">
+    <button class="hbtn active" id="vYear"  onclick="setView('year')">Anno</button>
+    <button class="hbtn"        id="vMonth" onclick="setView('month')">Mese</button>
+    <button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
+    <button class="hbtn"        id="vDay"   onclick="setView('day')">Giorno</button>
+  </div>
+  <div class="nav-btns">
+    <button class="hbtn" onclick="navigate(-1)">◀</button>
+    <span id="currentLabel"></span>
+    <button class="hbtn" onclick="navigate(1)">▶</button>
+    <button class="hbtn" onclick="goToday()">Oggi</button>
+    <div id="syncStatus"><div id="syncDot"></div><span id="syncLabel">–</span></div>
+    <button class="hbtn settings-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
+  </div>
+</header>
+
+<div id="classBar"><span>Classe:</span><div id="classPills"></div></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#C8E6FF;border:1.5px solid #92C4F0;"></div> Inglese</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E8D5FF;border:1.5px solid #C8A0F0;"></div> Letteratura</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#FFE5E3;border:1px solid #F5B8B5;"></div> Cancellata</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--bg2);border:1px dashed var(--border);"></div> Fuori anno scolastico</div>
+</div>
+
+<div id="calArea"></div>
+
+<!-- SETTINGS -->
+<div id="settingsOverlay" onclick="closeSettingsIfBg(event)">
+<div id="settingsPanel">
+  <h2>⚙️ Impostazioni</h2>
+  <div class="s-section">
+    <h3>Anno scolastico</h3>
+    <div class="s-row"><label>Inizio</label><input type="date" id="sSchoolStart"></div>
+    <div class="s-row"><label>Fine</label><input type="date" id="sSchoolEnd"></div>
+  </div>
+  <div class="s-section">
+    <h3>Classi</h3>
+    <div class="class-list" id="sClassList"></div>
+    <div class="class-add-row">
+      <input type="text" id="sNewClass" placeholder="Es: 2ª B" maxlength="20">
+      <button onclick="addClassFromInput()">+ Aggiungi</button>
+    </div>
+  </div>
+  <div class="s-section">
+    <h3>Orario settimanale per classe</h3>
+    <div class="s-row"><label>Classe</label><select id="sPatternClass" onchange="renderPatternEditor()"></select></div>
+    <div id="sPatternGrid" class="pattern-grid"></div>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:.3rem;">Puoi aggiungere più ore per giorno.</p>
+  </div>
+  <div class="s-actions">
+    <button class="btn-cancel-s" onclick="closeSettings()">Annulla</button>
+    <button class="btn-save-s" onclick="saveSettings()">💾 Salva</button>
+  </div>
+</div>
+</div>
+
+<!-- LESSON MODAL -->
+<div id="overlay" onclick="closeModal(event)">
+<div id="modal">
+  <h2 id="modalTitle"></h2>
+  <div class="modal-date" id="modalDate"></div>
+  <div class="modal-badges">
+    <span id="modalBadge" class="subj-badge"></span>
+    <span id="modalClassBadge" class="class-badge"></span>
+  </div>
+  <!-- Subject override -->
+  <div class="override-row">
+    <label>📌 Materia effettiva</label>
+    <select id="fSubjectOverride">
+      <option value="">— segui pattern —</option>
+      <option value="english">🇬🇧 Inglese</option>
+      <option value="lit">📚 Letteratura</option>
+    </select>
+    <span class="override-note">modifica solo questa lezione</span>
+  </div>
+  <div class="prev-hw-box" id="prevHwBox" style="display:none">
+    <strong>📋 Compiti assegnati la volta precedente:</strong><br>
+    <span id="prevHwText"></span>
+  </div>
+  <div class="modal-field">
+    <label>📖 Lezione / Attività</label>
+    <textarea id="fLesson" rows="3" placeholder="Es: Present perfect – introduzione, es. libro pag. 45…"></textarea>
+  </div>
+  <div class="modal-field">
+    <label>🎒 Materiale necessario</label>
+    <textarea id="fMaterial" rows="2" placeholder="Es: Libro, fotocopie, LIM, audio traccia 3.2…"></textarea>
+  </div>
+  <div class="modal-field">
+    <label>✏️ Compiti per la prossima volta</label>
+    <textarea id="fHomework" rows="2" placeholder="Es: Esercizi 1–4 pag. 48, imparare vocaboli…"></textarea>
+  </div>
+  <div class="modal-field">
+    <label>📝 Note extra</label>
+    <textarea id="fNotes" rows="1" placeholder="Verifiche, comunicazioni…"></textarea>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-clear"         onclick="clearSlot()">🗑 Svuota</button>
+    <button class="btn-cancel-lesson" id="cancelLessonBtn" onclick="openCancelModal()">🚫 Cancella lezione</button>
+    <button class="btn-cancel"        onclick="closeModal()">Chiudi</button>
+    <button class="btn-save"          onclick="saveSlot()">💾 Salva</button>
+  </div>
+</div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div id="cancelOverlay">
+<div id="cancelModal">
+  <h2>🚫 Lezione cancellata</h2>
+  <p>Questa lezione non si terrà. Cosa vuoi fare con i contenuti già pianificati?</p>
+  <div class="cancel-reason">
+    <label>Motivo (opzionale)</label>
+    <input type="text" id="cancelReason" placeholder="Es: Sciopero, gita, assemblea, malattia…">
+  </div>
+  <div class="cancel-choices">
+    <label class="cancel-choice selected" id="ccSlip">
+      <input type="radio" name="cancelMode" value="slip" checked onchange="selectCancelMode(this)">
+      <div>
+        <div class="cc-label">📅 Tutto slitta alla prossima volta</div>
+        <div class="cc-desc">Lezione, materiale e compiti si spostano alla prossima data della stessa materia.</div>
+      </div>
+    </label>
+    <label class="cancel-choice" id="ccKeep">
+      <input type="radio" name="cancelMode" value="keep" onchange="selectCancelMode(this)">
+      <div>
+        <div class="cc-label">📌 Le lezioni successive rimangono invariate</div>
+        <div class="cc-desc">Il giorno viene marcato come cancellato ma i contenuti futuri non cambiano.</div>
+      </div>
+    </label>
+  </div>
+  <div class="cancel-modal-actions">
+    <button class="btn-undo-cancel" id="undoCancelBtn" style="display:none" onclick="undoCancel()">↩ Ripristina</button>
+    <button class="btn-cancel" onclick="closeCancelModal()">Annulla</button>
+    <button class="btn-confirm-cancel" onclick="confirmCancel()">Conferma</button>
+  </div>
+</div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyArCiV6JbFzyukcwpqwphrmbqLqbhKC15Q",
+  authDomain: "agenda-prof-56704.firebaseapp.com",
+  projectId: "agenda-prof-56704",
+  storageBucket: "agenda-prof-56704.firebasestorage.app",
+  messagingSenderId: "680920471009",
+  appId: "1:680920471009:web:a2e5d1a205419f3ea2aea0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const DOC_REF = doc(db, 'agenda', 'main');
+
+// ── sync indicator ──
+function setSyncStatus(s, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = s;   // 'ok' | 'err' | 'loading'
+  lbl.textContent = label;
+}
+
+// ── upload state to Firestore ──
+window._fbSave = async function(stateObj) {
+  setSyncStatus('loading', 'Salvataggio…');
+  try {
+    await setDoc(DOC_REF, { data: JSON.stringify(stateObj) });
+    setSyncStatus('ok', 'Salvato');
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('err', 'Errore sync');
+    // fallback to localStorage only
+    localStorage.setItem('teacherCal3', JSON.stringify(stateObj));
+  }
+};
+
+// ── real-time listener: update UI when Firestore changes ──
+setSyncStatus('loading', 'Connessione…');
+onSnapshot(DOC_REF, (snap) => {
+  if (snap.exists()) {
+    try {
+      const remote = JSON.parse(snap.data().data);
+      // merge into window.state and re-render if already initialised
+      if (window._stateReady) {
+        Object.assign(window.state, remote);
+        window.buildClassBar();
+        window.render();
+      } else {
+        window._remoteState = remote;
+      }
+      setSyncStatus('ok', 'Sincronizzato');
+    } catch(e) { setSyncStatus('err', 'Errore dati'); }
+  } else {
+    setSyncStatus('ok', 'Nuovo documento');
+    if (window._stateReady) window._fbSave(window.state);
+  }
+}, (err) => {
+  console.error(err);
+  setSyncStatus('err', 'Offline');
+});
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════
+const DAYS_IT   = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+const MONTHS_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                   'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const DAY_NAMES = ['Lun','Mar','Mer','Gio','Ven'];
+
+// ══════════════════════════════════════════════════════
+//  STATE  – merge localStorage + remote
+// ══════════════════════════════════════════════════════
+const DEFAULT_STATE = {
+  schoolStart: '2025-09-14',
+  schoolEnd:   '2026-06-12',
+  classes: ['1ª A','2ª B','3ª C'],
+  patterns: {
+    '1ª A': {0:[{subject:'english',time:'08:00'}],1:[{subject:'lit',time:'09:00'}],2:[{subject:'english',time:'10:00'}]},
+    '2ª B': {1:[{subject:'english',time:'08:00'}],3:[{subject:'lit',time:'10:00'}],4:[{subject:'english',time:'09:00'}]},
+    '3ª C': {0:[{subject:'lit',time:'11:00'}],2:[{subject:'english',time:'08:00'}],4:[{subject:'english',time:'09:00'}]},
+  },
+  lessons:   {},   // [className][slotKey] = {lesson,material,homework,notes,subjectOverride}
+  cancelled: {},   // [className][slotKey] = {reason,mode}
+};
+
+let state = {...DEFAULT_STATE};
+try {
+  const ls = localStorage.getItem('teacherCal3');
+  if (ls) state = {...state, ...JSON.parse(ls)};
+} catch(e){}
+
+// If Firebase already pushed remote state before this script ran, apply it
+if (window._remoteState) { Object.assign(state, window._remoteState); window._remoteState = null; }
+window.state = state;
+window._stateReady = true;
+
+function persist() {
+  localStorage.setItem('teacherCal3', JSON.stringify(state));
+  if (window._fbSave) window._fbSave(state);
+}
+
+// ══════════════════════════════════════════════════════
+//  SCHOOL YEAR UTILS
+// ══════════════════════════════════════════════════════
+function parseDate(str) {
+  if (!str) return null;
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function isInSchoolYear(date) {
+  const start = parseDate(state.schoolStart);
+  const end   = parseDate(state.schoolEnd);
+  if (!start || !end) return true;
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return d >= start && d <= end;
+}
+// Is the whole month outside the school year?
+function isMonthInSchoolYear(year, month) {
+  const start = parseDate(state.schoolStart);
+  const end   = parseDate(state.schoolEnd);
+  if (!start || !end) return true;
+  const mStart = new Date(year, month, 1);
+  const mEnd   = new Date(year, month+1, 0);
+  return mEnd >= start && mStart <= end;
+}
+
+// ══════════════════════════════════════════════════════
+//  VIEW STATE
+// ══════════════════════════════════════════════════════
+let view = 'year';
+let cursor = new Date();
+let activeClass = state.classes[0] || '';
+let modalKey = null, modalSubject = 'none', modalPatternSubject = 'none';
+
+// ══════════════════════════════════════════════════════
+//  SUBJECT HELPERS
+// ══════════════════════════════════════════════════════
+function subjClass(s)     { return s==='english'?'subj-english':s==='lit'?'subj-lit':'subj-none'; }
+function subjPillClass(s) { return s==='english'?'pill-english':s==='lit'?'pill-lit':''; }
+function subjLabel(s)     { return s==='english'?'🇬🇧 Inglese':s==='lit'?'📚 Letteratura':'–'; }
+
+// Effective subject: override beats pattern
+function effectiveSubject(slotKey, patternSubject, className) {
+  const data = (state.lessons[className]||{})[slotKey];
+  return (data && data.subjectOverride) ? data.subjectOverride : patternSubject;
+}
+
+// Slots for a date+class → [{subject, time, slotKey}]
+function slotsOnDay(date, className) {
+  const pattern = (state.patterns[className])||{};
+  const dow = date.getDay();
+  const sd  = (dow===0||dow===6) ? null : dow-1;
+  if (sd===null) return [];
+  return (pattern[sd]||[]).map((s,i) => ({...s, slotKey: fmtDate(date)+`-${sd}-${i}`}));
+}
+function fmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function isToday(d) { return fmtDate(d)===fmtDate(new Date()); }
+
+// ══════════════════════════════════════════════════════
+//  PREV LESSON (same effective subject, same class)
+// ══════════════════════════════════════════════════════
+function prevLessonData(date, subjectToMatch, className) {
+  if (!subjectToMatch||subjectToMatch==='none') return null;
+  const lessons   = state.lessons[className]||{};
+  const cancelled = state.cancelled[className]||{};
+  let d = new Date(date); d.setDate(d.getDate()-1);
+  for (let i=0; i<180; i++) {
+    const slots = slotsOnDay(d, className);
+    for (let si=slots.length-1; si>=0; si--) {
+      const s = slots[si];
+      const eff = effectiveSubject(s.slotKey, s.subject, className);
+      if (eff===subjectToMatch && !cancelled[s.slotKey]) {
+        const data = lessons[s.slotKey];
+        if (data && (data.homework||data.lesson)) return data;
+      }
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════
+//  CLASS BAR
+// ══════════════════════════════════════════════════════
+window.buildClassBar = function() {
+  const container = document.getElementById('classPills');
+  container.innerHTML = '';
+  if (!state.classes.includes(activeClass) && state.classes.length>0) activeClass = state.classes[0];
+  state.classes.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'class-pill'+(c===activeClass?' active':'');
+    btn.textContent = c;
+    btn.onclick = () => { activeClass=c; buildClassBar(); render(); };
+    container.appendChild(btn);
+  });
+};
+
+// ══════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════
+function setView(v) {
+  view=v;
+  ['vYear','vMonth','vWeek','vDay'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('v'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  render();
+}
+function navigate(dir) {
+  if      (view==='year')  cursor = new Date(cursor.getFullYear()+dir, cursor.getMonth(), 1);
+  else if (view==='month') cursor = new Date(cursor.getFullYear(), cursor.getMonth()+dir, 1);
+  else if (view==='week')  cursor.setDate(cursor.getDate()+dir*7);
+  else                     cursor.setDate(cursor.getDate()+dir);
+  render();
+}
+function goToday() { cursor=new Date(); render(); }
+
+function updateLabel() {
+  const el=document.getElementById('currentLabel');
+  if      (view==='year')  el.textContent=cursor.getFullYear();
+  else if (view==='month') el.textContent=MONTHS_IT[cursor.getMonth()]+' '+cursor.getFullYear();
+  else if (view==='week')  {
+    const mon=weekStart(cursor), sun=new Date(mon); sun.setDate(sun.getDate()+6);
+    el.textContent=`${mon.getDate()} ${MONTHS_IT[mon.getMonth()].slice(0,3)} – ${sun.getDate()} ${MONTHS_IT[sun.getMonth()].slice(0,3)}`;
+  } else el.textContent=`${DAYS_IT[cursor.getDay()]} ${cursor.getDate()} ${MONTHS_IT[cursor.getMonth()]}`;
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER ROUTER
+// ══════════════════════════════════════════════════════
+window.render = function() {
+  updateLabel();
+  const area = document.getElementById('calArea');
+  area.innerHTML = '';
+  if      (view==='year')  renderYear(area);
+  else if (view==='month') renderMonth(area);
+  else if (view==='week')  renderWeek(area);
+  else                     renderDay(area);
+};
+
+// ══════════════════════════════════════════════════════
+//  YEAR VIEW
+// ══════════════════════════════════════════════════════
+function renderYear(area) {
+  const grid=document.createElement('div'); grid.className='year-grid';
+  for (let m=0; m<12; m++) grid.appendChild(buildMiniMonth(cursor.getFullYear(), m));
+  area.appendChild(grid);
+}
+function buildMiniMonth(year, month) {
+  const inYear = isMonthInSchoolYear(year, month);
+  const div=document.createElement('div');
+  div.className='mini-month'+(inYear?'':' inactive-month');
+  div.innerHTML=`<div class="mini-month-title">${MONTHS_IT[month]}</div>`;
+  const cal=document.createElement('div'); cal.className='mini-cal';
+  ['L','M','M','G','V','S','D'].forEach(d=>{const h=document.createElement('div');h.className='dh';h.textContent=d;cal.appendChild(h);});
+  const first=new Date(year,month,1);
+  let startDow=first.getDay(); startDow=startDow===0?6:startDow-1;
+  const dim=new Date(year,month+1,0).getDate();
+  const canc=state.cancelled[activeClass]||{};
+  for (let i=0;i<startDow;i++){const c=document.createElement('div');c.className='mini-day other-month';cal.appendChild(c);}
+  for (let d=1;d<=dim;d++) {
+    const date=new Date(year,month,d);
+    const inSY=isInSchoolYear(date);
+    const slots=inSY?slotsOnDay(date,activeClass):[];
+    const hasCancelled=slots.some(s=>canc[s.slotKey]);
+    const cell=document.createElement('div');
+    cell.className='mini-day'+(isToday(date)?' today-cell':hasCancelled?' cancelled-cell':!inSY?' no-school':'');
+    cell.textContent=d;
+    slots.filter(s=>!canc[s.slotKey]).forEach(s=>{
+      const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+      const dot=document.createElement('div'); dot.className='mini-day-dot';
+      dot.style.background=eff==='english'?'#5AAAE0':'#A870E0';
+      cell.appendChild(dot);
+    });
+    const cd=new Date(date);
+    if (inSY) cell.onclick=(e)=>{e.stopPropagation();cursor=cd;setView('day');};
+    cal.appendChild(cell);
+  }
+  div.appendChild(cal);
+  if (inYear) div.onclick=()=>{cursor=new Date(year,month,1);setView('month');};
+  return div;
+}
+
+// ══════════════════════════════════════════════════════
+//  MONTH VIEW
+// ══════════════════════════════════════════════════════
+function renderMonth(area) {
+  const grid=document.createElement('div'); grid.className='month-grid';
+  ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(d=>{const h=document.createElement('div');h.className='month-dh';h.textContent=d;grid.appendChild(h);});
+  const year=cursor.getFullYear(), month=cursor.getMonth();
+  const first=new Date(year,month,1);
+  let startDow=first.getDay(); startDow=startDow===0?6:startDow-1;
+  const dim=new Date(year,month+1,0).getDate();
+  for (let i=0;i<startDow;i++) grid.appendChild(buildMonthCell(new Date(year,month,0-startDow+i+1),true));
+  for (let d=1;d<=dim;d++)     grid.appendChild(buildMonthCell(new Date(year,month,d),false));
+  const trailing=(7-(startDow+dim)%7)%7;
+  for (let d=1;d<=trailing;d++) grid.appendChild(buildMonthCell(new Date(year,month+1,d),true));
+  area.appendChild(grid);
+}
+function buildMonthCell(date, otherMonth) {
+  const inSY = isInSchoolYear(date);
+  const slots = inSY?slotsOnDay(date,activeClass):[];
+  const lessons  = state.lessons[activeClass]||{};
+  const canc     = state.cancelled[activeClass]||{};
+  const hasCancelled = slots.some(s=>canc[s.slotKey]);
+  const cell=document.createElement('div');
+  cell.className='month-day'+(otherMonth?' other-month':'')+(isToday(date)?' today-cell':'')
+    +(hasCancelled?' cancelled-day':'')+((!inSY&&!otherMonth)?' no-school':'');
+  const num=document.createElement('div'); num.className='month-day-num'; num.textContent=date.getDate(); cell.appendChild(num);
+  slots.forEach(s=>{
+    const pill=document.createElement('div');
+    const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+    if (canc[s.slotKey]) {
+      pill.className='slot-pill cancelled-pill';
+      pill.textContent='🚫 '+(canc[s.slotKey].reason||'Cancellata');
+    } else {
+      pill.className=`slot-pill ${subjPillClass(eff)}`;
+      const data=lessons[s.slotKey];
+      const overridden=data&&data.subjectOverride&&data.subjectOverride!==s.subject;
+      const displayLabel=subjLabel(eff)+(overridden?' ✎':'');
+      pill.textContent=data&&data.lesson?(data.lesson.length>26?data.lesson.slice(0,24)+'…':data.lesson):displayLabel+' '+s.time;
+      if (data&&data.homework){const hw=document.createElement('div');hw.className='hw-hint';hw.textContent='✏️ '+data.homework.slice(0,36);pill.appendChild(hw);}
+    }
+    const ck=s.slotKey, cd=new Date(date);
+    pill.onclick=(e)=>{e.stopPropagation();openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null);};
+    cell.appendChild(pill);
+  });
+  const cd=new Date(date);
+  if (!otherMonth) cell.onclick=()=>{cursor=cd;setView('day');};
+  return cell;
+}
+
+// ══════════════════════════════════════════════════════
+//  WEEK VIEW
+// ══════════════════════════════════════════════════════
+function weekStart(d) {
+  const dt=new Date(d); const dow=dt.getDay();
+  dt.setDate(dt.getDate()+(dow===0?-6:1-dow)); return dt;
+}
+function renderWeek(area) {
+  const mon=weekStart(cursor);
+  const grid=document.createElement('div'); grid.className='week-grid';
+  const corner=document.createElement('div'); corner.className='corner-cell week-dh'; grid.appendChild(corner);
+  for (let i=0;i<7;i++) {
+    const d=new Date(mon); d.setDate(d.getDate()+i);
+    const inSY=isInSchoolYear(d);
+    const h=document.createElement('div');
+    h.className='week-dh'+(isToday(d)?' today-cell':!inSY?' no-school':'');
+    h.innerHTML=`<b>${DAYS_IT[d.getDay()]}</b><br><span style="font-size:.8rem">${d.getDate()}</span>`;
+    if (inSY){h.style.cursor='pointer';const cd=new Date(d);h.onclick=()=>{cursor=cd;setView('day');};}
+    grid.appendChild(h);
+  }
+  // Collect all unique times
+  const timeSlots=new Set();
+  for (let i=0;i<7;i++){
+    const d=new Date(mon); d.setDate(d.getDate()+i);
+    if (isInSchoolYear(d)) slotsOnDay(d,activeClass).forEach(s=>timeSlots.add(s.time));
+  }
+  const sortedTimes=[...timeSlots].sort();
+  if (!sortedTimes.length) sortedTimes.push('08:00','09:00','10:00','11:00','12:00','13:00');
+  const lessons=state.lessons[activeClass]||{};
+  const canc=state.cancelled[activeClass]||{};
+  sortedTimes.forEach(time=>{
+    const th=document.createElement('div'); th.className='week-time'; th.textContent=time; grid.appendChild(th);
+    for (let i=0;i<7;i++) {
+      const d=new Date(mon); d.setDate(d.getDate()+i);
+      const inSY=isInSchoolYear(d);
+      const slots=inSY?slotsOnDay(d,activeClass).filter(s=>s.time===time):[];
+      const cell=document.createElement('div');
+      cell.className='week-cell'+(isToday(d)?' today-cell':'')+(slots.some(s=>canc[s.slotKey])?' cancelled-cell':'')+((!inSY)?' no-school':'');
+      slots.forEach(s=>{
+        const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'small',canc[s.slotKey]);
+        cell.appendChild(card);
+      });
+      grid.appendChild(cell);
+    }
+  });
+  area.appendChild(grid);
+}
+
+// ══════════════════════════════════════════════════════
+//  DAY VIEW
+// ══════════════════════════════════════════════════════
+function renderDay(area) {
+  const d=cursor;
+  if (!isInSchoolYear(d)) {
+    const msg=document.createElement('div'); msg.className='out-of-school';
+    msg.textContent='📭 Questa data è fuori dall\'anno scolastico ('+state.schoolStart+' – '+state.schoolEnd+')';
+    area.appendChild(msg); return;
+  }
+  const slots=slotsOnDay(d,activeClass);
+  const lessons=state.lessons[activeClass]||{};
+  const canc=state.cancelled[activeClass]||{};
+  const banner=document.createElement('div');
+  banner.style.cssText='margin-bottom:1rem;font-size:.86rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+  if (slots.length) {
+    banner.innerHTML=`<span>${activeClass}</span> — `;
+    slots.forEach(s=>{
+      const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+      const sp=document.createElement('span');
+      sp.style.cssText=`background:${eff==='english'?'#C8E6FF':'#E8D5FF'};color:${eff==='english'?'#0D3D6E':'#42286A'};border-radius:8px;padding:2px 9px;font-weight:700;font-size:.82rem;`;
+      sp.textContent=subjLabel(eff)+' '+s.time;
+      banner.appendChild(sp);
+    });
+  } else {
+    banner.innerHTML=`<span style="color:var(--border)">Nessuna lezione programmata per ${activeClass}</span>`;
+  }
+  area.appendChild(banner);
+  if (!slots.length) return;
+  const grid=document.createElement('div'); grid.className='day-view';
+  slots.forEach(s=>{
+    const th=document.createElement('div'); th.className='day-time'; th.textContent=s.time; grid.appendChild(th);
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(canc[s.slotKey]?' cancelled-cell':'');
+    const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'full',canc[s.slotKey]);
+    cell.appendChild(card);
+    grid.appendChild(cell);
+  });
+  area.appendChild(grid);
+}
+
+// ══════════════════════════════════════════════════════
+//  SLOT CARD
+// ══════════════════════════════════════════════════════
+function buildSlotCard(date, key, patternSubj, time, data, size, cancData) {
+  const eff=effectiveSubject(key, patternSubj, activeClass);
+  const overridden=data&&data.subjectOverride&&data.subjectOverride!==patternSubj;
+  const card=document.createElement('div');
+  card.className=cancData?'slot-card cancelled-card':`slot-card ${subjClass(eff)}`;
+  if (size==='small') card.style.minHeight='50px';
+  let html=`<div class="sc-title">${subjLabel(eff)}${overridden?` <span style="font-size:.6rem;opacity:.6">(era ${subjLabel(patternSubj)})</span>`:''}</div>`;
+  html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${activeClass}</div>`;
+  if (cancData) {
+    html+=`<div style="font-size:.72rem;color:#B03030;font-style:italic">🚫 ${cancData.reason||'Lezione cancellata'}</div>`;
+  } else if (data&&data.lesson) {
+    html+=`<div class="sc-lesson">${data.lesson.length>55?data.lesson.slice(0,53)+'…':data.lesson}</div>`;
+    const prev=prevLessonData(date,eff,activeClass);
+    if (prev&&prev.homework) html+=`<div class="sc-hw-prev"><strong>Prev:</strong> ${prev.homework.length>75?prev.homework.slice(0,73)+'…':prev.homework}</div>`;
+  } else {
+    html+=`<div class="sc-empty">Tocca per aggiungere…</div>`;
+    const prev=prevLessonData(date,eff,activeClass);
+    if (prev&&prev.homework) html+=`<div class="sc-hw-prev"><strong>Prev compiti:</strong> ${prev.homework.length>75?prev.homework.slice(0,73)+'…':prev.homework}</div>`;
+  }
+  card.innerHTML=html;
+  const ck=key, cd=new Date(date), cs=patternSubj;
+  card.onclick=(e)=>{e.stopPropagation();openModal(ck,cd,cs,time,cancData?'cancelled':null);};
+  return card;
+}
+
+// ══════════════════════════════════════════════════════
+//  LESSON MODAL
+// ══════════════════════════════════════════════════════
+function openModal(key, date, patternSubj, time, status) {
+  modalKey=key; modalPatternSubject=patternSubj;
+  const data=(state.lessons[activeClass]||{})[key]||{};
+  const canc=(state.cancelled[activeClass]||{})[key];
+  const currSubj=effectiveSubject(key, patternSubj, activeClass);
+  const prev=prevLessonData(date, currSubj, activeClass);
+
+  document.getElementById('modalTitle').textContent=`${time} – ${activeClass}`;
+  document.getElementById('modalDate').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
+
+  // Badges
+  const badge=document.getElementById('modalBadge');
+  badge.textContent=subjLabel(currSubj);
+  badge.style.background=currSubj==='english'?'#C8E6FF':'#E8D5FF';
+  badge.style.color=currSubj==='english'?'#0D3D6E':'#42286A';
+  document.getElementById('modalClassBadge').textContent=activeClass;
+
+  // Subject override selector
+  const sel=document.getElementById('fSubjectOverride');
+  sel.value=data.subjectOverride||'';
+  sel.onchange=()=>{
+    // live-update badge when changing override
+    const chosen=sel.value||patternSubj;
+    badge.textContent=subjLabel(chosen);
+    badge.style.background=chosen==='english'?'#C8E6FF':'#E8D5FF';
+    badge.style.color=chosen==='english'?'#0D3D6E':'#42286A';
+  };
+
+  // Prev homework
+  if (prev&&prev.homework) {
+    document.getElementById('prevHwBox').style.display='block';
+    document.getElementById('prevHwText').textContent=prev.homework;
+  } else document.getElementById('prevHwBox').style.display='none';
+
+  document.getElementById('fLesson').value=data.lesson||'';
+  document.getElementById('fMaterial').value=data.material||'';
+  document.getElementById('fHomework').value=data.homework||'';
+  document.getElementById('fNotes').value=data.notes||'';
+
+  const cancelBtn=document.getElementById('cancelLessonBtn');
+  cancelBtn.textContent=canc?'🔄 Gestisci cancellazione':'🚫 Cancella lezione';
+
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (!e||e.target===document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open'); modalKey=null;
+  }
+}
+function saveSlot() {
+  if (!modalKey) return;
+  if (!state.lessons[activeClass]) state.lessons[activeClass]={};
+  const override=document.getElementById('fSubjectOverride').value;
+  state.lessons[activeClass][modalKey]={
+    lesson:   document.getElementById('fLesson').value.trim(),
+    material: document.getElementById('fMaterial').value.trim(),
+    homework: document.getElementById('fHomework').value.trim(),
+    notes:    document.getElementById('fNotes').value.trim(),
+    subjectOverride: override||null,
+  };
+  persist(); closeModal(); render();
+}
+function clearSlot() {
+  if (!modalKey) return;
+  if (confirm('Svuotare questo slot?')) {
+    if (state.lessons[activeClass]) delete state.lessons[activeClass][modalKey];
+    persist(); closeModal(); render();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  CANCEL MODAL
+// ══════════════════════════════════════════════════════
+function openCancelModal() {
+  const canc=(state.cancelled[activeClass]||{})[modalKey];
+  document.getElementById('cancelReason').value=canc?canc.reason||'':'';
+  document.querySelectorAll('[name=cancelMode]').forEach(r=>r.checked=r.value==='slip');
+  selectCancelMode({value:'slip'});
+  document.getElementById('undoCancelBtn').style.display=canc?'inline-block':'none';
+  document.getElementById('cancelOverlay').classList.add('open');
+}
+function closeCancelModal() { document.getElementById('cancelOverlay').classList.remove('open'); }
+function selectCancelMode(radio) {
+  document.getElementById('ccSlip').classList.toggle('selected',radio.value==='slip');
+  document.getElementById('ccKeep').classList.toggle('selected',radio.value==='keep');
+}
+function confirmCancel() {
+  if (!modalKey) return;
+  const reason=document.getElementById('cancelReason').value.trim();
+  const mode=document.querySelector('[name=cancelMode]:checked').value;
+  if (!state.cancelled[activeClass]) state.cancelled[activeClass]={};
+  state.cancelled[activeClass][modalKey]={reason,mode};
+  if (mode==='slip') {
+    const currentData=(state.lessons[activeClass]||{})[modalKey];
+    if (currentData&&(currentData.lesson||currentData.homework||currentData.material)) {
+      const dateStr=modalKey.split('-').slice(0,3).join('-');
+      const date=new Date(dateStr);
+      // Use effective subject for the slip
+      const subj=effectiveSubject(modalKey, modalPatternSubject, activeClass);
+      let d=new Date(date); d.setDate(d.getDate()+1);
+      for (let i=0; i<120; i++) {
+        if (isInSchoolYear(d)) {
+          const slots=slotsOnDay(d,activeClass);
+          let found=false;
+          for (const s of slots) {
+            const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+            if (eff===subj&&!(state.cancelled[activeClass]||{})[s.slotKey]) {
+              if (!state.lessons[activeClass]) state.lessons[activeClass]={};
+              if (!state.lessons[activeClass][s.slotKey]||!state.lessons[activeClass][s.slotKey].lesson) {
+                state.lessons[activeClass][s.slotKey]={...currentData};
+              }
+              found=true; break;
+            }
+          }
+          if (found) break;
+        }
+        d.setDate(d.getDate()+1);
+      }
+    }
+  }
+  persist(); closeCancelModal(); closeModal(); render();
+}
+function undoCancel() {
+  if (!modalKey) return;
+  if (state.cancelled[activeClass]) delete state.cancelled[activeClass][modalKey];
+  persist(); closeCancelModal(); closeModal(); render();
+}
+
+// ══════════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════════
+let settingsTemp={};
+function openSettings() {
+  settingsTemp=JSON.parse(JSON.stringify(state));
+  document.getElementById('sSchoolStart').value=settingsTemp.schoolStart;
+  document.getElementById('sSchoolEnd').value=settingsTemp.schoolEnd;
+  renderClassList(); renderPatternClassSelect(); renderPatternEditor();
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettingsIfBg(e) { if(e.target===document.getElementById('settingsOverlay')) closeSettings(); }
+function saveSettings() {
+  state.schoolStart=document.getElementById('sSchoolStart').value;
+  state.schoolEnd=document.getElementById('sSchoolEnd').value;
+  state.classes=settingsTemp.classes;
+  state.patterns=settingsTemp.patterns;
+  if (!state.classes.includes(activeClass)&&state.classes.length>0) activeClass=state.classes[0];
+  persist(); closeSettings(); buildClassBar(); render();
+}
+
+function renderClassList() {
+  const list=document.getElementById('sClassList'); list.innerHTML='';
+  settingsTemp.classes.forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='class-item';
+    row.innerHTML=`<span class="ci-name">${c}</span><button class="ci-rm" onclick="removeClassAt(${i})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+function addClassFromInput() {
+  const inp=document.getElementById('sNewClass');
+  const name=inp.value.trim(); if(!name) return;
+  if(settingsTemp.classes.includes(name)){alert('Classe già presente.');return;}
+  settingsTemp.classes.push(name);
+  if(!settingsTemp.patterns[name]) settingsTemp.patterns[name]={};
+  inp.value=''; renderClassList(); renderPatternClassSelect(); renderPatternEditor();
+}
+function removeClassAt(i) {
+  const name=settingsTemp.classes[i];
+  if(!confirm(`Rimuovere "${name}"?`)) return;
+  settingsTemp.classes.splice(i,1); delete settingsTemp.patterns[name];
+  renderClassList(); renderPatternClassSelect(); renderPatternEditor();
+}
+function renderPatternClassSelect() {
+  const sel=document.getElementById('sPatternClass'); sel.innerHTML='';
+  settingsTemp.classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+function renderPatternEditor() {
+  const cn=document.getElementById('sPatternClass').value;
+  const grid=document.getElementById('sPatternGrid');
+  if(!cn){grid.innerHTML='<p style="font-size:.8rem;color:var(--muted);">Aggiungi prima una classe.</p>';return;}
+  if(!settingsTemp.patterns[cn]) settingsTemp.patterns[cn]={};
+  const pattern=settingsTemp.patterns[cn]; grid.innerHTML='';
+  for (let d=0;d<5;d++) {
+    const col=document.createElement('div'); col.className='pattern-day-col';
+    col.innerHTML=`<div class="pd-name">${DAY_NAMES[d]}</div>`;
+    const slots=pattern[d]||[];
+    slots.forEach((s,si)=>{
+      const entry=document.createElement('div'); entry.className='slot-entry';
+      entry.innerHTML=`
+        <select onchange="updatePatternSlot('${cn}',${d},${si},'subject',this.value)">
+          <option value="none"    ${s.subject==='none'?'selected':''}>–</option>
+          <option value="english" ${s.subject==='english'?'selected':''}>🇬🇧 Inglese</option>
+          <option value="lit"     ${s.subject==='lit'?'selected':''}>📚 Letteratura</option>
+        </select>
+        <input type="time" value="${s.time||'08:00'}"
+          onchange="updatePatternSlot('${cn}',${d},${si},'time',this.value)">
+        <button class="rm-slot-btn" onclick="removePatternSlot('${cn}',${d},${si})">✕</button>`;
+      col.appendChild(entry);
+    });
+    const addBtn=document.createElement('button'); addBtn.className='add-slot-btn';
+    addBtn.textContent='+ ora'; addBtn.onclick=()=>addPatternSlot(cn,d);
+    col.appendChild(addBtn); grid.appendChild(col);
+  }
+}
+function updatePatternSlot(cn,d,si,field,val){
+  if(!settingsTemp.patterns[cn]) settingsTemp.patterns[cn]={};
+  if(!settingsTemp.patterns[cn][d]) settingsTemp.patterns[cn][d]=[];
+  if(settingsTemp.patterns[cn][d][si]) settingsTemp.patterns[cn][d][si][field]=val;
+}
+function addPatternSlot(cn,d){
+  if(!settingsTemp.patterns[cn]) settingsTemp.patterns[cn]={};
+  if(!settingsTemp.patterns[cn][d]) settingsTemp.patterns[cn][d]=[];
+  settingsTemp.patterns[cn][d].push({subject:'english',time:'08:00'});
+  renderPatternEditor();
+}
+function removePatternSlot(cn,d,si){
+  settingsTemp.patterns[cn][d].splice(si,1);
+  if(!settingsTemp.patterns[cn][d].length) delete settingsTemp.patterns[cn][d];
+  renderPatternEditor();
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+buildClassBar();
+cursor=new Date();
+render();
+</script>
+</body>
+</html>
