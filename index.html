@@ -199,11 +199,15 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .modal-badges .class-badge{background:var(--bg2);border-radius:20px;padding:2px 11px;font-size:0.74rem;font-weight:700;color:var(--muted);}
 /* Subject override row */
 .override-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:9px;
-  padding:8px 11px;margin-bottom:.9rem;}
-.override-row label{font-size:0.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
+  padding:8px 11px;margin-bottom:.9rem;cursor:pointer;}
+.override-row label{font-size:0.78rem;font-weight:600;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:6px;flex:1;}
+.override-toggle{display:inline-flex;align-items:center;font-size:0.8rem;transition:transform .2s;}
+.override-row.collapsed .override-toggle{transform:rotate(-90deg);}
+.override-row.collapsed .override-select{display:none;}
 .override-row select{border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;
   font-size:0.82rem;font-family:inherit;background:var(--white);color:var(--text);cursor:pointer;}
 .override-row select:focus{outline:none;border-color:var(--grape);}
+.override-row.collapsed select{display:none;}
 .override-note{font-size:0.71rem;color:var(--muted);font-style:italic;}
 .prev-hw-box{background:var(--bg2);border-radius:9px;padding:9px 11px;font-size:0.78rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5;}
 .prev-hw-box strong{color:var(--grape);font-size:0.73rem;}
@@ -212,6 +216,7 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .modal-field textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;
   font-size:0.84rem;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;transition:border-color .14s;}
 .modal-field textarea:focus{outline:none;border-color:var(--grape);}
+#fLesson{background:linear-gradient(to bottom,transparent 0,transparent calc(1.5em - 1px),#D3C8BB calc(1.5em - 1px),#D3C8BB 1.5em,transparent 1.5em);background-attachment:local;background-repeat:no-repeat;}
 .modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem;flex-wrap:wrap;}
 .btn-save{background:var(--grape);color:#fff;border:none;border-radius:9px;padding:7px 20px;font-size:0.86rem;font-weight:700;cursor:pointer;}
 .btn-save:hover{background:var(--blue);}
@@ -332,6 +337,23 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 .mat-item .mi-label{font-size:0.73rem;font-weight:700;color:var(--muted);min-width:80px;flex-shrink:0;}
 .mat-item .mi-text{font-size:0.82rem;color:var(--text);}
 .mat-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
+
+/* MOBILE RESPONSIVE */
+@media (max-width:768px) {
+  #calArea{padding:1.1rem 1.4rem 1rem;}
+  header{flex-direction:column;align-items:flex-start;}
+  .nav-btns{width:100%;justify-content:flex-start;flex-wrap:wrap;}
+  #currentLabel{min-width:auto;width:100%;text-align:left;}
+}
+
+@media (max-width:480px) {
+  body{font-size:0.95rem;}
+  #calArea{padding:1rem 0.8rem 0.5rem;}
+  header{padding:0.5rem 0.8rem;}
+  #classBar{padding:0.3rem 0.8rem;gap:8px;}
+  #secondaryNav{padding:0.4rem 0.8rem;top:calc(58px + 40px);}
+  .view-tabs{order:3;width:100%;margin-top:0.5rem;}
+}
 </style>
 </head>
 <body>
@@ -436,14 +458,16 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <span id="modalClassBadge" class="class-badge"></span>
   </div>
   <!-- Subject override -->
-  <div class="override-row">
-    <label>📌 Materia effettiva</label>
-    <select id="fSubjectOverride">
-      <option value="">— segui pattern —</option>
-      <option value="english">🇬🇧 Inglese</option>
-      <option value="lit">📚 Letteratura</option>
-    </select>
-    <span class="override-note">modifica solo questa lezione</span>
+  <div class="override-row collapsed" onclick="toggleOverride(event)">
+    <label><span class="override-toggle">▼</span>📌 Materia effettiva</label>
+    <div class="override-select">
+      <select id="fSubjectOverride" onclick="event.stopPropagation()">
+        <option value="">— segui pattern —</option>
+        <option value="english">🇬🇧 Inglese</option>
+        <option value="lit">📚 Letteratura</option>
+      </select>
+      <span class="override-note">modifica solo questa lezione</span>
+    </div>
   </div>
   <div class="prev-hw-box" id="prevHwBox" style="display:none">
     <strong>📋 Compiti assegnati la volta precedente:</strong><br>
@@ -2042,6 +2066,14 @@ function showToast(msg) {
   t.style.opacity = '1';
   clearTimeout(t._tid);
   t._tid = setTimeout(()=>{ t.style.opacity='0'; }, 2800);
+}
+
+// ══════════════════════════════════════════════════════
+//  TOGGLE OVERRIDE ROW
+// ══════════════════════════════════════════════════════
+function toggleOverride(event) {
+  const row = event.currentTarget;
+  row.classList.toggle('collapsed');
 }
 
 // ══════════════════════════════════════════════════════
