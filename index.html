@@ -344,6 +344,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
     <button class="hbtn"        id="vDay"   onclick="setView('day')">Giorno</button>
   </div>
+  
   <div class="nav-btns">
     <button class="hbtn" onclick="navigate(-1)">◀</button>
     <span id="currentLabel"></span>
@@ -354,9 +355,6 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <button class="hbtn settings-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
   </div>
 </header>
-
-<div id="classBar"><span>Classe:</span><div id="classPills"></div></div>
-
 <!-- SECONDARY NAV BAR -->
 <div id="secondaryNav">
   <span class="snav-label">📚 Viste rapide:</span>
@@ -364,6 +362,10 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   <button class="sec-nav-btn" id="navLessons" onclick="showLessonsView()">📖 Programma Svolto</button>
   <button class="sec-nav-btn" id="navMaterials" onclick="showMaterialsView()">🎒 Materiali del Giorno</button>
 </div>
+
+<div id="classBar"><span>Classe:</span><div id="classPills"></div></div>
+
+
 
 <!-- EXTRA VIEW OVERLAY -->
 <div id="extraViewOverlay" onclick="closeExtraViewIfBg(event)">
@@ -376,13 +378,13 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   <div class="evp-body" id="evpBody"></div>
 </div>
 </div>
-
+<!--legend
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#C8E6FF;border:1.5px solid #92C4F0;"></div> Inglese</div>
   <div class="legend-item"><div class="legend-dot" style="background:#E8D5FF;border:1.5px solid #C8A0F0;"></div> Letteratura</div>
   <div class="legend-item"><div class="legend-dot" style="background:#FFE5E3;border:1px solid #F5B8B5;"></div> Cancellata</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--bg2);border:1px dashed var(--border);"></div> Fuori anno scolastico</div>
-</div>
+</div>-->
 
 <div id="calArea"></div>
 
@@ -1751,7 +1753,8 @@ function renderScheduleBody(body) {
   if (!selectedClasses.length) {
     body.innerHTML = '<div class="prog-empty">Seleziona almeno una classe.</div>'; return;
   }
-  // Collect all unique times from patterns of selected classes
+
+  // Collect all unique times across selected classes
   const allTimes = new Set();
   selectedClasses.forEach(cn => {
     const pat = state.patterns[cn]||{};
@@ -1761,51 +1764,112 @@ function renderScheduleBody(body) {
   if (!sortedTimes.length) {
     body.innerHTML = '<div class="prog-empty">Nessun orario configurato. Imposta l\'orario nelle Impostazioni.</div>'; return;
   }
-  const cols = 1 + selectedClasses.length; // time + one col per class
-  const grid = document.createElement('div');
-  grid.className = 'sched-grid';
-  grid.style.gridTemplateColumns = '55px ' + selectedClasses.map(()=>'1fr').join(' ');
 
-  // Header row
-  const th0 = document.createElement('div'); th0.className='sched-cell header'; th0.textContent='Ora'; grid.appendChild(th0);
-  selectedClasses.forEach(cn => {
-    const th = document.createElement('div'); th.className='sched-cell header';
-    const color = (state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD';
-    th.innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;margin-right:5px;vertical-align:middle;"></span>${cn}`;
-    grid.appendChild(th);
-  });
-
-  const DAY_FULL = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+  // Build lookup: lookup[dow][time] = [{cn, subject}]
+  const lookup = {};
   for (let d=0; d<5; d++) {
-    // check if any selected class has a slot this day
-    const hasAny = selectedClasses.some(cn => (state.patterns[cn]||{})[d] && (state.patterns[cn]||{})[d].length > 0);
-    if (!hasAny) continue;
-    // Day separator spanning all cols
-    const dayHdr = document.createElement('div'); dayHdr.className='sched-cell header';
-    dayHdr.style.cssText=`grid-column:1/-1;text-align:left;font-size:0.76rem;padding:6px 10px;background:#EDE5F5;color:var(--grape);border-bottom:1.5px solid var(--border);`;
-    dayHdr.textContent = DAY_FULL[d];
-    grid.appendChild(dayHdr);
-    // time rows for this day
-    const dayTimes = new Set();
-    selectedClasses.forEach(cn => { (((state.patterns[cn]||{})[d])||[]).forEach(s=>dayTimes.add(s.time)); });
-    [...dayTimes].sort().forEach(t => {
-      const tc = document.createElement('div'); tc.className='sched-cell time-col'; tc.textContent=t; grid.appendChild(tc);
-      selectedClasses.forEach(cn => {
-        const cell = document.createElement('div'); cell.className='sched-cell';
-        const slot = ((state.patterns[cn]||{})[d]||[]).find(s=>s.time===t);
-        if (slot && slot.subject && slot.subject !== 'none') {
-          const sub = document.createElement('div'); sub.className='sched-slot';
-          const sc = subjConfig(slot.subject);
-          if (sc) { sub.style.background = sc.pillBg; sub.style.color = sc.pillText; sub.style.border = `1px solid ${sc.border}`; }
-          else { sub.style.background='var(--bg2)'; }
-          sub.textContent = sc ? sc.label : slot.subject;
-          cell.appendChild(sub);
-        }
-        grid.appendChild(cell);
+    lookup[d] = {};
+    sortedTimes.forEach(t => { lookup[d][t] = []; });
+    selectedClasses.forEach(cn => {
+      ((state.patterns[cn]||{})[d]||[]).forEach(s => {
+        if (!lookup[d][s.time]) lookup[d][s.time] = [];
+        lookup[d][s.time].push({ cn, subject: s.subject });
       });
     });
   }
+
+  // Grid: cols = ORA + 5 days
+  const DAY_SHORT = ['LUN','MAR','MER','GIO','VEN'];
+  const grid = document.createElement('div');
+  grid.className = 'sched-grid';
+  grid.style.gridTemplateColumns = '52px repeat(5, 1fr)';
+
+  // Header row: ORA | LUN | MAR | MER | GIO | VEN
+  const hOra = document.createElement('div');
+  hOra.className = 'sched-cell header';
+  hOra.textContent = 'ORA';
+  grid.appendChild(hOra);
+  DAY_SHORT.forEach(d => {
+    const th = document.createElement('div');
+    th.className = 'sched-cell header';
+    th.textContent = d;
+    grid.appendChild(th);
+  });
+
+  // One row per time
+  sortedTimes.forEach(t => {
+    // Time label cell
+    const tc = document.createElement('div');
+    tc.className = 'sched-cell time-col';
+    tc.textContent = t.slice(0,5); // show HH:MM
+    grid.appendChild(tc);
+
+    // 5 day cells
+    for (let d=0; d<5; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'sched-cell';
+      cell.style.padding = '4px';
+      cell.style.verticalAlign = 'middle';
+      const entries = (lookup[d][t]||[]);
+      entries.forEach(({ cn, subject }) => {
+        if (!subject || subject === 'none') return;
+        const sc = subjConfig(subject);
+        const classColor = (state.classColors&&state.classColors[cn]) ? state.classColors[cn] : '#DDD';
+        const slot = document.createElement('div');
+        slot.className = 'sched-slot';
+        // Background = subject color, border = class color
+        const bg   = sc ? sc.pillBg   : '#F3E9D8';
+        const text = sc ? sc.pillText  : '#2C2018';
+        slot.style.cssText = `background:${bg};color:${text};border:2.5px solid ${classColor};
+          border-radius:8px;padding:5px 7px;margin-bottom:3px;font-size:0.8rem;font-weight:700;
+          text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;line-height:1.2;`;
+        // Short class name (e.g. "2A")
+        const shortCn = cn.replace(/[ªº°\s]/g,'');
+        slot.textContent = shortCn;
+        slot.title = `${cn} – ${sc ? sc.label : subject}`;
+        cell.appendChild(slot);
+      });
+      grid.appendChild(cell);
+    }
+  });
+
   body.appendChild(grid);
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;margin-top:1.1rem;padding-top:.9rem;border-top:1px solid var(--border);';
+
+  // Subject legend
+  const subjLegend = document.createElement('div');
+  subjLegend.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+  const sl = document.createElement('div'); sl.style.cssText='font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;'; sl.textContent='Materia (sfondo)'; subjLegend.appendChild(sl);
+  const subjRow = document.createElement('div'); subjRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
+  Object.keys(state.subjects||{}).forEach(k => {
+    const sc = subjConfig(k); if (!sc) return;
+    const item = document.createElement('div'); item.style.cssText='display:flex;align-items:center;gap:5px;font-size:.76rem;';
+    const swatch = document.createElement('span'); swatch.style.cssText=`width:14px;height:14px;border-radius:4px;background:${sc.pillBg};border:1px solid ${sc.border};flex-shrink:0;`;
+    item.appendChild(swatch); item.appendChild(document.createTextNode(sc.label || k));
+    subjRow.appendChild(item);
+  });
+  subjLegend.appendChild(subjRow);
+  legend.appendChild(subjLegend);
+
+  // Class color legend
+  const classLegend = document.createElement('div');
+  classLegend.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+  const cl = document.createElement('div'); cl.style.cssText='font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;'; cl.textContent='Classe (bordo)'; classLegend.appendChild(cl);
+  const classRow = document.createElement('div'); classRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
+  selectedClasses.forEach(cn => {
+    const color = (state.classColors&&state.classColors[cn]) ? state.classColors[cn] : '#DDD';
+    const item = document.createElement('div'); item.style.cssText='display:flex;align-items:center;gap:5px;font-size:.76rem;';
+    const swatch = document.createElement('span'); swatch.style.cssText=`width:14px;height:14px;border-radius:4px;background:transparent;border:2.5px solid ${color};flex-shrink:0;`;
+    item.appendChild(swatch); item.appendChild(document.createTextNode(cn));
+    classRow.appendChild(item);
+  });
+  classLegend.appendChild(classRow);
+  legend.appendChild(classLegend);
+
+  body.appendChild(legend);
 }
 
 // ─── 2. PROGRAMMA SVOLTO ──────────────────────────────
