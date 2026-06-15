@@ -197,21 +197,65 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .modal-badges{display:flex;align-items:center;gap:6px;margin-bottom:.9rem;flex-wrap:wrap;}
 .modal-badges .subj-badge{border-radius:20px;padding:2px 11px;font-size:0.76rem;font-weight:700;}
 .modal-badges .class-badge{background:var(--bg2);border-radius:20px;padding:2px 11px;font-size:0.74rem;font-weight:700;color:var(--muted);}
-/* Subject override row */
-.override-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:9px;
-  padding:8px 11px;margin-bottom:.9rem;}
-.override-row label{font-size:0.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
-.override-row select{border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;
-  font-size:0.82rem;font-family:inherit;background:var(--white);color:var(--text);cursor:pointer;}
-.override-row select:focus{outline:none;border-color:var(--grape);}
-.override-note{font-size:0.71rem;color:var(--muted);font-style:italic;}
+/* Subject badge — inline clickable dropdown */
+.subj-badge-wrap{position:relative;display:inline-flex;align-items:center;gap:0;cursor:pointer;}
+.subj-badge-btn{border-radius:20px 0 0 20px;padding:3px 10px 3px 11px;font-size:0.76rem;
+  font-weight:700;border:none;cursor:pointer;transition:filter .12s;line-height:1.5;}
+.subj-badge-btn:hover{filter:brightness(.93);}
+.subj-badge-arrow{border-radius:0 20px 20px 0;padding:3px 8px 3px 4px;font-size:0.7rem;
+  border:none;cursor:pointer;transition:filter .12s;line-height:1.5;border-left:1px solid rgba(0,0,0,.12);}
+.subj-badge-arrow:hover{filter:brightness(.9);}
+.subj-badge-dropdown{position:absolute;top:calc(100% + 5px);left:0;background:var(--white);
+  border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 18px var(--shadow);
+  z-index:600;min-width:160px;overflow:hidden;display:none;}
+.subj-badge-dropdown.open{display:block;}
+.subj-dropdown-item{padding:8px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:background .12s;}
+.subj-dropdown-item:hover{background:var(--bg2);}
+.subj-dropdown-item.active{background:var(--bg2);}
+.subj-dropdown-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.subj-dropdown-default{font-style:italic;color:var(--muted);font-weight:500;}
 .prev-hw-box{background:var(--bg2);border-radius:9px;padding:9px 11px;font-size:0.78rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5;}
 .prev-hw-box strong{color:var(--grape);font-size:0.73rem;}
 .modal-field{margin-bottom:.9rem;}
 .modal-field label{display:block;font-size:0.77rem;font-weight:700;color:var(--muted);margin-bottom:4px;}
-.modal-field textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:7px 9px;
-  font-size:0.84rem;font-family:inherit;background:var(--bg);color:var(--text);resize:vertical;transition:border-color .14s;}
+/* Shared textarea style for all modal fields */
+.modal-field textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;
+  padding:7px 9px;font-size:0.84rem;font-family:inherit;background:var(--bg);
+  color:var(--text);resize:vertical;transition:border-color .14s;min-height:44px;
+  line-height:1.5;display:block;}
 .modal-field textarea:focus{outline:none;border-color:var(--grape);}
+
+/* fLesson: title + divider + body */
+#fLesson{width:100%;border:1.5px solid var(--border);border-radius:9px;
+  background:var(--bg);transition:border-color .14s;padding:0;display:block;}
+.flesson-title{width:100%;border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:0.86rem;font-weight:700;color:var(--text);
+  padding:7px 9px 6px;resize:none;min-height:36px;line-height:1.4;display:block;}
+.flesson-divider{border:none;border-top:1.5px solid var(--cream);margin:0 9px;display:block;}
+.flesson-body{width:100%;border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:0.84rem;color:var(--text);
+  padding:6px 9px 8px;resize:vertical;min-height:60px;line-height:1.5;display:block;}
+
+/* Material checklist */
+.mat-checklist{width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:9px;padding:5px 0;transition:border-color .14s;min-height:44px;}
+.mat-checklist:focus-within{border-color:var(--grape);}
+.mat-check-item{display:flex;align-items:center;gap:8px;padding:5px 9px;
+  border-bottom:1px solid rgba(221,208,192,.4);}
+.mat-check-item:last-of-type{border-bottom:none;}
+.mat-check-item input[type=checkbox]{width:15px;height:15px;flex-shrink:0;
+  accent-color:var(--grape);cursor:pointer;margin:0;}
+.mat-check-item input[type=text]{flex:1;border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:0.84rem;color:var(--text);padding:2px 0;line-height:1.4;}
+.mat-check-item input[type=text].checked-item{text-decoration:line-through;color:var(--muted);}
+.mat-check-item .rm-mat-btn{background:none;border:none;color:var(--border);
+  cursor:pointer;font-size:1rem;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s;}
+.mat-check-item .rm-mat-btn:hover{color:var(--coral);}
+.mat-add-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;
+  font-size:0.78rem;color:var(--muted);cursor:pointer;background:none;border:none;
+  font-family:inherit;transition:color .12s;width:100%;}
+.mat-add-btn:hover{color:var(--grape);}
 .modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:.9rem;flex-wrap:wrap;}
 .btn-save{background:var(--grape);color:#fff;border:none;border-radius:9px;padding:7px 20px;font-size:0.86rem;font-weight:700;cursor:pointer;}
 .btn-save:hover{background:var(--blue);}
@@ -293,8 +337,13 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 #extraViewPanel{background:var(--white);border-radius:18px;width:min(820px,97vw);
   max-height:88vh;overflow-y:auto;box-shadow:0 10px 50px rgba(0,0,0,.22);
   display:flex;flex-direction:column;}
-.evp-header{background:var(--mauve);color:#fff;padding:1rem 1.4rem;border-radius:18px 18px 0 0;
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.evp-header{color:#fff;padding:1rem 1.4rem;border-radius:18px 18px 0 0;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--evp-color, var(--mauve));}
+/* Per-panel accent colors */
+.evp-header[data-panel="schedule"] { background: var(--lime); }
+.evp-header[data-panel="lessons"]  { background: var(--mauve); }
+.evp-header[data-panel="materials"]{ background: var(--salmon); }
 .evp-header h2{font-size:1.05rem;font-weight:700;flex:1;margin:0;}
 .evp-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;
   padding:5px 14px;font-size:0.86rem;cursor:pointer;font-weight:600;}
@@ -449,18 +498,13 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   <h2 id="modalTitle"></h2>
   <div class="modal-date" id="modalDate"></div>
   <div class="modal-badges">
-    <span id="modalBadge" class="subj-badge"></span>
+    <!-- inline subject badge with dropdown -->
+    <div class="subj-badge-wrap" id="subjBadgeWrap">
+      <button class="subj-badge-btn" id="modalBadgeBtn" onclick="toggleSubjDropdown(event)"></button>
+      <button class="subj-badge-arrow" id="modalBadgeArrow" onclick="toggleSubjDropdown(event)">▾</button>
+      <div class="subj-badge-dropdown" id="subjDropdown"></div>
+    </div>
     <span id="modalClassBadge" class="class-badge"></span>
-  </div>
-  <!-- Subject override -->
-  <div class="override-row">
-    <label>📌 Materia effettiva</label>
-    <select id="fSubjectOverride">
-      <option value="">— segui pattern —</option>
-      <option value="english">🇬🇧 Inglese</option>
-      <option value="lit">📚 Letteratura</option>
-    </select>
-    <span class="override-note">modifica solo questa lezione</span>
   </div>
   <div class="prev-hw-box" id="prevHwBox" style="display:none">
     <strong>📋 Compiti assegnati la volta precedente:</strong><br>
@@ -468,19 +512,33 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   </div>
   <div class="modal-field">
     <label>📖 Lezione / Attività</label>
-    <textarea id="fLesson" rows="3" placeholder="Es: Present perfect – introduzione, es. libro pag. 45…"></textarea>
+    <div id="fLesson" style="border:1.5px solid var(--border);border-radius:9px;background:var(--bg);transition:border-color .14s;" onclick="this.style.borderColor='var(--grape)'" onblur="this.style.borderColor='var(--border)'">
+      <textarea id="fLessonTitle" class="flesson-title" rows="1"
+        placeholder="Titolo lezione (opzionale)"
+        oninput="autoResizeTA(this)"
+        onfocus="document.getElementById('fLesson').style.borderColor='var(--grape)'"
+        onblur="document.getElementById('fLesson').style.borderColor='var(--border)'"
+      ></textarea>
+      <span class="flesson-divider"></span>
+      <textarea id="fLessonBody" class="flesson-body" rows="3"
+        placeholder="Descrizione, attività, pagine del libro…"
+        oninput="autoResizeTA(this)"
+        onfocus="document.getElementById('fLesson').style.borderColor='var(--grape)'"
+        onblur="document.getElementById('fLesson').style.borderColor='var(--border)'"
+      ></textarea>
+    </div>
   </div>
   <div class="modal-field">
     <label>🎒 Materiale necessario</label>
-    <textarea id="fMaterial" rows="2" placeholder="Es: Libro, fotocopie, LIM, audio traccia 3.2…"></textarea>
+    <div class="mat-checklist" id="matChecklist"></div>
   </div>
   <div class="modal-field">
     <label>✏️ Compiti per la prossima volta</label>
-    <textarea id="fHomework" rows="2" placeholder="Es: Esercizi 1–4 pag. 48, imparare vocaboli…"></textarea>
+    <textarea id="fHomework" rows="2" placeholder="Es: Esercizi 1–4 pag. 48, imparare vocaboli…" oninput="autoResizeTA(this)"></textarea>
   </div>
   <div class="modal-field">
     <label>📝 Note extra</label>
-    <textarea id="fNotes" rows="1" placeholder="Verifiche, comunicazioni…"></textarea>
+    <textarea id="fNotes" rows="1" placeholder="Verifiche, comunicazioni…" oninput="autoResizeTA(this)"></textarea>
   </div>
   <div class="modal-actions">
     <button class="btn-clear"         onclick="clearSlot()">🗑 Svuota</button>
@@ -1304,14 +1362,11 @@ function openModal(key, date, patternSubj, time, status, className) {
   document.getElementById('modalTitle').textContent=`${time} – ${modalClass}`;
   document.getElementById('modalDate').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
 
-  // Badges
-  const badge=document.getElementById('modalBadge');
-  badge.textContent=subjLabel(currSubj);
-  const sb = subjConfig(currSubj);
-  if (sb) { badge.style.background = sb.pillBg; badge.style.color = sb.pillText; } else {
-    badge.style.background=currSubj==='english'?'#C8E6FF':'#E8D5FF';
-    badge.style.color=currSubj==='english'?'#0D3D6E':'#42286A';
-  }
+  // ── Subject badge + dropdown ──
+  _modalPatternSubj = patternSubj;   // store for dropdown usage
+  _currentOverride = data.subjectOverride||null;
+  _rebuildSubjBadge(currSubj);
+
   const classBadge=document.getElementById('modalClassBadge');
   classBadge.textContent=modalClass;
   if (state.classColors && state.classColors[modalClass]) {
@@ -1319,38 +1374,32 @@ function openModal(key, date, patternSubj, time, status, className) {
     classBadge.style.color = '#222';
   } else { classBadge.style.background=''; classBadge.style.color=''; }
 
-  // Subject override selector
-  const sel=document.getElementById('fSubjectOverride');
-  // rebuild options from state.subjects
-  sel.innerHTML='';
-  const optDef = document.createElement('option'); optDef.value=''; optDef.textContent='— segui pattern —'; sel.appendChild(optDef);
-  Object.keys(state.subjects||{}).forEach(k=>{
-    const o = document.createElement('option'); o.value=k; o.textContent = state.subjects[k].label || k; sel.appendChild(o);
-  });
-  sel.value = data.subjectOverride||'';
-  sel.onchange = ()=>{
-    const chosen = sel.value || patternSubj;
-    badge.textContent = subjLabel(chosen);
-    const conf = subjConfig(chosen);
-    if (conf) {
-      badge.style.background = conf.pillBg || (conf.color||'#C8E6FF');
-      badge.style.color = conf.pillText || '#222';
-    } else {
-      badge.style.background = chosen==='english'?'#C8E6FF':'#E8D5FF';
-      badge.style.color = chosen==='english'?'#0D3D6E':'#42286A';
-    }
-  };
-
   // Prev homework
   if (prev&&prev.homework) {
     document.getElementById('prevHwBox').style.display='block';
     document.getElementById('prevHwText').textContent=prev.homework;
   } else document.getElementById('prevHwBox').style.display='none';
 
-  document.getElementById('fLesson').value=data.lesson||'';
-  document.getElementById('fMaterial').value=data.material||'';
+  // Split lesson: title is first line, rest is body
+  const fullLesson = data.lesson||'';
+  const nlIdx = fullLesson.indexOf('\n');
+  if (nlIdx !== -1) {
+    document.getElementById('fLessonTitle').value = fullLesson.slice(0, nlIdx);
+    document.getElementById('fLessonBody').value  = fullLesson.slice(nlIdx+1);
+  } else {
+    document.getElementById('fLessonTitle').value = '';
+    document.getElementById('fLessonBody').value  = fullLesson;
+  }
+  autoResizeTA(document.getElementById('fLessonTitle'));
+  autoResizeTA(document.getElementById('fLessonBody'));
+
+  // Material checklist
+  matBuildChecklist(matDeserialize(data.material||''));
+
   document.getElementById('fHomework').value=data.homework||'';
+  autoResizeTA(document.getElementById('fHomework'));
   document.getElementById('fNotes').value=data.notes||'';
+  autoResizeTA(document.getElementById('fNotes'));
 
   const cancelBtn=document.getElementById('cancelLessonBtn');
   cancelBtn.textContent=canc?'🔄 Gestisci cancellazione':'🚫 Cancella lezione';
@@ -1365,13 +1414,15 @@ function closeModal(e) {
 function saveSlot() {
   if (!modalKey) return;
   if (!state.lessons[modalClass]) state.lessons[modalClass]={};
-  const override=document.getElementById('fSubjectOverride').value;
+  const title = (document.getElementById('fLessonTitle').value||'').trim();
+  const body  = (document.getElementById('fLessonBody').value||'').trim();
+  const lesson = title ? (body ? title+'\n'+body : title) : body;
   state.lessons[modalClass][modalKey] = {
-    lesson:   document.getElementById('fLesson').value.trim(),
-    material: document.getElementById('fMaterial').value.trim(),
+    lesson,
+    material: matSerialize(),
     homework: document.getElementById('fHomework').value.trim(),
     notes:    document.getElementById('fNotes').value.trim(),
-    subjectOverride: override||null,
+    subjectOverride: _currentOverride||null,
   };
   persist(); closeModal(); render();
 }
@@ -1741,8 +1792,8 @@ function openExtraView(title, renderControls, renderBody) {
 // ─── 1. ORARIO SETTIMANALE ─────────────────────────────
 function showScheduleView() {
   activateSecondaryNavBtn('navSchedule');
-  // build controls once, then reuse panel body on change
   openExtraView('📅 Orario Settimanale', (ctrl) => {
+    setEvpPanel('schedule');
     ctrl.innerHTML = '';
     // class filter: checkboxes
     const lbl = document.createElement('label'); lbl.textContent = 'Classi:'; ctrl.appendChild(lbl);
@@ -1893,7 +1944,7 @@ function renderScheduleBody(body) {
 function showLessonsView() {
   activateSecondaryNavBtn('navLessons');
   openExtraView('📖 Programma Svolto', (ctrl) => {
-    ctrl.innerHTML = '';
+    setEvpPanel('lessons');
     // Class selector
     const lblC = document.createElement('label'); lblC.textContent='Classe:'; ctrl.appendChild(lblC);
     const selC = document.createElement('select'); selC.id='prog-sel-class';
@@ -1966,7 +2017,7 @@ function renderProgrammaBody(body) {
     card.innerHTML = `
       <div class="pl-date">${i+1}. ${dateStr} – ${e.time}</div>
       ${e.data.lesson ? `<div class="pl-lesson">📖 ${e.data.lesson}</div>` : ''}
-      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${e.data.material}</div>` : ''}
+      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${matPlainText(e.data.material)||e.data.material}</div>` : ''}
       ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
       ${e.data.notes ? `<div class="pl-notes">📝 ${e.data.notes}</div>` : ''}
     `;
@@ -1978,7 +2029,7 @@ function renderProgrammaBody(body) {
 function showMaterialsView() {
   activateSecondaryNavBtn('navMaterials');
   openExtraView('🎒 Materiali del Giorno', (ctrl) => {
-    ctrl.innerHTML = '';
+    setEvpPanel('materials');
     const lbl = document.createElement('label'); lbl.textContent = 'Data:'; ctrl.appendChild(lbl);
     const inp = document.createElement('input'); inp.type='date'; inp.id='mat-date-inp';
     inp.value = fmtDate(new Date()); // default oggi
@@ -2035,6 +2086,10 @@ function renderMaterialsBody(body) {
     row.style.borderLeftColor = color;
     const sc = subjConfig(item.subject);
     const subjLbl = sc ? sc.label : item.subject;
+    const parsedMat = matDeserialize(item.material);
+    const matHtml = parsedMat.length
+      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.9rem;">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span></span>`).join('')
+      : `<span>${item.material}</span>`;
     row.innerHTML = `
       <div class="mi-label">
         <span style="display:flex;align-items:center;gap:4px;">
@@ -2043,7 +2098,7 @@ function renderMaterialsBody(body) {
         </span>
         <span style="font-weight:500;color:var(--muted);font-size:.7rem;">${subjLbl} ${item.time}</span>
       </div>
-      <div class="mi-text">🎒 ${item.material}</div>
+      <div class="mi-text">🎒 ${matHtml}</div>
     `;
     body.appendChild(row);
   });
@@ -2059,6 +2114,156 @@ function showToast(msg) {
   t.style.opacity = '1';
   clearTimeout(t._tid);
   t._tid = setTimeout(()=>{ t.style.opacity='0'; }, 2800);
+}
+
+// ══════════════════════════════════════════════════════
+//  SUBJECT BADGE — inline dropdown
+// ══════════════════════════════════════════════════════
+let _currentOverride = null;   // tracks currently selected override
+let _modalPatternSubj = 'none';
+
+function _rebuildSubjBadge(chosenSubj) {
+  const btn   = document.getElementById('modalBadgeBtn');
+  const arrow = document.getElementById('modalBadgeArrow');
+  const sc = subjConfig(chosenSubj);
+  const bg   = sc ? sc.pillBg   : (chosenSubj==='english'?'#C8E6FF':'#E8D5FF');
+  const text = sc ? sc.pillText : (chosenSubj==='english'?'#0D3D6E':'#42286A');
+  btn.textContent   = subjLabel(chosenSubj);
+  btn.style.background  = bg;
+  btn.style.color       = text;
+  arrow.style.background = bg;
+  arrow.style.color      = text;
+  // rebuild dropdown items
+  const dd = document.getElementById('subjDropdown');
+  dd.innerHTML = '';
+  // "segui pattern" option
+  const defItem = document.createElement('div');
+  defItem.className = 'subj-dropdown-item subj-dropdown-default'+(!_currentOverride?' active':'');
+  defItem.innerHTML = `<span class="subj-dropdown-swatch" style="background:var(--border)"></span>— segui pattern`;
+  defItem.onclick = (e) => { e.stopPropagation(); _currentOverride=null; _rebuildSubjBadge(_modalPatternSubj); _updatePrevHw(_modalPatternSubj); closeSubjDropdown(); };
+  dd.appendChild(defItem);
+  Object.keys(state.subjects||{}).forEach(k => {
+    const s = state.subjects[k];
+    const item = document.createElement('div');
+    item.className = 'subj-dropdown-item'+((_currentOverride===k)?' active':'');
+    item.innerHTML = `<span class="subj-dropdown-swatch" style="background:${s.pillBg||'#eee'}"></span>${s.label||k}`;
+    item.onclick = (e) => { e.stopPropagation(); _currentOverride=k; _rebuildSubjBadge(k); _updatePrevHw(k); closeSubjDropdown(); };
+    dd.appendChild(item);
+  });
+}
+function _updatePrevHw(subj) {
+  if (!modalKey) return;
+  const dateStr = modalKey.split('-').slice(0,3).join('-');
+  const date = parseDate(dateStr);
+  const prev = prevLessonData(date, subj, modalClass);
+  if (prev&&prev.homework) {
+    document.getElementById('prevHwBox').style.display='block';
+    document.getElementById('prevHwText').textContent=prev.homework;
+  } else document.getElementById('prevHwBox').style.display='none';
+}
+function toggleSubjDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('subjDropdown');
+  dd.classList.toggle('open');
+}
+function closeSubjDropdown() {
+  const dd = document.getElementById('subjDropdown');
+  if (dd) dd.classList.remove('open');
+}
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#subjBadgeWrap')) closeSubjDropdown();
+});
+
+// ══════════════════════════════════════════════════════
+//  AUTO-RESIZE TEXTAREAS
+// ══════════════════════════════════════════════════════
+function autoResizeTA(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ══════════════════════════════════════════════════════
+//  MATERIAL CHECKLIST
+// ══════════════════════════════════════════════════════
+// Material stored as "text||checked" lines separated by \n
+// e.g. "Libro||true\nFotocopie||false\nLIM||false"
+function matSerialize() {
+  const items = document.querySelectorAll('#matChecklist .mat-check-item');
+  return [...items].map(row => {
+    const chk = row.querySelector('input[type=checkbox]');
+    const txt = row.querySelector('input[type=text]');
+    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false');
+  }).filter(s => s.replace('||false','').replace('||true','').trim()).join('\n');
+}
+function matDeserialize(raw) {
+  if (!raw) return [];
+  return raw.split('\n').map(line => {
+    const idx = line.lastIndexOf('||');
+    if (idx === -1) return { text: line, checked: false };
+    return { text: line.slice(0, idx), checked: line.slice(idx+2) === 'true' };
+  }).filter(i => i.text.trim());
+}
+function matBuildChecklist(items) {
+  const box = document.getElementById('matChecklist');
+  box.innerHTML = '';
+  (items.length ? items : []).forEach((item, i) => matAddRow(box, item.text, item.checked));
+  matAddAddButton(box);
+}
+function matAddRow(box, text='', checked=false) {
+  // insert before the add-button if present
+  const addBtn = box.querySelector('.mat-add-btn');
+  const row = document.createElement('div');
+  row.className = 'mat-check-item';
+  const chk = document.createElement('input'); chk.type='checkbox'; chk.checked=checked;
+  const inp = document.createElement('input'); inp.type='text'; inp.value=text;
+  inp.placeholder='Aggiungi voce…';
+  if (checked) inp.classList.add('checked-item');
+  chk.onchange = () => {
+    inp.classList.toggle('checked-item', chk.checked);
+  };
+  // Enter key → new row
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); matAddRow(box, '', false); }
+    if (e.key === 'Backspace' && inp.value === '') {
+      e.preventDefault();
+      const prev = row.previousElementSibling;
+      row.remove();
+      if (prev && prev.classList.contains('mat-check-item')) {
+        const pi = prev.querySelector('input[type=text]'); if (pi) pi.focus();
+      }
+    }
+  });
+  const rm = document.createElement('button'); rm.className='rm-mat-btn'; rm.textContent='✕';
+  rm.onclick = () => { row.remove(); if (!box.querySelector('.mat-check-item')) matAddRow(box,'',false); };
+  row.appendChild(chk); row.appendChild(inp); row.appendChild(rm);
+  if (addBtn) box.insertBefore(row, addBtn); else box.appendChild(row);
+  inp.focus();
+  return row;
+}
+function matAddAddButton(box) {
+  const btn = document.createElement('button'); btn.className='mat-add-btn';
+  btn.textContent = 'Aggiungi voce'; btn.type='button';
+  btn.onclick = (e) => { e.preventDefault(); matAddRow(box,'',false); };
+  box.appendChild(btn);
+}
+// Convert stored material string to plain readable text for display
+function matDisplayText(raw) {
+  if (!raw) return '';
+  return matDeserialize(raw).map(i => (i.checked?'☑':'☐')+' '+i.text).join('\n');
+}
+function matPlainText(raw) {
+  // just the text items, no checkboxes, for compact display
+  if (!raw) return '';
+  return matDeserialize(raw).map(i=>i.text).filter(Boolean).join(', ');
+}
+
+// ══════════════════════════════════════════════════════
+//  EVP PANEL COLOR HELPER
+// ══════════════════════════════════════════════════════
+function setEvpPanel(panelKey) {
+  const hdr = document.querySelector('.evp-header');
+  if (hdr) hdr.setAttribute('data-panel', panelKey);
 }
 
 // ══════════════════════════════════════════════════════
