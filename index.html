@@ -83,8 +83,10 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .month-day.cancelled-day{background:#FFF0EF;}
 .month-day-num{font-size:0.76rem;font-weight:700;color:var(--muted);margin-bottom:3px;}
 .month-day.today-cell .month-day-num{color:var(--coral);}
+.slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
+  cursor:pointer;height:100%;min-height:58px;display:flex;flex-direction:column;gap:2px;}
 .slot-pill{border-radius:7px;padding:2px 5px 3px;font-size:0.66rem;font-weight:600;
-  margin-bottom:2px;cursor:pointer;line-height:1.3;}
+  margin-bottom:2px;cursor:pointer;line-height:1.3;position:relative;}
 .slot-pill .hw-hint{font-size:0.6rem;font-weight:400;margin-top:1px;opacity:.85;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cancelled-pill{background:#FFE5E3;color:#B03030;border:1px solid #F5B8B5;font-style:italic;}
@@ -128,6 +130,16 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .slot-card .sc-empty{font-size:0.7rem;font-weight:400;opacity:.55;font-style:italic;}
 .slot-card.cancelled-card{background:#FFE5E3;color:#8B2020;border:1.5px solid #F5B8B5;}
 .slot-card.cancelled-card .sc-title{text-decoration:line-through;opacity:.7;}
+
+/* CLASS ACCENT: colored left border on lesson cards/pills */
+.slot-card.class-accent{border-left:4px solid var(--class-accent,#DDD) !important;border-radius:0 9px 9px 0;padding-left:10px;}
+.slot-pill.class-accent{border-left:4px solid var(--class-accent,#DDD) !important;border-radius:0 7px 7px 0;padding-left:8px;}
+.class-swatch{width:13px;height:13px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(0,0,0,0.12);display:inline-block;vertical-align:middle;margin-right:6px;box-shadow:0 1px 4px rgba(0,0,0,0.13);}
+/* Color circle picker trigger */
+.color-circle-wrap{position:relative;width:28px;height:28px;flex-shrink:0;cursor:pointer;}
+.color-circle{width:28px;height:28px;border-radius:50%;border:2.5px solid rgba(0,0,0,0.10);box-shadow:0 2px 7px rgba(0,0,0,0.16);cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.color-circle:hover{transform:scale(1.12);box-shadow:0 3px 12px rgba(0,0,0,0.22);}
+.color-circle-wrap input[type=color]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
 
 /* SUBJECT COLORS */
 .subj-english{background:#E8F4FF;color:#1A5490;border:1.5px solid #92C4F0;}
@@ -259,6 +271,67 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   background:var(--text);color:#fff;border-radius:12px;padding:9px 20px;
   font-size:.84rem;font-weight:600;z-index:600;pointer-events:none;
   opacity:0;transition:opacity .25s;white-space:nowrap;}
+
+/* SECONDARY NAV BAR */
+#secondaryNav{background:#DA9CFF;;padding:0.55rem 1.4rem;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:58px;z-index:99;
+  box-shadow:0 2px 12px rgba(116,79,135,.18);}
+#secondaryNav .snav-label{font-size:0.72rem;font-weight:700;color:#FDECEA;text-transform:uppercase;
+  letter-spacing:0.08em;margin-right:4px;flex-shrink:0;}
+.sec-nav-btn{background:rgba(255,255,255,0.07);color:#fff;border:1.5px solid rgba(255,255,255,0.14);
+  border-radius:9px;padding:6px 16px;font-size:0.82rem;font-weight:600;cursor:pointer;
+  transition:all .18s;flex-shrink:0;letter-spacing:0.01em;}
+.sec-nav-btn:hover{background:rgba(116,79,135,.45);border-color:var(--mauve);color:#fff;
+  box-shadow:0 3px 10px rgba(116,79,135,.30);}
+.sec-nav-btn.active{background:var(--grape);border-color:var(--mauve);color:#fff;
+  box-shadow:0 2px 10px rgba(116,79,135,.40);}
+
+/* EXTRA VIEW OVERLAY (orario / programma / materiali) */
+#extraViewOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.48);
+  z-index:250;align-items:flex-start;justify-content:center;padding-top:1rem;overflow-y:auto;}
+#extraViewOverlay.open{display:flex;}
+#extraViewPanel{background:var(--white);border-radius:18px;width:min(820px,97vw);
+  max-height:88vh;overflow-y:auto;box-shadow:0 10px 50px rgba(0,0,0,.22);
+  display:flex;flex-direction:column;}
+.evp-header{background:var(--grape);color:#fff;padding:1rem 1.4rem;border-radius:18px 18px 0 0;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.evp-header h2{font-size:1.05rem;font-weight:700;flex:1;margin:0;}
+.evp-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;
+  padding:5px 14px;font-size:0.86rem;cursor:pointer;font-weight:600;}
+.evp-close:hover{background:rgba(255,255,255,.35);}
+.evp-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:0.9rem 1.4rem;
+  border-bottom:1px solid var(--border);background:var(--bg2);}
+.evp-controls label{font-size:0.78rem;font-weight:700;color:var(--muted);}
+.evp-controls select,.evp-controls input[type=date]{
+  border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;
+  font-size:0.82rem;font-family:inherit;background:var(--white);color:var(--text);cursor:pointer;}
+.evp-controls select:focus,.evp-controls input[type=date]:focus{outline:none;border-color:var(--grape);}
+.evp-body{padding:1.2rem 1.4rem 1.6rem;flex:1;}
+/* Orario settimanale */
+.sched-grid{display:grid;gap:0;border:1.5px solid var(--border);border-radius:13px;overflow:hidden;}
+.sched-cell{background:var(--white);padding:8px 10px;border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);font-size:0.78rem;}
+.sched-cell.header{background:var(--bg2);font-weight:700;color:var(--muted);text-align:center;font-size:0.72rem;}
+.sched-cell.time-col{background:var(--bg2);font-weight:700;color:var(--muted);font-size:0.7rem;text-align:right;padding-right:8px;}
+.sched-slot{border-radius:7px;padding:4px 8px;margin-bottom:4px;font-size:0.74rem;font-weight:600;line-height:1.35;}
+/* Programma svolto */
+.prog-lesson{background:var(--bg2);border-radius:11px;border-left:4px solid var(--grape);
+  padding:10px 14px;margin-bottom:10px;}
+.prog-lesson .pl-date{font-size:0.72rem;font-weight:700;color:var(--muted);margin-bottom:4px;}
+.prog-lesson .pl-lesson{font-size:0.84rem;color:var(--text);margin-bottom:4px;font-weight:600;}
+.prog-lesson .pl-hw{font-size:0.76rem;color:var(--blue);margin-top:4px;}
+.prog-lesson .pl-mat{font-size:0.74rem;color:var(--green);margin-top:3px;}
+.prog-lesson .pl-notes{font-size:0.73rem;color:var(--muted);margin-top:3px;font-style:italic;}
+.prog-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
+/* Materiali */
+.mat-day-section{margin-bottom:1.2rem;}
+.mat-day-header{font-size:0.82rem;font-weight:700;color:var(--grape);margin-bottom:8px;
+  display:flex;align-items:center;gap:8px;}
+.mat-item{background:var(--bg2);border-radius:9px;padding:9px 12px;margin-bottom:6px;
+  display:flex;gap:10px;align-items:flex-start;border-left:4px solid var(--border);}
+.mat-item .mi-label{font-size:0.73rem;font-weight:700;color:var(--muted);min-width:80px;flex-shrink:0;}
+.mat-item .mi-text{font-size:0.82rem;color:var(--text);}
+.mat-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
 </style>
 </head>
 <body>
@@ -284,6 +357,26 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 
 <div id="classBar"><span>Classe:</span><div id="classPills"></div></div>
 
+<!-- SECONDARY NAV BAR -->
+<div id="secondaryNav">
+  <span class="snav-label">📚 Viste rapide:</span>
+  <button class="sec-nav-btn" id="navSchedule" onclick="showScheduleView()">📅 Orario Settimanale</button>
+  <button class="sec-nav-btn" id="navLessons" onclick="showLessonsView()">📖 Programma Svolto</button>
+  <button class="sec-nav-btn" id="navMaterials" onclick="showMaterialsView()">🎒 Materiali del Giorno</button>
+</div>
+
+<!-- EXTRA VIEW OVERLAY -->
+<div id="extraViewOverlay" onclick="closeExtraViewIfBg(event)">
+<div id="extraViewPanel">
+  <div class="evp-header">
+    <h2 id="evpTitle"></h2>
+    <button class="evp-close" onclick="closeExtraView()">✕ Chiudi</button>
+  </div>
+  <div class="evp-controls" id="evpControls"></div>
+  <div class="evp-body" id="evpBody"></div>
+</div>
+</div>
+
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#C8E6FF;border:1.5px solid #92C4F0;"></div> Inglese</div>
   <div class="legend-item"><div class="legend-dot" style="background:#E8D5FF;border:1.5px solid #C8A0F0;"></div> Letteratura</div>
@@ -308,6 +401,14 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <div class="class-add-row">
       <input type="text" id="sNewClass" placeholder="Es: 2ª B" maxlength="20">
       <button onclick="addClassFromInput()">+ Aggiungi</button>
+    </div>
+  </div>
+  <div class="s-section">
+    <h3>Materie</h3>
+    <div class="class-list" id="sSubjectList"></div>
+    <div class="class-add-row">
+      <input type="text" id="sNewSubject" placeholder="Es: Scienze" maxlength="30">
+      <button onclick="addSubjectFromInput()">+ Aggiungi</button>
     </div>
   </div>
   <div class="s-section">
@@ -579,6 +680,15 @@ const DEFAULT_STATE = {
     '2ª B': {1:[{subject:'english',time:'08:00'}],3:[{subject:'lit',time:'10:00'}],4:[{subject:'english',time:'09:00'}]},
     '3ª C': {0:[{subject:'lit',time:'11:00'}],2:[{subject:'english',time:'08:00'}],4:[{subject:'english',time:'09:00'}]},
   },
+  classColors: {
+    '1ª A': '#FF9B85',
+    '2ª B': '#DA9CFF',
+    '3ª C': '#49ACEF'
+  },
+  subjects: {
+    'english': { label: '🇬🇧 Inglese', pillBg: '#C8E6FF', pillText: '#0D3D6E', border: '#92C4F0' },
+    'lit':     { label: '📚 Letteratura', pillBg: '#E8D5FF', pillText: '#42286A', border: '#C8A0F0' }
+  },
   lessons:   {},   // [className][slotKey] = {lesson,material,homework,notes,subjectOverride}
   cancelled: {},   // [className][slotKey] = {reason,mode}
 };
@@ -630,14 +740,40 @@ function isMonthInSchoolYear(year, month) {
 let view = 'year';
 let cursor = new Date();
 let activeClass = state.classes[0] || '';
-let modalKey = null, modalSubject = 'none', modalPatternSubject = 'none';
+let modalKey = null, modalSubject = 'none', modalPatternSubject = 'none', modalClass = null;
 
 // ══════════════════════════════════════════════════════
 //  SUBJECT HELPERS
 // ══════════════════════════════════════════════════════
-function subjClass(s)     { return s==='english'?'subj-english':s==='lit'?'subj-lit':'subj-none'; }
-function subjPillClass(s) { return s==='english'?'pill-english':s==='lit'?'pill-lit':''; }
-function subjLabel(s)     { return s==='english'?'🇬🇧 Inglese':s==='lit'?'📚 Letteratura':'–'; }
+function hexToRgb(hex) {
+  if (!hex) return [200,200,200];
+  const h = hex.replace('#','');
+  const bigint = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h,16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return [r,g,b];
+}
+function fadeHex(hex, a) { const [r,g,b]=hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+
+function subjConfig(key) {
+  if (!state.subjects) return null;
+  return state.subjects[key] || null;
+}
+function subjLabel(s) {
+  const c = subjConfig(s);
+  return c ? c.label : '–';
+}
+function subjPillStyle(s, planned) {
+  const c = subjConfig(s) || {};
+  const bg = c.pillBg || (c.color||'#EEE');
+  const text = c.pillText || '#222';
+  const border = c.border || (c.pillBg || bg);
+  if (planned) {
+    return `background:${fadeHex(bg,0.32)};color:${fadeHex(text,0.6)};border:1.5px solid ${fadeHex(border,0.35)};`;
+  }
+  return `background:${bg};color:${text};border:1.5px solid ${border};`;
+}
 
 // Effective subject: override beats pattern
 function effectiveSubject(slotKey, patternSubject, className) {
@@ -685,11 +821,20 @@ function prevLessonData(date, subjectToMatch, className) {
 window.buildClassBar = function() {
   const container = document.getElementById('classPills');
   container.innerHTML = '';
-  if (!state.classes.includes(activeClass) && state.classes.length>0) activeClass = state.classes[0];
+  if (activeClass !== '__all__' && !state.classes.includes(activeClass) && state.classes.length>0) activeClass = state.classes[0];
+
+  // 'All classes' pill
+  const allBtn = document.createElement('button');
+  allBtn.className = 'class-pill'+(activeClass==='__all__'?' active':'');
+  allBtn.textContent = 'Tutte';
+  allBtn.onclick = ()=>{ activeClass='__all__'; buildClassBar(); render(); };
+  container.appendChild(allBtn);
+
   state.classes.forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'class-pill'+(c===activeClass?' active':'');
-    btn.textContent = c;
+    const color = (state.classColors && state.classColors[c]) ? state.classColors[c] : '#DDD';
+    btn.innerHTML = `<span class="class-swatch" style="background:${color}"></span>${c}`;
     btn.onclick = () => { activeClass=c; buildClassBar(); render(); };
     container.appendChild(btn);
   });
@@ -759,20 +904,51 @@ function buildMiniMonth(year, month) {
   for (let d=1;d<=dim;d++) {
     const date=new Date(year,month,d);
     const inSY=isInSchoolYear(date);
-    const slots=inSY?slotsOnDay(date,activeClass):[];
-    const hasCancelled=slots.some(s=>canc[s.slotKey]);
-    const cell=document.createElement('div');
-    cell.className='mini-day'+(isToday(date)?' today-cell':hasCancelled?' cancelled-cell':!inSY?' no-school':'');
-    cell.textContent=d;
-    slots.filter(s=>!canc[s.slotKey]).forEach(s=>{
-      const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
-      const dot=document.createElement('div'); dot.className='mini-day-dot';
-      dot.style.background=eff==='english'?'#5AAAE0':'#A870E0';
-      cell.appendChild(dot);
-    });
-    const cd=new Date(date);
-    if (inSY) cell.onclick=(e)=>{e.stopPropagation();cursor=cd;setView('day');};
-    cal.appendChild(cell);
+    let cell=document.createElement('div');
+    if (!inSY) {
+      cell.className='mini-day'+(isToday(date)?' today-cell':'')+' no-school';
+      cell.textContent=d; cal.appendChild(cell); continue;
+    }
+    // handle single-class or all-classes
+    if (activeClass!=='__all__') {
+      const slots=inSY?slotsOnDay(date,activeClass):[];
+      const hasCancelled=slots.some(s=> (state.cancelled[activeClass]||{})[s.slotKey]);
+      cell.className='mini-day'+(isToday(date)?' today-cell':hasCancelled?' cancelled-cell':'');
+      cell.textContent=d;
+      slots.filter(s=>!(state.cancelled[activeClass]||{})[s.slotKey]).forEach(s=>{
+        const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+        const lessonsForClass = state.lessons[activeClass]||{};
+        const hasData = !!(lessonsForClass[s.slotKey] && (lessonsForClass[s.slotKey].lesson||lessonsForClass[s.slotKey].homework||lessonsForClass[s.slotKey].material||lessonsForClass[s.slotKey].notes));
+        const dot=document.createElement('div'); dot.className='mini-day-dot';
+        const subjConf = subjConfig(eff);
+        dot.style.background = subjConf ? subjConf.pillBg : '#999';
+        if (!hasData) dot.style.opacity = '0.45';
+        cell.appendChild(dot);
+      });
+      const cd=new Date(date);
+      cell.onclick=(e)=>{e.stopPropagation();cursor=cd;setView('day');};
+      cal.appendChild(cell);
+    } else {
+      // all classes: one dot per class slot, colorized by class color
+      const cd=new Date(date);
+      cell.className='mini-day'+(isToday(date)?' today-cell':'');
+      cell.textContent=d;
+      for (const cn of state.classes) {
+        const slots = slotsOnDay(date, cn);
+        const cancForClass = state.cancelled[cn]||{};
+        slots.filter(s=>!cancForClass[s.slotKey]).forEach(s=>{
+          const lessonsForClass = state.lessons[cn]||{};
+          const hasData = !!(lessonsForClass[s.slotKey] && (lessonsForClass[s.slotKey].lesson||lessonsForClass[s.slotKey].homework||lessonsForClass[s.slotKey].material||lessonsForClass[s.slotKey].notes));
+          const dot=document.createElement('div'); dot.className='mini-day-dot';
+          // use class color for mini-dot when viewing all classes
+          dot.style.background = (state.classColors&&state.classColors[cn])?state.classColors[cn]:'#999';
+          if (!hasData) dot.style.opacity = '0.45';
+          cell.appendChild(dot);
+        });
+      }
+      if (inSY) cell.onclick=(e)=>{e.stopPropagation();cursor=cd;setView('day');};
+      cal.appendChild(cell);
+    }
   }
   div.appendChild(cal);
   if (inYear) div.onclick=()=>{cursor=new Date(year,month,1);setView('month');};
@@ -797,41 +973,96 @@ function renderMonth(area) {
 }
 function buildMonthCell(date, otherMonth) {
   const inSY = isInSchoolYear(date);
-  const slots = inSY?slotsOnDay(date,activeClass):[];
-  const lessons  = state.lessons[activeClass]||{};
-  const canc     = state.cancelled[activeClass]||{};
-  const hasCancelled = slots.some(s=>canc[s.slotKey]);
   const cell=document.createElement('div');
+  // determine if any cancelled slot exists for styling
+  let hasCancelled=false;
+  if (activeClass!=='__all__') {
+    const slots = inSY?slotsOnDay(date,activeClass):[];
+    const canc = state.cancelled[activeClass]||{};
+    hasCancelled = slots.some(s=>canc[s.slotKey]);
+  } else {
+    for (const cn of state.classes) {
+      const canc = (state.cancelled[cn]||{});
+      const patt = inSY?slotsOnDay(date,cn):[];
+      if (patt.some(s=>canc[s.slotKey])) { hasCancelled=true; break; }
+    }
+  }
   cell.className='month-day'+(otherMonth?' other-month':'')+(isToday(date)?' today-cell':'')
     +(hasCancelled?' cancelled-day':'')+((!inSY&&!otherMonth)?' no-school':'');
   const num=document.createElement('div'); num.className='month-day-num'; num.textContent=date.getDate(); cell.appendChild(num);
-  slots.forEach(s=>{
-    const pill=document.createElement('div');
-    const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
-    if (canc[s.slotKey]) {
-      pill.className='slot-pill cancelled-pill';
-      pill.textContent='🚫 '+(canc[s.slotKey].reason||'Cancellata');
-    } else {
-      pill.className=`slot-pill ${subjPillClass(eff)}`;
+
+  if (activeClass!=='__all__') {
+    const slots = inSY?slotsOnDay(date,activeClass):[];
+    const lessons  = state.lessons[activeClass]||{};
+    const canc     = state.cancelled[activeClass]||{};
+    slots.forEach(s=>{
+      const pill=document.createElement('div');
+      const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
       const data=lessons[s.slotKey];
-      const overridden=data&&data.subjectOverride&&data.subjectOverride!==s.subject;
-      const displayLabel=subjLabel(eff)+(overridden?' ✎':'');
-      pill.textContent=data&&data.lesson?(data.lesson.length>26?data.lesson.slice(0,24)+'…':data.lesson):displayLabel+' '+s.time;
-      if (data&&data.homework){const hw=document.createElement('div');hw.className='hw-hint';hw.textContent='✏️ '+data.homework.slice(0,36);pill.appendChild(hw);}
+      const hasData = !!(data && (data.lesson||data.homework||data.material||data.notes));
+      const planned = !hasData && !canc[s.slotKey];
+      pill.className = 'slot-pill class-accent' + (canc[s.slotKey] ? ' cancelled-pill' : '') + (planned ? ' planned' : '');
+      // subject-based pill styling
+      pill.style.cssText = subjPillStyle(eff, planned);
+      pill.style.setProperty('--class-accent', (state.classColors&&state.classColors[activeClass])?state.classColors[activeClass]:'#DDD');
+      if (canc[s.slotKey]) {
+        pill.textContent='🚫 '+(canc[s.slotKey].reason||'Cancellata');
+      } else {
+        const overridden=data&&data.subjectOverride&&data.subjectOverride!==s.subject;
+        const displayLabel=subjLabel(eff)+(overridden?' ✎':'');
+        pill.textContent=data&&data.lesson?(data.lesson.length>26?data.lesson.slice(0,24)+'…':data.lesson):displayLabel+' '+s.time;
+        if (data&&data.homework){const hw=document.createElement('div');hw.className='hw-hint';hw.textContent='✏️ '+data.homework.slice(0,36);pill.appendChild(hw);}
+      }
+      const ck=s.slotKey, cd=new Date(date);
+      pill.draggable = true;
+      const _sk = s.slotKey;
+      pill.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk, activeClass); });
+      pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
+      pill.onclick=(e)=>{
+        e.stopPropagation();
+        if (clipboard) { pasteOnDay(cd); return; }
+        openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null, activeClass);
+      };
+      cell.appendChild(pill);
+    });
+  } else {
+    // all classes: render each class' slots
+    for (const cn of state.classes) {
+      const slots = inSY?slotsOnDay(date,cn):[];
+      const lessons  = state.lessons[cn]||{};
+      const canc     = state.cancelled[cn]||{};
+      for (const s of slots) {
+          const pill=document.createElement('div');
+          const eff=effectiveSubject(s.slotKey,s.subject,cn);
+          const data=lessons[s.slotKey];
+          const hasData = !!(data && (data.lesson||data.homework||data.material||data.notes));
+          const planned = !hasData && !canc[s.slotKey];
+          pill.className = 'slot-pill class-accent' + (canc[s.slotKey] ? ' cancelled-pill' : '') + (planned ? ' planned' : '');
+          pill.style.cssText = subjPillStyle(eff, planned);
+          pill.style.setProperty('--class-accent', (state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD');
+          if (canc[s.slotKey]) {
+            pill.textContent='🚫 '+(canc[s.slotKey].reason||'Cancellata')+' · '+cn;
+          } else {
+            const overridden=data&&data.subjectOverride&&data.subjectOverride!==s.subject;
+            const displayLabel=subjLabel(eff)+(overridden?' ✎':'');
+            pill.textContent=(data&&data.lesson?(data.lesson.length>26?data.lesson.slice(0,24)+'…':data.lesson):displayLabel+' '+s.time) + ' · ' + cn;
+            if (data&&data.homework){const hw=document.createElement('div');hw.className='hw-hint';hw.textContent='✏️ '+data.homework.slice(0,36);pill.appendChild(hw);}
+          }
+          const ck=s.slotKey, cd=new Date(date);
+          pill.draggable = true;
+          const _sk = s.slotKey;
+          pill.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk, cn); });
+          pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
+          pill.onclick=(e)=>{
+            e.stopPropagation();
+            if (clipboard) { pasteOnDay(cd); return; }
+            openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null, cn);
+          };
+          cell.appendChild(pill);
+        }
     }
-    const ck=s.slotKey, cd=new Date(date);
-    // drag to move to another day
-    pill.draggable = true;
-    const _sk = s.slotKey;
-    pill.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk); });
-    pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
-    pill.onclick=(e)=>{
-      e.stopPropagation();
-      if (clipboard) { pasteOnDay(cd); return; }
-      openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null);
-    };
-    cell.appendChild(pill);
-  });
+  }
+
   const cd=new Date(date);
   if (!otherMonth) {
     cell.addEventListener('dragover', onCellDragOver);
@@ -865,33 +1096,50 @@ function renderWeek(area) {
     if (inSY){h.style.cursor='pointer';const cd=new Date(d);h.onclick=()=>{cursor=cd;setView('day');};}
     grid.appendChild(h);
   }
-  // Collect all unique times
+  // Collect all unique times (across classes when showing all)
+  const classesToUse = (activeClass==='__all__') ? state.classes : [activeClass];
   const timeSlots=new Set();
   for (let i=0;i<7;i++){
     const d=new Date(mon); d.setDate(d.getDate()+i);
-    if (isInSchoolYear(d)) slotsOnDay(d,activeClass).forEach(s=>timeSlots.add(s.time));
+    if (isInSchoolYear(d)) {
+      for (const cn of classesToUse) slotsOnDay(d,cn).forEach(s=>timeSlots.add(s.time));
+    }
   }
   const sortedTimes=[...timeSlots].sort();
   if (!sortedTimes.length) sortedTimes.push('08:00','09:00','10:00','11:00','12:00','13:00');
-  const lessons=state.lessons[activeClass]||{};
-  const canc=state.cancelled[activeClass]||{};
   sortedTimes.forEach(time=>{
     const th=document.createElement('div'); th.className='week-time'; th.textContent=time; grid.appendChild(th);
     for (let i=0;i<7;i++) {
       const d=new Date(mon); d.setDate(d.getDate()+i);
       const inSY=isInSchoolYear(d);
-      const slots=inSY?slotsOnDay(d,activeClass).filter(s=>s.time===time):[];
       const cell=document.createElement('div');
-      cell.className='week-cell'+(isToday(d)?' today-cell':'')+(slots.some(s=>canc[s.slotKey])?' cancelled-cell':'')+((!inSY)?' no-school':'');
-      slots.forEach(s=>{
-        const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'small',canc[s.slotKey]);
-        // drag to move to another day
-        card.draggable = true;
-        const _sk = s.slotKey;
-        card.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk); });
-        card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
-        cell.appendChild(card);
-      });
+      // mark cancelled if any class has a cancelled slot at this time
+      let cancelledHere=false;
+      if (inSY) {
+        for (const cn of classesToUse) {
+          const slotsForClass = slotsOnDay(d,cn).filter(s=>s.time===time);
+          if (slotsForClass.some(s=> (state.cancelled[cn]||{})[s.slotKey] )) { cancelledHere=true; break; }
+        }
+      }
+      cell.className='week-cell'+(isToday(d)?' today-cell':'')+(cancelledHere?' cancelled-cell':'')+((!inSY)?' no-school':'');
+
+      if (inSY) {
+        for (const cn of classesToUse) {
+          const slots = slotsOnDay(d,cn).filter(s=>s.time===time);
+          const lessons = state.lessons[cn]||{};
+          const canc = state.cancelled[cn]||{};
+          slots.forEach(s=>{
+            const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'small',canc[s.slotKey], cn);
+            // drag to move to another day (stays within same class)
+            card.draggable = true;
+            const _sk = s.slotKey;
+            card.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk, cn); });
+            card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
+            cell.appendChild(card);
+          });
+        }
+      }
+
       if (inSY) {
         const _d = new Date(d);
         cell.addEventListener('dragover', onCellDragOver);
@@ -915,57 +1163,103 @@ function renderDay(area) {
     msg.textContent='📭 Questa data è fuori dall\'anno scolastico ('+state.schoolStart+' – '+state.schoolEnd+')';
     area.appendChild(msg); return;
   }
-  const slots=slotsOnDay(d,activeClass);
-  const lessons=state.lessons[activeClass]||{};
-  const canc=state.cancelled[activeClass]||{};
   const banner=document.createElement('div');
   banner.style.cssText='margin-bottom:1rem;font-size:.86rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
-  if (slots.length) {
-    banner.innerHTML=`<span>${activeClass}</span> — `;
+  if (activeClass!=='__all__') {
+    const slots=slotsOnDay(d,activeClass);
+    const lessons=state.lessons[activeClass]||{};
+    const canc=state.cancelled[activeClass]||{};
+    if (slots.length) {
+      banner.innerHTML=`<span>${activeClass}</span> — `;
+      slots.forEach(s=>{
+        const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
+        const sp=document.createElement('span');
+        sp.style.cssText=`background:${eff==='english'?'#C8E6FF':'#E8D5FF'};color:${eff==='english'?'#0D3D6E':'#42286A'};border-radius:8px;padding:2px 9px;font-weight:700;font-size:.82rem;`;
+        sp.textContent=subjLabel(eff)+' '+s.time;
+        banner.appendChild(sp);
+      });
+    } else {
+      banner.innerHTML=`<span style="color:var(--border)">Nessuna lezione programmata per ${activeClass}</span>`;
+    }
+    area.appendChild(banner);
+    if (!slots.length) return;
+    const grid=document.createElement('div'); grid.className='day-view';
     slots.forEach(s=>{
-      const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
-      const sp=document.createElement('span');
-      sp.style.cssText=`background:${eff==='english'?'#C8E6FF':'#E8D5FF'};color:${eff==='english'?'#0D3D6E':'#42286A'};border-radius:8px;padding:2px 9px;font-weight:700;font-size:.82rem;`;
-      sp.textContent=subjLabel(eff)+' '+s.time;
-      banner.appendChild(sp);
+      const th=document.createElement('div'); th.className='day-time'; th.textContent=s.time; grid.appendChild(th);
+      const cell=document.createElement('div');
+      cell.className='day-cell'+((state.cancelled[activeClass]||{})[s.slotKey]?' cancelled-cell':'');
+      const card=buildSlotCard(d,s.slotKey,s.subject,s.time,(state.lessons[activeClass]||{})[s.slotKey],'full', (state.cancelled[activeClass]||{})[s.slotKey], activeClass);
+      // enable drag/drop per cell
+      cell.appendChild(card);
+      grid.appendChild(cell);
     });
-  } else {
-    banner.innerHTML=`<span style="color:var(--border)">Nessuna lezione programmata per ${activeClass}</span>`;
+    area.appendChild(grid);
+    return;
   }
+
+  // ALL CLASSES
+  banner.textContent = 'Tutte le classi';
   area.appendChild(banner);
-  if (!slots.length) return;
-  const grid=document.createElement('div'); grid.className='day-view';
-  slots.forEach(s=>{
-    const th=document.createElement('div'); th.className='day-time'; th.textContent=s.time; grid.appendChild(th);
-    const cell=document.createElement('div');
-    cell.className='day-cell'+(canc[s.slotKey]?' cancelled-cell':'');
-    const card=buildSlotCard(d,s.slotKey,s.subject,s.time,lessons[s.slotKey],'full',canc[s.slotKey]);
-    cell.appendChild(card);
-    grid.appendChild(cell);
-  });
-  area.appendChild(grid);
+  const classes = state.classes;
+  for (const cn of classes) {
+    const header=document.createElement('div');
+    header.style.cssText='margin-top:12px;margin-bottom:6px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px;';
+    const sw=document.createElement('span'); sw.className='class-swatch'; sw.style.background=(state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD';
+    header.appendChild(sw); header.appendChild(document.createTextNode(cn));
+    area.appendChild(header);
+    const slots=slotsOnDay(d,cn);
+    if (!slots.length) {
+      const msg=document.createElement('div'); msg.style.cssText='color:var(--border);font-style:italic;margin-bottom:8px'; msg.textContent='Nessuna lezione programmata.'; area.appendChild(msg); continue;
+    }
+    for (const s of slots) {
+      const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='50px 1fr'; row.style.gap='0'; row.style.marginBottom='8px';
+      const th=document.createElement('div'); th.className='day-time'; th.textContent=s.time; row.appendChild(th);
+      const cell=document.createElement('div'); cell.className='day-cell'+(((state.cancelled[cn]||{})[s.slotKey])?' cancelled-cell':'');
+      const card=buildSlotCard(d,s.slotKey,s.subject,s.time,(state.lessons[cn]||{})[s.slotKey],'full', (state.cancelled[cn]||{})[s.slotKey], cn);
+      card.draggable = true;
+      const _sk = s.slotKey;
+      card.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk, cn); });
+      card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
+      cell.appendChild(card);
+      // allow dropping on this cell for the same class
+      cell.addEventListener('dragover', onCellDragOver);
+      cell.addEventListener('dragleave', onCellDragLeave);
+      cell.addEventListener('drop', (e)=>onCellDrop(e, new Date(d)));
+      row.appendChild(cell);
+      area.appendChild(row);
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════
 //  SLOT CARD
 // ══════════════════════════════════════════════════════
-function buildSlotCard(date, key, patternSubj, time, data, size, cancData) {
-  const eff=effectiveSubject(key, patternSubj, activeClass);
+function buildSlotCard(date, key, patternSubj, time, data, size, cancData, className) {
+  const cls = className || activeClass;
+  const eff=effectiveSubject(key, patternSubj, cls);
   const overridden=data&&data.subjectOverride&&data.subjectOverride!==patternSubj;
   const card=document.createElement('div');
-  card.className=cancData?'slot-card cancelled-card':`slot-card ${subjClass(eff)}`;
+  card.className = cancData ? 'slot-card cancelled-card' : 'slot-card';
   if (size==='small') card.style.minHeight='50px';
+  // add class accent color (use class color, faded when planned)
+  card.classList.add('class-accent');
+  const classColor = (state.classColors&&state.classColors[cls])?state.classColors[cls]:'#DDD';
+  const hasData = !!(data && (data.lesson||data.homework||data.material||data.notes));
+  const planned = !hasData && !cancData;
+  const accentColor = planned ? fadeHex(classColor, 0.36) : classColor;
+  card.style.setProperty('--class-accent', accentColor);
+  if (planned) card.style.opacity = '0.62';
   let html=`<div class="sc-title">${subjLabel(eff)}${overridden?` <span style="font-size:.6rem;opacity:.6">(era ${subjLabel(patternSubj)})</span>`:''}</div>`;
-  html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${activeClass}</div>`;
+  html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${cls}</div>`;
   if (cancData) {
     html+=`<div style="font-size:.72rem;color:#B03030;font-style:italic">🚫 ${cancData.reason||'Lezione cancellata'}</div>`;
   } else if (data&&data.lesson) {
     html+=`<div class="sc-lesson">${data.lesson.length>55?data.lesson.slice(0,53)+'…':data.lesson}</div>`;
-    const prev=prevLessonData(date,eff,activeClass);
+    const prev=prevLessonData(date,eff,cls);
     if (prev&&prev.homework) html+=`<div class="sc-hw-prev"><strong>Prev:</strong> ${prev.homework.length>75?prev.homework.slice(0,73)+'…':prev.homework}</div>`;
   } else {
     html+=`<div class="sc-empty">Tocca per aggiungere…</div>`;
-    const prev=prevLessonData(date,eff,activeClass);
+    const prev=prevLessonData(date,eff,cls);
     if (prev&&prev.homework) html+=`<div class="sc-hw-prev"><strong>Prev compiti:</strong> ${prev.homework.length>75?prev.homework.slice(0,73)+'…':prev.homework}</div>`;
   }
   card.innerHTML=html;
@@ -973,7 +1267,7 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData) {
   card.onclick=(e)=>{
     e.stopPropagation();
     if (clipboard) { pasteOnDay(cd); return; }
-    openModal(ck,cd,cs,time,cancData?'cancelled':null);
+    openModal(ck,cd,cs,time,cancData?'cancelled':null, cls);
   };
   return card;
 }
@@ -981,32 +1275,51 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData) {
 // ══════════════════════════════════════════════════════
 //  LESSON MODAL
 // ══════════════════════════════════════════════════════
-function openModal(key, date, patternSubj, time, status) {
-  modalKey=key; modalPatternSubject=patternSubj;
-  const data=(state.lessons[activeClass]||{})[key]||{};
-  const canc=(state.cancelled[activeClass]||{})[key];
-  const currSubj=effectiveSubject(key, patternSubj, activeClass);
-  const prev=prevLessonData(date, currSubj, activeClass);
+function openModal(key, date, patternSubj, time, status, className) {
+  modalKey=key; modalPatternSubject=patternSubj; modalClass = className || activeClass;
+  const data=(state.lessons[modalClass]||{})[key]||{};
+  const canc=(state.cancelled[modalClass]||{})[key];
+  const currSubj=effectiveSubject(key, patternSubj, modalClass);
+  const prev=prevLessonData(date, currSubj, modalClass);
 
-  document.getElementById('modalTitle').textContent=`${time} – ${activeClass}`;
+  document.getElementById('modalTitle').textContent=`${time} – ${modalClass}`;
   document.getElementById('modalDate').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
 
   // Badges
   const badge=document.getElementById('modalBadge');
   badge.textContent=subjLabel(currSubj);
-  badge.style.background=currSubj==='english'?'#C8E6FF':'#E8D5FF';
-  badge.style.color=currSubj==='english'?'#0D3D6E':'#42286A';
-  document.getElementById('modalClassBadge').textContent=activeClass;
+  const sb = subjConfig(currSubj);
+  if (sb) { badge.style.background = sb.pillBg; badge.style.color = sb.pillText; } else {
+    badge.style.background=currSubj==='english'?'#C8E6FF':'#E8D5FF';
+    badge.style.color=currSubj==='english'?'#0D3D6E':'#42286A';
+  }
+  const classBadge=document.getElementById('modalClassBadge');
+  classBadge.textContent=modalClass;
+  if (state.classColors && state.classColors[modalClass]) {
+    classBadge.style.background = state.classColors[modalClass];
+    classBadge.style.color = '#222';
+  } else { classBadge.style.background=''; classBadge.style.color=''; }
 
   // Subject override selector
   const sel=document.getElementById('fSubjectOverride');
-  sel.value=data.subjectOverride||'';
-  sel.onchange=()=>{
-    // live-update badge when changing override
-    const chosen=sel.value||patternSubj;
-    badge.textContent=subjLabel(chosen);
-    badge.style.background=chosen==='english'?'#C8E6FF':'#E8D5FF';
-    badge.style.color=chosen==='english'?'#0D3D6E':'#42286A';
+  // rebuild options from state.subjects
+  sel.innerHTML='';
+  const optDef = document.createElement('option'); optDef.value=''; optDef.textContent='— segui pattern —'; sel.appendChild(optDef);
+  Object.keys(state.subjects||{}).forEach(k=>{
+    const o = document.createElement('option'); o.value=k; o.textContent = state.subjects[k].label || k; sel.appendChild(o);
+  });
+  sel.value = data.subjectOverride||'';
+  sel.onchange = ()=>{
+    const chosen = sel.value || patternSubj;
+    badge.textContent = subjLabel(chosen);
+    const conf = subjConfig(chosen);
+    if (conf) {
+      badge.style.background = conf.pillBg || (conf.color||'#C8E6FF');
+      badge.style.color = conf.pillText || '#222';
+    } else {
+      badge.style.background = chosen==='english'?'#C8E6FF':'#E8D5FF';
+      badge.style.color = chosen==='english'?'#0D3D6E':'#42286A';
+    }
   };
 
   // Prev homework
@@ -1032,9 +1345,9 @@ function closeModal(e) {
 }
 function saveSlot() {
   if (!modalKey) return;
-  if (!state.lessons[activeClass]) state.lessons[activeClass]={};
+  if (!state.lessons[modalClass]) state.lessons[modalClass]={};
   const override=document.getElementById('fSubjectOverride').value;
-  state.lessons[activeClass][modalKey]={
+  state.lessons[modalClass][modalKey] = {
     lesson:   document.getElementById('fLesson').value.trim(),
     material: document.getElementById('fMaterial').value.trim(),
     homework: document.getElementById('fHomework').value.trim(),
@@ -1046,7 +1359,7 @@ function saveSlot() {
 function clearSlot() {
   if (!modalKey) return;
   if (confirm('Svuotare questo slot?')) {
-    if (state.lessons[activeClass]) delete state.lessons[activeClass][modalKey];
+    if (state.lessons[modalClass]) delete state.lessons[modalClass][modalKey];
     persist(); closeModal(); render();
   }
 }
@@ -1055,7 +1368,7 @@ function clearSlot() {
 //  CANCEL MODAL
 // ══════════════════════════════════════════════════════
 function openCancelModal() {
-  const canc=(state.cancelled[activeClass]||{})[modalKey];
+  const canc=(state.cancelled[modalClass]||{})[modalKey];
   document.getElementById('cancelReason').value=canc?canc.reason||'':'';
   document.querySelectorAll('[name=cancelMode]').forEach(r=>r.checked=r.value==='slip');
   selectCancelMode({value:'slip'});
@@ -1071,26 +1384,26 @@ function confirmCancel() {
   if (!modalKey) return;
   const reason=document.getElementById('cancelReason').value.trim();
   const mode=document.querySelector('[name=cancelMode]:checked').value;
-  if (!state.cancelled[activeClass]) state.cancelled[activeClass]={};
-  state.cancelled[activeClass][modalKey]={reason,mode};
+  if (!state.cancelled[modalClass]) state.cancelled[modalClass]={};
+  state.cancelled[modalClass][modalKey]={reason,mode};
   if (mode==='slip') {
-    const currentData=(state.lessons[activeClass]||{})[modalKey];
+    const currentData=(state.lessons[modalClass]||{})[modalKey];
     if (currentData&&(currentData.lesson||currentData.homework||currentData.material)) {
       const dateStr=modalKey.split('-').slice(0,3).join('-');
       const date=new Date(dateStr);
       // Use effective subject for the slip
-      const subj=effectiveSubject(modalKey, modalPatternSubject, activeClass);
+      const subj=effectiveSubject(modalKey, modalPatternSubject, modalClass);
       let d=new Date(date); d.setDate(d.getDate()+1);
       for (let i=0; i<120; i++) {
         if (isInSchoolYear(d)) {
-          const slots=slotsOnDay(d,activeClass);
+          const slots=slotsOnDay(d,modalClass);
           let found=false;
           for (const s of slots) {
-            const eff=effectiveSubject(s.slotKey,s.subject,activeClass);
-            if (eff===subj&&!(state.cancelled[activeClass]||{})[s.slotKey]) {
-              if (!state.lessons[activeClass]) state.lessons[activeClass]={};
-              if (!state.lessons[activeClass][s.slotKey]||!state.lessons[activeClass][s.slotKey].lesson) {
-                state.lessons[activeClass][s.slotKey]={...currentData};
+            const eff=effectiveSubject(s.slotKey,s.subject,modalClass);
+            if (eff===subj&&!(state.cancelled[modalClass]||{})[s.slotKey]) {
+              if (!state.lessons[modalClass]) state.lessons[modalClass]={};
+              if (!state.lessons[modalClass][s.slotKey]||!state.lessons[modalClass][s.slotKey].lesson) {
+                state.lessons[modalClass][s.slotKey]={...currentData};
               }
               found=true; break;
             }
@@ -1105,7 +1418,7 @@ function confirmCancel() {
 }
 function undoCancel() {
   if (!modalKey) return;
-  if (state.cancelled[activeClass]) delete state.cancelled[activeClass][modalKey];
+  if (state.cancelled[modalClass]) delete state.cancelled[modalClass][modalKey];
   persist(); closeCancelModal(); closeModal(); render();
 }
 
@@ -1117,7 +1430,7 @@ function openSettings() {
   settingsTemp=JSON.parse(JSON.stringify(state));
   document.getElementById('sSchoolStart').value=settingsTemp.schoolStart;
   document.getElementById('sSchoolEnd').value=settingsTemp.schoolEnd;
-  renderClassList(); renderPatternClassSelect(); renderPatternEditor();
+  renderClassList(); renderSubjectList(); renderPatternClassSelect(); renderPatternEditor();
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
@@ -1127,6 +1440,8 @@ function saveSettings() {
   state.schoolEnd=document.getElementById('sSchoolEnd').value;
   state.classes=settingsTemp.classes;
   state.patterns=settingsTemp.patterns;
+  state.classColors = settingsTemp.classColors || {};
+  state.subjects = settingsTemp.subjects || {};
   if (!state.classes.includes(activeClass)&&state.classes.length>0) activeClass=state.classes[0];
   persist(); closeSettings(); buildClassBar(); render();
 }
@@ -1135,7 +1450,14 @@ function renderClassList() {
   const list=document.getElementById('sClassList'); list.innerHTML='';
   settingsTemp.classes.forEach((c,i)=>{
     const row=document.createElement('div'); row.className='class-item';
-    row.innerHTML=`<span class="ci-name">${c}</span><button class="ci-rm" onclick="removeClassAt(${i})">✕</button>`;
+    const color = (settingsTemp.classColors && settingsTemp.classColors[c]) ? settingsTemp.classColors[c] : '#F3E9D8';
+    row.innerHTML = `
+      <div class="color-circle-wrap" title="Scegli colore per ${c}">
+        <div class="color-circle" id="cc-${i}" style="background:${color}"></div>
+        <input type="color" value="${color}" onchange="updateClassColor('${c}',this.value,${i})">
+      </div>
+      <span class="ci-name" style="flex:1">${c}</span>
+      <button class="ci-rm" onclick="removeClassAt(${i})">✕</button>`;
     list.appendChild(row);
   });
 }
@@ -1145,14 +1467,61 @@ function addClassFromInput() {
   if(settingsTemp.classes.includes(name)){alert('Classe già presente.');return;}
   settingsTemp.classes.push(name);
   if(!settingsTemp.patterns[name]) settingsTemp.patterns[name]={};
+  if(!settingsTemp.classColors) settingsTemp.classColors = {};
+  settingsTemp.classColors[name] = '#49ACEF';
   inp.value=''; renderClassList(); renderPatternClassSelect(); renderPatternEditor();
 }
 function removeClassAt(i) {
   const name=settingsTemp.classes[i];
   if(!confirm(`Rimuovere "${name}"?`)) return;
   settingsTemp.classes.splice(i,1); delete settingsTemp.patterns[name];
+  if(settingsTemp.classColors) delete settingsTemp.classColors[name];
   renderClassList(); renderPatternClassSelect(); renderPatternEditor();
 }
+
+function updateClassColor(className, color, idx) {
+  if(!settingsTemp.classColors) settingsTemp.classColors = {};
+  settingsTemp.classColors[className] = color;
+  // live update the circle without re-rendering the whole list
+  const circle = document.getElementById('cc-'+idx);
+  if (circle) circle.style.background = color;
+}
+function renderSubjectList() {
+  const list=document.getElementById('sSubjectList'); if(!list) return; list.innerHTML='';
+  const keys = Object.keys(settingsTemp.subjects||{});
+  keys.forEach((k,i)=>{
+    const s = settingsTemp.subjects[k];
+    const row=document.createElement('div'); row.className='class-item';
+    const color = s.pillBg || '#E8D5FF';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;flex:1;">
+        <div class="color-circle-wrap"><div class="color-circle" id="subcc-${i}" style="background:${color}"></div>
+        <input type="color" value="${color}" onchange="updateSubjectColor('${k}',this.value,${i})"></div>
+        <span class="ci-name">${s.label}</span>
+      </div>
+      <div><button class="ci-rm" onclick="removeSubjectAt(${i})">✕</button></div>`;
+    list.appendChild(row);
+  });
+}
+function slugifyName(n){return n.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');}
+function addSubjectFromInput(){
+  const inp=document.getElementById('sNewSubject'); if(!inp) return;
+  const name=inp.value.trim(); if(!name) return;
+  if(!settingsTemp.subjects) settingsTemp.subjects={};
+  let key = slugifyName(name) || 'subj';
+  let i=1; const base=key;
+  while(settingsTemp.subjects[key]){ key = base + '-' + (i++); }
+  settingsTemp.subjects[key] = { label: name, pillBg:'#C8E6FF', pillText:'#0D3D6E', border:'#92C4F0' };
+  inp.value=''; renderSubjectList(); renderPatternEditor();
+}
+function removeSubjectAt(i){
+  const keys=Object.keys(settingsTemp.subjects||{});
+  if(keys.length<=1){ alert('Deve esserci almeno una materia.'); return; }
+  const key = keys[i];
+  if(!confirm(`Rimuovere materia "${settingsTemp.subjects[key].label}"?`)) return;
+  delete settingsTemp.subjects[key]; renderSubjectList(); renderPatternEditor();
+}
+function updateSubjectColor(key,color,idx){ if(!settingsTemp.subjects) settingsTemp.subjects={}; if(!settingsTemp.subjects[key]) return; settingsTemp.subjects[key].pillBg=color; const circle=document.getElementById('subcc-'+idx); if(circle) circle.style.background=color; }
 function renderPatternClassSelect() {
   const sel=document.getElementById('sPatternClass'); sel.innerHTML='';
   settingsTemp.classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
@@ -1169,15 +1538,13 @@ function renderPatternEditor() {
     const slots=pattern[d]||[];
     slots.forEach((s,si)=>{
       const entry=document.createElement('div'); entry.className='slot-entry';
-      entry.innerHTML=`
-        <select onchange="updatePatternSlot('${cn}',${d},${si},'subject',this.value)">
-          <option value="none"    ${s.subject==='none'?'selected':''}>–</option>
-          <option value="english" ${s.subject==='english'?'selected':''}>🇬🇧 Inglese</option>
-          <option value="lit"     ${s.subject==='lit'?'selected':''}>📚 Letteratura</option>
-        </select>
-        <input type="time" value="${s.time||'08:00'}"
-          onchange="updatePatternSlot('${cn}',${d},${si},'time',this.value)">
-        <button class="rm-slot-btn" onclick="removePatternSlot('${cn}',${d},${si})">✕</button>`;
+      const sel = document.createElement('select'); sel.onchange = function(){ updatePatternSlot(cn,d,si,'subject', this.value); };
+      const optNone = document.createElement('option'); optNone.value='none'; optNone.textContent='–'; if(s.subject==='none') optNone.selected=true; sel.appendChild(optNone);
+      const subjKeys = Object.keys(settingsTemp.subjects||{});
+      subjKeys.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=(settingsTemp.subjects[k] && settingsTemp.subjects[k].label) ? settingsTemp.subjects[k].label : k; if(s.subject===k) o.selected=true; sel.appendChild(o); });
+      const timeIn = document.createElement('input'); timeIn.type='time'; timeIn.value = s.time||'08:00'; timeIn.onchange = function(){ updatePatternSlot(cn,d,si,'time', this.value); };
+      const rmBtn = document.createElement('button'); rmBtn.className='rm-slot-btn'; rmBtn.textContent='✕'; rmBtn.onclick = function(){ removePatternSlot(cn,d,si); };
+      entry.appendChild(sel); entry.appendChild(timeIn); entry.appendChild(rmBtn);
       col.appendChild(entry);
     });
     const addBtn=document.createElement('button'); addBtn.className='add-slot-btn';
@@ -1205,14 +1572,16 @@ function removePatternSlot(cn,d,si){
 // ══════════════════════════════════════════════════════
 //  DRAG & DROP — sposta lezione su un altro giorno
 // ══════════════════════════════════════════════════════
-let dragSrc = null; // {slotKey, data, cancData}
+let dragSrc = null; // {slotKey, className, data, cancData}
 
-function onSlotDragStart(e, slotKey) {
+function onSlotDragStart(e, slotKey, className) {
+  const srcClass = className || activeClass;
   dragSrc = {
     slotKey,
-    data:     JSON.parse(JSON.stringify((state.lessons[activeClass]||{})[slotKey]||{})),
-    cancData: (state.cancelled[activeClass]||{})[slotKey]
-              ? JSON.parse(JSON.stringify((state.cancelled[activeClass])[slotKey])) : null
+    className: srcClass,
+    data:     JSON.parse(JSON.stringify((state.lessons[srcClass]||{})[slotKey]||{})),
+    cancData: (state.cancelled[srcClass]||{})[slotKey]
+              ? JSON.parse(JSON.stringify((state.cancelled[srcClass])[slotKey])) : null
   };
   e.dataTransfer.effectAllowed = 'move';
   setTimeout(()=>{
@@ -1240,35 +1609,37 @@ function onCellDrop(e, targetDate) {
   e.currentTarget.classList.remove('drag-over');
   if (!dragSrc) return;
   if (!isInSchoolYear(targetDate)) return;
-  const slots = slotsOnDay(targetDate, activeClass);
+  const targetClass = dragSrc.className || activeClass;
+  const slots = slotsOnDay(targetDate, targetClass);
   if (!slots.length) {
-    showToast('⚠️ Nessuna ora in questo giorno per '+activeClass);
+    showToast('⚠️ Nessuna ora in questo giorno per '+targetClass);
     dragSrc = null; return;
   }
   const srcIdx = parseInt(dragSrc.slotKey.split('-').pop())||0;
   const targetSlot = slots[Math.min(srcIdx, slots.length-1)];
   if (targetSlot.slotKey === dragSrc.slotKey) { dragSrc = null; return; }
   // warn if target already has content
-  const tData = (state.lessons[activeClass]||{})[targetSlot.slotKey];
+  const tData = (state.lessons[targetClass]||{})[targetSlot.slotKey];
   if (tData && (tData.lesson||tData.material||tData.homework)) {
     if (!confirm('Questo giorno ha già una lezione. Sovrascrivere?')) { dragSrc = null; return; }
   }
   // execute move
-  if (!state.lessons[activeClass]) state.lessons[activeClass]={};
-  if (!state.cancelled[activeClass]) state.cancelled[activeClass]={};
+  if (!state.lessons[targetClass]) state.lessons[targetClass]={};
+  if (!state.cancelled[targetClass]) state.cancelled[targetClass]={};
   const src = dragSrc; dragSrc = null;
   if (src.data && Object.values(src.data).some(v=>v)) {
-    state.lessons[activeClass][targetSlot.slotKey] = src.data;
+    state.lessons[targetClass][targetSlot.slotKey] = src.data;
   } else {
-    delete state.lessons[activeClass][targetSlot.slotKey];
+    delete state.lessons[targetClass][targetSlot.slotKey];
   }
-  delete state.lessons[activeClass][src.slotKey];
+  // remove original
+  if (state.lessons[src.className]) delete state.lessons[src.className][src.slotKey];
   if (src.cancData) {
-    state.cancelled[activeClass][targetSlot.slotKey] = src.cancData;
+    state.cancelled[targetClass][targetSlot.slotKey] = src.cancData;
   } else {
-    delete state.cancelled[activeClass][targetSlot.slotKey];
+    delete state.cancelled[targetClass][targetSlot.slotKey];
   }
-  delete state.cancelled[activeClass][src.slotKey];
+  if (state.cancelled[src.className]) delete state.cancelled[src.className][src.slotKey];
   persist(); render();
   showToast('✅ Lezione spostata!');
 }
@@ -1280,7 +1651,8 @@ let clipboard = null;
 
 function copyLesson(slotKey) {
   if (!slotKey) return;
-  const data = (state.lessons[activeClass]||{})[slotKey];
+  const srcClass = modalClass || activeClass;
+  const data = (state.lessons[srcClass]||{})[slotKey];
   if (!data||(! data.lesson && !data.material && !data.homework && !data.notes)) {
     showToast('⚠️ Nessun contenuto da copiare.'); return;
   }
@@ -1319,6 +1691,281 @@ function pasteOnDay(targetDate) {
   persist(); hidePasteBar();
   showToast('✅ Lezione incollata in '+targetClass+'!');
   return true;
+}
+
+// ══════════════════════════════════════════════════════
+//  SECONDARY NAV - Tre visualizzazioni
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+//  SECONDARY NAV - Tre visualizzazioni
+// ══════════════════════════════════════════════════════
+
+function activateSecondaryNavBtn(btnId) {
+  document.querySelectorAll('.sec-nav-btn').forEach(btn=>btn.classList.remove('active'));
+  if (btnId) document.getElementById(btnId).classList.add('active');
+}
+function closeExtraView() {
+  document.getElementById('extraViewOverlay').classList.remove('open');
+  activateSecondaryNavBtn(null);
+}
+function closeExtraViewIfBg(e) {
+  if (e.target === document.getElementById('extraViewOverlay')) closeExtraView();
+}
+function openExtraView(title, renderControls, renderBody) {
+  document.getElementById('evpTitle').textContent = title;
+  renderControls(document.getElementById('evpControls'));
+  renderBody(document.getElementById('evpBody'));
+  document.getElementById('extraViewOverlay').classList.add('open');
+}
+
+// ─── 1. ORARIO SETTIMANALE ─────────────────────────────
+function showScheduleView() {
+  activateSecondaryNavBtn('navSchedule');
+  // build controls once, then reuse panel body on change
+  openExtraView('📅 Orario Settimanale', (ctrl) => {
+    ctrl.innerHTML = '';
+    // class filter: checkboxes
+    const lbl = document.createElement('label'); lbl.textContent = 'Classi:'; ctrl.appendChild(lbl);
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;';
+    state.classes.forEach(cn => {
+      const id = 'sc-chk-'+cn.replace(/\s/g,'_');
+      const chk = document.createElement('input'); chk.type='checkbox'; chk.id=id; chk.value=cn; chk.checked=true;
+      chk.onchange = () => renderScheduleBody(document.getElementById('evpBody'));
+      const l = document.createElement('label'); l.htmlFor=id;
+      l.style.cssText='display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text);';
+      const sw = document.createElement('span'); sw.style.cssText=`width:11px;height:11px;border-radius:50%;background:${(state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD'};flex-shrink:0;`;
+      l.appendChild(chk); l.appendChild(sw); l.appendChild(document.createTextNode(cn));
+      wrap.appendChild(l);
+    });
+    ctrl.appendChild(wrap);
+  }, (body) => {
+    renderScheduleBody(body);
+  });
+}
+function renderScheduleBody(body) {
+  body.innerHTML = '';
+  const checkboxes = document.querySelectorAll('#evpControls input[type=checkbox]');
+  const selectedClasses = [...checkboxes].filter(c=>c.checked).map(c=>c.value);
+  if (!selectedClasses.length) {
+    body.innerHTML = '<div class="prog-empty">Seleziona almeno una classe.</div>'; return;
+  }
+  // Collect all unique times from patterns of selected classes
+  const allTimes = new Set();
+  selectedClasses.forEach(cn => {
+    const pat = state.patterns[cn]||{};
+    for (let d=0; d<5; d++) { (pat[d]||[]).forEach(s => allTimes.add(s.time)); }
+  });
+  const sortedTimes = [...allTimes].sort();
+  if (!sortedTimes.length) {
+    body.innerHTML = '<div class="prog-empty">Nessun orario configurato. Imposta l\'orario nelle Impostazioni.</div>'; return;
+  }
+  const cols = 1 + selectedClasses.length; // time + one col per class
+  const grid = document.createElement('div');
+  grid.className = 'sched-grid';
+  grid.style.gridTemplateColumns = '55px ' + selectedClasses.map(()=>'1fr').join(' ');
+
+  // Header row
+  const th0 = document.createElement('div'); th0.className='sched-cell header'; th0.textContent='Ora'; grid.appendChild(th0);
+  selectedClasses.forEach(cn => {
+    const th = document.createElement('div'); th.className='sched-cell header';
+    const color = (state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD';
+    th.innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;margin-right:5px;vertical-align:middle;"></span>${cn}`;
+    grid.appendChild(th);
+  });
+
+  const DAY_FULL = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì'];
+  for (let d=0; d<5; d++) {
+    // check if any selected class has a slot this day
+    const hasAny = selectedClasses.some(cn => (state.patterns[cn]||{})[d] && (state.patterns[cn]||{})[d].length > 0);
+    if (!hasAny) continue;
+    // Day separator spanning all cols
+    const dayHdr = document.createElement('div'); dayHdr.className='sched-cell header';
+    dayHdr.style.cssText=`grid-column:1/-1;text-align:left;font-size:0.76rem;padding:6px 10px;background:#EDE5F5;color:var(--grape);border-bottom:1.5px solid var(--border);`;
+    dayHdr.textContent = DAY_FULL[d];
+    grid.appendChild(dayHdr);
+    // time rows for this day
+    const dayTimes = new Set();
+    selectedClasses.forEach(cn => { (((state.patterns[cn]||{})[d])||[]).forEach(s=>dayTimes.add(s.time)); });
+    [...dayTimes].sort().forEach(t => {
+      const tc = document.createElement('div'); tc.className='sched-cell time-col'; tc.textContent=t; grid.appendChild(tc);
+      selectedClasses.forEach(cn => {
+        const cell = document.createElement('div'); cell.className='sched-cell';
+        const slot = ((state.patterns[cn]||{})[d]||[]).find(s=>s.time===t);
+        if (slot && slot.subject && slot.subject !== 'none') {
+          const sub = document.createElement('div'); sub.className='sched-slot';
+          const sc = subjConfig(slot.subject);
+          if (sc) { sub.style.background = sc.pillBg; sub.style.color = sc.pillText; sub.style.border = `1px solid ${sc.border}`; }
+          else { sub.style.background='var(--bg2)'; }
+          sub.textContent = sc ? sc.label : slot.subject;
+          cell.appendChild(sub);
+        }
+        grid.appendChild(cell);
+      });
+    });
+  }
+  body.appendChild(grid);
+}
+
+// ─── 2. PROGRAMMA SVOLTO ──────────────────────────────
+function showLessonsView() {
+  activateSecondaryNavBtn('navLessons');
+  openExtraView('📖 Programma Svolto', (ctrl) => {
+    ctrl.innerHTML = '';
+    // Class selector
+    const lblC = document.createElement('label'); lblC.textContent='Classe:'; ctrl.appendChild(lblC);
+    const selC = document.createElement('select'); selC.id='prog-sel-class';
+    state.classes.forEach(cn => { const o=document.createElement('option'); o.value=cn; o.textContent=cn; selC.appendChild(o); });
+    selC.onchange = () => { renderSubjectSelector(document.getElementById('prog-sel-subj')); renderProgrammaBody(document.getElementById('evpBody')); };
+    ctrl.appendChild(selC);
+    // Subject selector
+    const lblS = document.createElement('label'); lblS.textContent='Materia:'; ctrl.appendChild(lblS);
+    const selS = document.createElement('select'); selS.id='prog-sel-subj';
+    renderSubjectSelector(selS);
+    selS.onchange = () => renderProgrammaBody(document.getElementById('evpBody'));
+    ctrl.appendChild(selS);
+  }, (body) => {
+    renderProgrammaBody(body);
+  });
+}
+function renderSubjectSelector(sel) {
+  sel.innerHTML = '';
+  Object.keys(state.subjects||{}).forEach(k => {
+    const o = document.createElement('option'); o.value=k; o.textContent=(state.subjects[k].label||k); sel.appendChild(o);
+  });
+}
+function renderProgrammaBody(body) {
+  body.innerHTML = '';
+  const selC = document.getElementById('prog-sel-class');
+  const selS = document.getElementById('prog-sel-subj');
+  if (!selC || !selS) return;
+  const cn = selC.value;
+  const subjKey = selS.value;
+  if (!cn || !subjKey) { body.innerHTML='<div class="prog-empty">Seleziona classe e materia.</div>'; return; }
+  // iterate all school year days in order
+  const start = parseDate(state.schoolStart);
+  const end   = parseDate(state.schoolEnd);
+  if (!start || !end) { body.innerHTML='<div class="prog-empty">Configura l\'anno scolastico nelle Impostazioni.</div>'; return; }
+  const lessons = state.lessons[cn]||{};
+  const cancelled = state.cancelled[cn]||{};
+  const entries = [];
+  const d = new Date(start);
+  while (d <= end) {
+    const dow = d.getDay();
+    if (dow >= 1 && dow <= 5) {
+      const slots = slotsOnDay(d, cn);
+      slots.forEach(s => {
+        const eff = effectiveSubject(s.slotKey, s.subject, cn);
+        if (eff === subjKey && !cancelled[s.slotKey]) {
+          const data = lessons[s.slotKey];
+          if (data && (data.lesson||data.homework||data.material||data.notes)) {
+            entries.push({ date: new Date(d), slotKey: s.slotKey, time: s.time, data });
+          }
+        }
+      });
+    }
+    d.setDate(d.getDate()+1);
+  }
+  if (!entries.length) {
+    const sc = subjConfig(subjKey);
+    body.innerHTML = `<div class="prog-empty">Nessuna lezione registrata di ${sc?sc.label:subjKey} per ${cn}.</div>`;
+    return;
+  }
+  // count label
+  const countDiv = document.createElement('div');
+  countDiv.style.cssText='font-size:.78rem;color:var(--muted);margin-bottom:.8rem;font-weight:600;';
+  countDiv.textContent = `${entries.length} lezione${entries.length!==1?'e':''} registrata${entries.length!==1?'e':''}`;
+  body.appendChild(countDiv);
+  entries.forEach((e, i) => {
+    const card = document.createElement('div'); card.className = 'prog-lesson';
+    const sc = subjConfig(subjKey);
+    if (sc) { card.style.borderLeftColor = sc.border || sc.pillBg || 'var(--grape)'; }
+    const dateStr = `${DAYS_IT[e.date.getDay()]} ${e.date.getDate()} ${MONTHS_IT[e.date.getMonth()]} ${e.date.getFullYear()}`;
+    card.innerHTML = `
+      <div class="pl-date">${i+1}. ${dateStr} – ${e.time}</div>
+      ${e.data.lesson ? `<div class="pl-lesson">📖 ${e.data.lesson}</div>` : ''}
+      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${e.data.material}</div>` : ''}
+      ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
+      ${e.data.notes ? `<div class="pl-notes">📝 ${e.data.notes}</div>` : ''}
+    `;
+    body.appendChild(card);
+  });
+}
+
+// ─── 3. MATERIALI DEL GIORNO ─────────────────────────
+function showMaterialsView() {
+  activateSecondaryNavBtn('navMaterials');
+  openExtraView('🎒 Materiali del Giorno', (ctrl) => {
+    ctrl.innerHTML = '';
+    const lbl = document.createElement('label'); lbl.textContent = 'Data:'; ctrl.appendChild(lbl);
+    const inp = document.createElement('input'); inp.type='date'; inp.id='mat-date-inp';
+    inp.value = fmtDate(new Date()); // default oggi
+    inp.onchange = () => renderMaterialsBody(document.getElementById('evpBody'));
+    ctrl.appendChild(inp);
+  }, (body) => {
+    renderMaterialsBody(body);
+  });
+}
+function renderMaterialsBody(body) {
+  body.innerHTML = '';
+  const inp = document.getElementById('mat-date-inp');
+  if (!inp) return;
+  const dateStr = inp.value;
+  if (!dateStr) { body.innerHTML='<div class="mat-empty">Seleziona una data.</div>'; return; }
+  const date = parseDate(dateStr);
+  if (!date) return;
+  if (!isInSchoolYear(date)) {
+    body.innerHTML='<div class="mat-empty">La data selezionata è fuori dall\'anno scolastico.</div>'; return;
+  }
+  // collect all materials for this day across all classes
+  const items = []; // {className, subject, time, material}
+  state.classes.forEach(cn => {
+    const slots = slotsOnDay(date, cn);
+    const lessons = state.lessons[cn]||{};
+    const cancelled = state.cancelled[cn]||{};
+    slots.forEach(s => {
+      if (cancelled[s.slotKey]) return;
+      const data = lessons[s.slotKey];
+      if (data && data.material && data.material.trim()) {
+        const eff = effectiveSubject(s.slotKey, s.subject, cn);
+        items.push({ className: cn, subject: eff, time: s.time, material: data.material.trim() });
+      }
+    });
+  });
+  const dateLabel = `${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
+  const hdr = document.createElement('div'); hdr.className='mat-day-header';
+  hdr.innerHTML = `📅 <span style="color:var(--text)">${dateLabel}</span>`;
+  body.appendChild(hdr);
+  if (!items.length) {
+    body.innerHTML += '<div class="mat-empty">Nessun materiale registrato per questo giorno.<br><span style="font-size:.8rem">Apri le lezioni del giorno e aggiungi il campo "Materiale necessario".</span></div>';
+    return;
+  }
+  // sort by time
+  items.sort((a,b) => a.time.localeCompare(b.time));
+  const countDiv = document.createElement('div');
+  countDiv.style.cssText='font-size:.78rem;color:var(--muted);margin-bottom:.9rem;font-weight:600;';
+  countDiv.textContent = `${items.length} voce${items.length!==1?'i':''} trovata${items.length!==1?'e':''}`;
+  body.appendChild(countDiv);
+  items.forEach(item => {
+    const row = document.createElement('div'); row.className='mat-item';
+    const cn = item.className;
+    const color = (state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD';
+    row.style.borderLeftColor = color;
+    const sc = subjConfig(item.subject);
+    const subjLbl = sc ? sc.label : item.subject;
+    row.innerHTML = `
+      <div class="mi-label">
+        <span style="display:flex;align-items:center;gap:4px;">
+          <span style="width:9px;height:9px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+          ${cn}
+        </span>
+        <span style="font-weight:500;color:var(--muted);font-size:.7rem;">${subjLbl} ${item.time}</span>
+      </div>
+      <div class="mi-text">🎒 ${item.material}</div>
+    `;
+    body.appendChild(row);
+  });
 }
 
 // ══════════════════════════════════════════════════════
