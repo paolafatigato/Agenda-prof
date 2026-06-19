@@ -27,11 +27,13 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .hbtn.settings-btn{background:var(--bg2);font-size:1rem;padding:5px 10px;}
 .hbtn.settings-btn:hover{border-color:var(--grape);}
 #currentLabel{font-size:0.92rem;font-weight:600;color:var(--blue);min-width:150px;text-align:center;}
-#syncStatus{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;}
-#syncDot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;}
-#syncDot.ok{background:var(--green);}
-#syncDot.err{background:var(--coral);}
-#syncDot.loading{background:var(--sky);animation:pulse .8s infinite;}
+#syncStatus{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;position:relative;}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.err{background:var(--coral);}
+.sync-dot.loading{background:var(--sky);animation:pulse .8s infinite;}
+.sync-dot[title]{cursor:help;}
+.sync-dot.tooltip:hover::after{content:attr(data-label);position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:5px 10px;border-radius:6px;font-size:0.68rem;white-space:nowrap;z-index:1000;font-weight:600;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* CLASS BAR */
@@ -394,9 +396,18 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 /* MOBILE RESPONSIVE */
 @media (max-width:768px) {
   #calArea{padding:1.1rem 1.4rem 1rem;}
-  header{flex-direction:column;align-items:flex-start;}
-  .nav-btns{width:100%;justify-content:flex-start;flex-wrap:wrap;}
-  #currentLabel{min-width:auto;width:100%;text-align:left;}
+  header{flex-wrap:wrap;}
+  .view-tabs{width:100%;order:2;}
+  .nav-btns{width:100%;order:3;flex-wrap:nowrap;justify-content:flex-start;gap:3px;}
+  .nav-back{flex-shrink:0;}
+  .nav-label{flex:1;min-width:auto;text-align:center;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .nav-forward{flex-shrink:0;}
+  .nav-today{display:none !important;}
+  .hbtn{padding:5px 10px;font-size:0.78rem;}
+  .hbtn.settings-btn{margin-left:auto;}
+  #authBtn{flex-shrink:0;}
+  #todoConnectBtn{display:none !important;}
+  #syncStatus{gap:5px;margin-left:auto;order:10;}
 }
 
 /* AUTH GATE */
@@ -451,11 +462,14 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   </div>
   
   <div class="nav-btns">
-    <button class="hbtn" onclick="navigate(-1)">◀</button>
-    <span id="currentLabel"></span>
-    <button class="hbtn" onclick="navigate(1)">▶</button>
-    <button class="hbtn" onclick="goToday()">Oggi</button>
-    <div id="syncStatus"><div id="syncDot"></div><span id="syncLabel">–</span></div>
+    <button class="hbtn nav-back" onclick="navigate(-1)">◀</button>
+    <span id="currentLabel" class="nav-label"></span>
+    <button class="hbtn nav-forward" onclick="navigate(1)">▶</button>
+    <button class="hbtn nav-today" onclick="goToday()" style="display:none;">Oggi</button>
+    <div id="syncStatus">
+      <div class="sync-dot ok tooltip" id="syncDotFirebase" data-label="Sincronizzato" title="Sincronizzato"></div>
+      <div class="sync-dot ok tooltip" id="syncDotTodo" data-label="Todo collegata" title="Todo collegata" style="display:none;"></div>
+    </div>
     <button class="hbtn" id="authBtn" onclick="toggleAuth()">Accedi</button>
     <button class="hbtn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
     <button class="hbtn settings-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
@@ -725,18 +739,27 @@ window.connectTodoAppFromButton = async function() {
 // Shows/hides/updates the header button based on current connection state.
 function updateTodoConnectButton() {
   const btn = document.getElementById('todoConnectBtn');
+  const todoDot = document.getElementById('syncDotTodo');
+  
   if (!btn) return;
-  if (window._guestMode || !currentUser) { btn.style.display = 'none'; return; }
+  if (window._guestMode || !currentUser) { 
+    btn.style.display = 'none';
+    if (todoDot) todoDot.style.display = 'none';
+    return;
+  }
+  
   if (window._todoSyncEnabled) {
     btn.style.display = 'inline-block';
     btn.textContent = '✅ Todo collegata';
     btn.disabled = true;
     btn.title = 'La tua Todo app è collegata e sincronizzata';
+    if (todoDot) todoDot.style.display = 'inline-block';
   } else {
     btn.style.display = 'inline-block';
     btn.textContent = '🔗 Collega a Todo';
     btn.disabled = false;
     btn.title = 'Collega la tua Todo app per inviare i materiali da preparare come task';
+    if (todoDot) todoDot.style.display = 'none';
   }
 }
 
@@ -851,10 +874,12 @@ window._everSawRemoteLessons = false;
 
 // ── sync indicator (header, only visible once app is shown) ──
 function setSyncStatus(s, label) {
-  const dot = document.getElementById('syncDot');
-  const lbl = document.getElementById('syncLabel');
-  if (dot) dot.className = s;
-  if (lbl) lbl.textContent = label;
+  const dotFirebase = document.getElementById('syncDotFirebase');
+  if (dotFirebase) {
+    dotFirebase.className = 'sync-dot ok tooltip';
+    dotFirebase.setAttribute('data-label', label || 'Sincronizzato');
+    dotFirebase.title = label || 'Sincronizzato';
+  }
 }
 function setGateStatus(label) {
   const el = document.getElementById('gateStatus');
