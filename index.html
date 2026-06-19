@@ -455,6 +455,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <button class="hbtn" onclick="goToday()">Oggi</button>
     <div id="syncStatus"><div id="syncDot"></div><span id="syncLabel">–</span></div>
     <button class="hbtn" id="authBtn" onclick="toggleAuth()">Accedi</button>
+    <button class="hbtn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
     <button class="hbtn settings-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
   </div>
 </header>
@@ -567,10 +568,13 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   </div>
   <div class="modal-field">
     <label>🎒 Materiale necessario</label>
-    <div style="display:flex;justify-content:flex-start;gap:18px;font-size:0.68rem;color:var(--muted);
-      margin-bottom:3px;padding-left:9px;">
-      <span title="Spunta quando il materiale è pronto/preparato">✅ pronto</span>
-      <span title="Spunta quando hai usato questo materiale">☑ usato</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:18px;font-size:0.68rem;color:var(--muted);
+      margin-bottom:3px;padding-left:9px;padding-right:9px;">
+      <span style="display:flex;gap:18px;">
+        <span title="Spunta quando il materiale è pronto/preparato">✅ pronto</span>
+        <span title="Spunta quando hai usato questo materiale">☑ usato</span>
+      </span>
+      <span id="todoSyncBadge" style="display:none;font-weight:600;" title="I materiali non pronti vengono inviati come task alla tua Todo app">🔗 Todo</span>
     </div>
     <div class="mat-checklist" id="matChecklist"></div>
   </div>
@@ -637,7 +641,8 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where,
+         addDoc, updateDoc, getDocs, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -655,6 +660,180 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 const DOC_REF = doc(db, 'agenda', 'main');
+
+// ══════════════════════════════════════════════════════
+//  TODO APP INTEGRATION — second Firebase project
+// ══════════════════════════════════════════════════════
+const todoFirebaseConfig = {
+  apiKey: "AIzaSyBbS8KHnJewqmDkCPkTpWOudiQz62CMmMU",
+  authDomain: "todo-list-e14cb.firebaseapp.com",
+  projectId: "todo-list-e14cb",
+  storageBucket: "todo-list-e14cb.firebasestorage.app",
+  messagingSenderId: "163171617012",
+  appId: "1:163171617012:web:928e02fd5a2c4fe6a536a1"
+};
+const todoApp  = initializeApp(todoFirebaseConfig, 'todoApp');
+const todoDb   = getFirestore(todoApp);
+const todoAuth = getAuth(todoApp);
+let todoUserUid = null;
+window._todoSyncEnabled = false;
+
+// Firebase Auth persists sessions in IndexedDB/localStorage by default, scoped
+// per Firebase app instance. onAuthStateChanged fires immediately with the
+// restored user if one exists — no popup needed on repeat visits.
+onAuthStateChanged(todoAuth, (user) => {
+  if (user) {
+    todoUserUid = user.uid;
+    window._todoSyncEnabled = true;
+    console.log('✅ Sessione Todo già attiva:', user.email);
+    if (window._onTodoConnected) window._onTodoConnected();
+  } else {
+    window._todoSyncEnabled = false;
+  }
+  if (window._todoSyncEnabled !== undefined) updateTodoConnectButton();
+});
+
+async function connectTodoApp(allowPopup = true) {
+  // Already connected via restored session (the onAuthStateChanged above)?
+  if (window._todoSyncEnabled) { updateTodoConnectButton(); return; }
+  if (!allowPopup) return; // wait for the restored-session listener instead
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(todoAuth, provider);
+    todoUserUid = result.user.uid;
+    window._todoSyncEnabled = true;
+    console.log('✅ Collegata a Todo app:', result.user.email);
+    if (window._onTodoConnected) window._onTodoConnected();
+  } catch (e) {
+    console.warn('Todo app non collegata:', e.message);
+    window._todoSyncEnabled = false;
+  }
+  updateTodoConnectButton();
+}
+
+// Explicit click handler for the "🔗 Collega a Todo" header button —
+// always runs inside a direct user click, so the popup is never blocked.
+window.connectTodoAppFromButton = async function() {
+  const btn = document.getElementById('todoConnectBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Connessione…'; }
+  await connectTodoApp(true);
+  if (btn) btn.disabled = false;
+};
+
+// Shows/hides/updates the header button based on current connection state.
+function updateTodoConnectButton() {
+  const btn = document.getElementById('todoConnectBtn');
+  if (!btn) return;
+  if (window._guestMode || !currentUser) { btn.style.display = 'none'; return; }
+  if (window._todoSyncEnabled) {
+    btn.style.display = 'inline-block';
+    btn.textContent = '✅ Todo collegata';
+    btn.disabled = true;
+    btn.title = 'La tua Todo app è collegata e sincronizzata';
+  } else {
+    btn.style.display = 'inline-block';
+    btn.textContent = '🔗 Collega a Todo';
+    btn.disabled = false;
+    btn.title = 'Collega la tua Todo app per inviare i materiali da preparare come task';
+  }
+}
+
+// ── Todo list/task helpers ──
+const TODO_LIST_NAME = '📅 Materiali Agenda';
+let todoMaterialsListId = null; // cached once found/created
+
+function todoUserListsRef() {
+  if (!todoUserUid) throw new Error('Todo non collegata');
+  return collection(todoDb, 'users', todoUserUid, 'lists');
+}
+function todoUserTasksRef(listId) {
+  if (!todoUserUid) throw new Error('Todo non collegata');
+  return collection(todoDb, 'users', todoUserUid, 'lists', listId, 'tasks');
+}
+
+// Finds the "📅 Materiali Agenda" list, creating it if missing. Cached after first call.
+async function ensureTodoMaterialsList() {
+  if (todoMaterialsListId) return todoMaterialsListId;
+  const listsSnap = await getDocs(todoUserListsRef());
+  let found = null;
+  listsSnap.forEach(d => { if (d.data().name === TODO_LIST_NAME) found = d.id; });
+  if (found) { todoMaterialsListId = found; return found; }
+  // Not found — create it
+  const countSnap = await getDocs(todoUserListsRef());
+  const newList = await addDoc(todoUserListsRef(), {
+    name: TODO_LIST_NAME,
+    starred: false,
+    order: countSnap.size,
+    createdAt: serverTimestamp(),
+  });
+  todoMaterialsListId = newList.id;
+  return newList.id;
+}
+
+// Finds an existing task by its agendaLinkId, or null.
+async function findTodoTaskByLinkId(listId, linkId) {
+  const q = query(todoUserTasksRef(listId), where('agendaLinkId', '==', linkId));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() };
+}
+
+// Creates or updates a Todo task linked to a single Agenda material item.
+// deadlineDate: JS Date for the lesson day (task deadline = day before, per spec)
+async function syncMaterialToTodo(linkId, materialText, isDone, deadlineDate) {
+  if (!window._todoSyncEnabled || !linkId || !materialText) return;
+  try {
+    const listId = await ensureTodoMaterialsList();
+    const existing = await findTodoTaskByLinkId(listId, linkId);
+    const taskName = `Prepara: ${materialText}`;
+    let deadlineStr = null;
+    if (deadlineDate) {
+      const d = new Date(deadlineDate);
+      d.setDate(d.getDate() - 1); // day before the lesson
+      deadlineStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    if (existing) {
+      const updates = { name: taskName };
+      if (existing.completed !== isDone) updates.completed = isDone;
+      if (deadlineStr && existing.deadline !== deadlineStr) updates.deadline = deadlineStr;
+      await updateDoc(doc(todoDb, 'users', todoUserUid, 'lists', listId, 'tasks', existing.id), updates);
+    } else if (!isDone) {
+      // Only create a fresh task if the material isn't already marked ready
+      const tasksSnap = await getDocs(todoUserTasksRef(listId));
+      await addDoc(todoUserTasksRef(listId), {
+        name: taskName, completed: false, notes: '', order: tasksSnap.size,
+        deadline: deadlineStr, plannedPeriod: null, plannedPeriodUntil: null,
+        overdue: false, recurrence: null, milestones: [],
+        agendaLinkId: linkId,
+        createdAt: serverTimestamp(),
+      });
+    }
+  } catch (e) {
+    console.warn('Sync materiale → Todo fallita:', e);
+  }
+}
+window.syncMaterialToTodo = syncMaterialToTodo;
+
+// Listens for completed-state changes on Todo tasks linked to Agenda materials,
+// and reflects them back into the Agenda's material "ready" checkbox.
+function listenTodoMaterialUpdates() {
+  if (!window._todoSyncEnabled) return;
+  ensureTodoMaterialsList().then(listId => {
+    // Listen to the whole list and filter client-side — avoids needing a
+    // Firestore composite index for an inequality-on-agendaLinkId query.
+    onSnapshot(todoUserTasksRef(listId), (snap) => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'modified' || change.type === 'added') {
+          const task = change.doc.data();
+          if (task.agendaLinkId && window._onTodoTaskUpdate) {
+            window._onTodoTaskUpdate(task.agendaLinkId, task.completed);
+          }
+        }
+      });
+    });
+  }).catch(e => console.warn('Listener Todo non avviato:', e));
+}
+window._onTodoConnected = function() { listenTodoMaterialUpdates(); };
 
 // Returns true if a state object has zero lesson entries across all classes
 function _isLessonsEmpty(stateObj) {
@@ -793,6 +972,16 @@ onAuthStateChanged(auth, (user) => {
     if (authBtn) { authBtn.textContent = user.displayName || 'Account'; authBtn.title = 'Esci'; }
     setGateStatus('Connessione ai tuoi dati…');
     setSyncStatus('loading', 'Connessione…');
+    updateTodoConnectButton();
+    // Todo app connection with a fresh popup is attempted directly inside
+    // connectTodoAppFromButton(), within that button's own click gesture
+    // (required by browsers so the popup isn't blocked). Here we only try
+    // the silent restore path — never a fresh popup without an active
+    // user gesture on this specific button.
+    if (!window._todoConnectAttempted) {
+      window._todoConnectAttempted = true;
+      connectTodoApp(false);
+    }
     if (unsubscribeFirestore) unsubscribeFirestore();
     let revealed = false;
     unsubscribeFirestore = onSnapshot(DOC_REF, { includeMetadataChanges: true }, (snap) => {
@@ -854,6 +1043,7 @@ onAuthStateChanged(auth, (user) => {
     if (authBtn) { authBtn.textContent = 'Accedi'; authBtn.title = 'Accedi con Google'; }
     setSyncStatus('err', 'Non autenticato');
     if (unsubscribeFirestore) { unsubscribeFirestore(); unsubscribeFirestore = null; }
+    updateTodoConnectButton();
   }
 });
 </script>
@@ -1501,6 +1691,9 @@ function openModal(key, date, patternSubj, time, status, className) {
   const currSubj=effectiveSubject(key, patternSubj, modalClass);
   const prev=prevLessonData(date, currSubj, modalClass);
 
+  const todoBadge = document.getElementById('todoSyncBadge');
+  if (todoBadge) todoBadge.style.display = window._todoSyncEnabled ? 'inline' : 'none';
+
   document.getElementById('modalTitle').textContent=`${time} – ${modalClass}`;
   document.getElementById('modalDate').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
 
@@ -1565,10 +1758,58 @@ function _persistCurrentSlot() {
     state.lessons[modalClass][modalKey] = { lesson, material, homework, notes, subjectOverride: override };
   }
   persist();
+  _syncAllMaterialRowsToTodo();
 }
-function closeModal(e) {
+
+// Pushes every material row currently in the modal to the Todo app
+// (create/update tasks, skip rows already marked ready with no existing task).
+function _syncAllMaterialRowsToTodo() {
+  if (!window._todoSyncEnabled || !modalKey) return;
+  const lessonDateStr = modalKey.slice(0, 10); // "YYYY-MM-DD"
+  const lessonDate = parseDate(lessonDateStr);
+  document.querySelectorAll('#matChecklist .mat-check-item').forEach(row => {
+    window._syncMaterialRow(row, lessonDate);
+  });
+}
+window._syncMaterialRow = function(row, lessonDate) {
+  if (!window._todoSyncEnabled) return;
+  const txt   = row.querySelector('input[type=text]');
+  const ready = row.querySelector('.mat-ready-check');
+  const text  = txt ? txt.value.trim() : '';
+  if (!text) return;
+  let linkId = row.dataset.linkId;
+  if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
+  const dateForDeadline = lessonDate || (modalKey ? parseDate(modalKey.slice(0,10)) : null);
+  if (window.syncMaterialToTodo) window.syncMaterialToTodo(linkId, text, ready.checked, dateForDeadline);
+};
+
+// When a Todo task's completed state changes, reflect it into the matching
+// material's "ready" checkbox across all classes/lessons in local state.
+window._onTodoTaskUpdate = function(linkId, completed) {
+  let changed = false;
+  Object.keys(state.lessons || {}).forEach(cls => {
+    Object.keys(state.lessons[cls] || {}).forEach(key => {
+      const entry = state.lessons[cls][key];
+      if (!entry || !entry.material || !entry.material.includes(linkId)) return;
+      const items = matDeserialize(entry.material);
+      let rowChanged = false;
+      items.forEach(it => { if (it.linkId === linkId && it.ready !== completed) { it.ready = completed; rowChanged = true; } });
+      if (rowChanged) {
+        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}`).join('\n');
+        changed = true;
+        // If this lesson's modal happens to be open right now, refresh its checklist live
+        if (modalKey === key && modalClass === cls) {
+          matBuildChecklist(items);
+        }
+      }
+    });
+  });
+  if (changed) { persist(); render(); }
+};
+
+function closeModal(e, skipPersist = false) {
   if (!e||e.target===document.getElementById('overlay')) {
-    if (document.getElementById('overlay').classList.contains('open')) _persistCurrentSlot();
+    if (!skipPersist && document.getElementById('overlay').classList.contains('open')) _persistCurrentSlot();
     document.getElementById('overlay').classList.remove('open'); modalKey=null;
     render();
   }
@@ -1576,7 +1817,7 @@ function closeModal(e) {
 function saveSlot() {
   if (!modalKey) return;
   _persistCurrentSlot();
-  closeModal(); render();
+  closeModal(null, true); render();
 }
 function clearSlot() {
   if (!modalKey) return;
@@ -2341,15 +2582,20 @@ function autoResizeTA(el) {
 // ══════════════════════════════════════════════════════
 //  MATERIAL CHECKLIST
 // ══════════════════════════════════════════════════════
-// Material stored as "text||used||ready" lines separated by \n
-// e.g. "Libro||true||false\nFotocopie||false||true"
+// Material stored as "text||used||ready||linkId" lines separated by \n
+// linkId is a stable per-row id (survives text edits) used to match this
+// material item to its twin task in the Todo app.
+// e.g. "Libro||true||false||a1b2c3\nFotocopie||false||true||d4e5f6"
+function _genLinkId() { return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function matSerialize() {
   const items = document.querySelectorAll('#matChecklist .mat-check-item');
   return [...items].map(row => {
     const chk   = row.querySelector('.mat-used-check');
     const ready = row.querySelector('.mat-ready-check');
     const txt   = row.querySelector('input[type=text]');
-    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false');
+    let linkId  = row.dataset.linkId;
+    if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
+    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false') + '||' + linkId;
   }).filter(s => {
     const parts = s.split('||');
     return parts[0].trim();
@@ -2362,25 +2608,28 @@ function matDeserialize(raw) {
     const text = parts[0] || '';
     const checked = parts[1] === 'true';
     const ready   = parts[2] === 'true';
-    return { text, checked, ready };
+    const linkId  = parts[3] || _genLinkId();
+    return { text, checked, ready, linkId };
   }).filter(i => i.text.trim());
 }
 function matBuildChecklist(items) {
   const box = document.getElementById('matChecklist');
   box.innerHTML = '';
-  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready));
+  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready, item.linkId));
   matAddAddButton(box);
 }
-function matAddRow(box, text='', checked=false, ready=false) {
+function matAddRow(box, text='', checked=false, ready=false, linkId=null) {
   // insert before the add-button if present
   const addBtn = box.querySelector('.mat-add-btn');
   const row = document.createElement('div');
   row.className = 'mat-check-item';
+  row.dataset.linkId = linkId || _genLinkId();
 
   const readyWrap = document.createElement('span'); readyWrap.className='mat-ready-wrap';
   readyWrap.title = 'Pronto / già preparato';
   const readyChk = document.createElement('input'); readyChk.type='checkbox';
   readyChk.className='mat-ready-check'; readyChk.checked=ready;
+  readyChk.onchange = () => { if (window._syncMaterialRow) window._syncMaterialRow(row); };
   readyWrap.appendChild(readyChk);
 
   const chk = document.createElement('input'); chk.type='checkbox'; chk.className='mat-used-check';
