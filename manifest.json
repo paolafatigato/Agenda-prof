@@ -2,7 +2,7 @@
   "name": "Agenda Prof",
   "short_name": "Agenda",
   "description": "A professional agenda application for teachers",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#FDF6EE",
   "theme_color": "#744F87",
