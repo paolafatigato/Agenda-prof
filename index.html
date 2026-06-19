@@ -124,6 +124,11 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .slot-card .sc-title{font-size:0.8rem;font-weight:700;}
 .slot-card .sc-override{font-size:0.64rem;opacity:.7;font-style:italic;}
 .slot-card .sc-lesson{font-size:0.72rem;font-weight:500;}
+.slot-card .sc-lesson-title{font-size:0.78rem;font-weight:700;line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.slot-card .sc-lesson-body{font-size:0.68rem;font-weight:400;opacity:.85;
+  margin-top:1px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;}
 .slot-card .sc-hw-prev{margin-top:3px;background:rgba(255,255,255,.45);border-radius:5px;
   padding:2px 5px;font-size:0.65rem;font-weight:400;line-height:1.4;}
 .slot-card .sc-hw-prev strong{font-weight:700;}
@@ -246,6 +251,10 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .mat-check-item:last-of-type{border-bottom:none;}
 .mat-check-item input[type=checkbox]{width:15px;height:15px;flex-shrink:0;
   accent-color:var(--grape);cursor:pointer;margin:0;}
+.mat-ready-check{width:15px;height:15px;flex-shrink:0;accent-color:var(--green);
+  cursor:pointer;margin:0;}
+.mat-ready-wrap{display:flex;align-items:center;flex-shrink:0;}
+.mat-ready-wrap[title]{cursor:help;}
 .mat-check-item input[type=text]{flex:1;border:none;outline:none;background:transparent;
   font-family:inherit;font-size:0.84rem;color:var(--text);padding:2px 0;line-height:1.4;}
 .mat-check-item input[type=text].checked-item{text-decoration:line-through;color:var(--muted);}
@@ -341,9 +350,9 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   background:var(--evp-color, var(--mauve));}
 /* Per-panel accent colors */
-.evp-header[data-panel="schedule"] { background: var(--lime); }
-.evp-header[data-panel="lessons"]  { background: var(--mauve); }
-.evp-header[data-panel="materials"]{ background: var(--salmon); }
+.evp-header[data-panel="schedule"] { background: var(--blue); }
+.evp-header[data-panel="lessons"]  { background: var(--grape); }
+.evp-header[data-panel="materials"]{ background: var(--green); }
 .evp-header h2{font-size:1.05rem;font-weight:700;flex:1;margin:0;}
 .evp-close{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;
   padding:5px 14px;font-size:0.86rem;cursor:pointer;font-weight:600;}
@@ -390,18 +399,46 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   #currentLabel{min-width:auto;width:100%;text-align:left;}
 }
 
-@media (max-width:480px) {
-  body{font-size:0.95rem;}
-  #calArea{padding:1rem 0.8rem 0.5rem;}
-  header{padding:0.5rem 0.8rem;}
-  #classBar{padding:0.3rem 0.8rem;gap:8px;}
-  #secondaryNav{padding:0.4rem 0.8rem;top:calc(58px + 40px);}
-  .view-tabs{order:3;width:100%;margin-top:0.5rem;}
-}
-</style>
+/* AUTH GATE */
+#authGate{position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.6rem;
+  padding:2rem;text-align:center;}
+#authGate.hidden{display:none;}
+#authGate .gate-logo{font-size:2.6rem;}
+#authGate h1{font-size:1.4rem;font-weight:700;color:var(--grape);}
+#authGate p{font-size:0.92rem;color:var(--muted);max-width:380px;line-height:1.5;}
+.gate-btn{border:none;border-radius:12px;padding:13px 28px;font-size:0.96rem;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .12s,box-shadow .12s;
+  min-width:260px;justify-content:center;}
+.gate-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--shadow);}
+.gate-btn-google{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+.gate-btn-guest{background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);font-weight:600;font-size:0.86rem;}
+#authGate .gate-status{font-size:0.8rem;color:var(--muted);min-height:1.2rem;}
+#authGate .gate-warn{font-size:0.76rem;color:var(--coral);max-width:380px;line-height:1.5;background:#FFF0EF;
+  border:1.5px solid #F5B8B5;border-radius:10px;padding:9px 14px;display:none;}
+#authGate .gate-warn.show{display:block;}
+#appRoot.gate-hidden{display:none;}
+.guest-badge{background:var(--bg2);color:var(--muted);font-size:0.7rem;font-weight:700;
+  border-radius:20px;padding:2px 10px;border:1.5px dashed var(--border);}
+  </style>
 </head>
 <body>
 
+<!-- AUTH GATE -->
+<div id="authGate">
+  <div class="gate-logo">📅</div>
+  <h1>Agenda Professoressa</h1>
+  <p>Accedi con Google per sincronizzare i tuoi dati su tutti i dispositivi, oppure continua come ospite per usare l'agenda solo su questo dispositivo (i dati resteranno solo qui).</p>
+  <button class="gate-btn gate-btn-google" onclick="window.signInWithGoogle()">
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.87-3.04.87-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.73A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.73V4.94H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.06l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.94l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+    Accedi con Google
+  </button>
+  <button class="gate-btn gate-btn-guest" onclick="window.continueAsGuest()">👤 Continua come ospite (solo questo dispositivo)</button>
+  <div class="gate-status" id="gateStatus"></div>
+  <div class="gate-warn" id="gateWarn">⚠️ In modalità ospite i tuoi dati restano solo su questo browser e non si sincronizzano con altri dispositivi.</div>
+</div>
+
+<div id="appRoot" class="gate-hidden">
 <header>
   <h1>📅 Agenda</h1>
   <div class="view-tabs">
@@ -530,6 +567,11 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   </div>
   <div class="modal-field">
     <label>🎒 Materiale necessario</label>
+    <div style="display:flex;justify-content:flex-start;gap:18px;font-size:0.68rem;color:var(--muted);
+      margin-bottom:3px;padding-left:9px;">
+      <span title="Spunta quando il materiale è pronto/preparato">✅ pronto</span>
+      <span title="Spunta quando hai usato questo materiale">☑ usato</span>
+    </div>
     <div class="mat-checklist" id="matChecklist"></div>
   </div>
   <div class="modal-field">
@@ -614,16 +656,45 @@ const db  = getFirestore(app);
 const auth = getAuth(app);
 const DOC_REF = doc(db, 'agenda', 'main');
 
-// ── sync indicator ──
+// Returns true if a state object has zero lesson entries across all classes
+function _isLessonsEmpty(stateObj) {
+  if (!stateObj || !stateObj.lessons) return true;
+  const classes = Object.keys(stateObj.lessons);
+  if (!classes.length) return true;
+  return classes.every(c => {
+    const slots = stateObj.lessons[c];
+    return !slots || Object.keys(slots).length === 0;
+  });
+}
+window._everSawRemoteLessons = false;
+
+// ── sync indicator (header, only visible once app is shown) ──
 function setSyncStatus(s, label) {
   const dot = document.getElementById('syncDot');
   const lbl = document.getElementById('syncLabel');
-  dot.className = s;   // 'ok' | 'err' | 'loading'
-  lbl.textContent = label;
+  if (dot) dot.className = s;
+  if (lbl) lbl.textContent = label;
+}
+function setGateStatus(label) {
+  const el = document.getElementById('gateStatus');
+  if (el) el.textContent = label;
 }
 
 // ── upload state to Firestore ──
 window._fbSave = async function(stateObj) {
+  if (window._guestMode) {
+    localStorage.setItem('teacherCal3', JSON.stringify(stateObj));
+    return;
+  }
+  // Safety guard: never silently overwrite a document that already has
+  // lessons with a state object that has none — this would only happen
+  // due to a loading bug, never from legitimate user action (clearing a
+  // single slot never empties the whole `lessons` object across all classes).
+  if (window._everSawRemoteLessons && _isLessonsEmpty(stateObj)) {
+    console.warn('Blocked an automatic save that would have erased remote lesson data.');
+    setSyncStatus('err', 'Salvataggio bloccato (sicurezza)');
+    return;
+  }
   setSyncStatus('loading', 'Salvataggio…');
   try {
     await setDoc(DOC_REF, { data: JSON.stringify(stateObj) });
@@ -631,7 +702,6 @@ window._fbSave = async function(stateObj) {
   } catch(e) {
     console.error(e);
     setSyncStatus('err', 'Errore sync');
-    // fallback to localStorage only
     localStorage.setItem('teacherCal3', JSON.stringify(stateObj));
   }
 };
@@ -639,30 +709,44 @@ window._fbSave = async function(stateObj) {
 let unsubscribeFirestore = null;
 let currentUser = null;
 
-setSyncStatus('loading', 'In attesa login…');
+// ── reveal the app, hide the gate ──
+function revealApp() {
+  document.getElementById('authGate').classList.add('hidden');
+  document.getElementById('appRoot').classList.remove('gate-hidden');
+  window._gateResolved = true;
+  if (window.startApp) window.startApp();
+}
 
-// Auth helpers exposed to global scope for header button
+// ── GUEST MODE ──
+window.continueAsGuest = function() {
+  window._guestMode = true;
+  setSyncStatus('err', 'Modalità ospite');
+  const authBtn = document.getElementById('authBtn');
+  if (authBtn) { authBtn.textContent = '👤 Ospite'; authBtn.title = 'Modalità ospite — accedi con Google per sincronizzare'; }
+  revealApp();
+};
+
+// ── GOOGLE SIGN-IN ──
 window.signInWithGoogle = async function() {
   const provider = new GoogleAuthProvider();
-  setSyncStatus('loading', 'Accesso…');
+  setGateStatus('Accesso in corso…');
   try {
     await signInWithPopup(auth, provider);
     return;
   } catch (err) {
     console.warn('signInWithPopup failed:', err);
-    // Fallback to redirect when popup is blocked or not supported
     if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/operation-not-supported-in-this-environment')) {
       try {
-        setSyncStatus('loading', 'Accesso via redirect…');
+        setGateStatus('Accesso via redirect…');
         await signInWithRedirect(auth, provider);
         return; // redirect will reload the page
       } catch (err2) {
         console.error('signInWithRedirect failed', err2);
-        setSyncStatus('err', 'Accesso fallito');
+        setGateStatus('⚠️ Accesso fallito. Riprova o usa la modalità ospite.');
       }
     } else {
       console.error(err);
-      setSyncStatus('err', 'Accesso fallito');
+      setGateStatus('⚠️ Accesso fallito. Riprova o usa la modalità ospite.');
     }
   }
 };
@@ -670,7 +754,7 @@ window.signInWithGoogle = async function() {
 // Complete redirect sign-in flow if present
 getRedirectResult(auth).then((result) => {
   if (result && result.user) {
-    setSyncStatus('ok', 'Autenticato');
+    setGateStatus('Autenticato, caricamento dati…');
   }
 }).catch((e) => {
   console.warn('getRedirectResult:', e);
@@ -679,7 +763,8 @@ getRedirectResult(auth).then((result) => {
 window.signOutUser = async function() {
   try {
     await signOut(auth);
-    setSyncStatus('ok', 'Disconnesso');
+    // Reload to go back to the gate cleanly
+    window.location.reload();
   } catch(e) {
     console.error(e);
   }
@@ -687,49 +772,86 @@ window.signOutUser = async function() {
 
 window.toggleAuth = function() {
   if (currentUser) window.signOutUser();
-  else window.signInWithGoogle();
+  else if (window._guestMode) {
+    // From guest mode, offer to sign in for real sync
+    window._guestMode = false;
+    document.getElementById('authGate').classList.remove('hidden');
+    document.getElementById('appRoot').classList.add('gate-hidden');
+  } else {
+    window.signInWithGoogle();
+  }
 };
 
-// ── react to auth state changes and (un)subscribe Firestore ──
+// ── react to auth state changes ──
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  if (window._guestMode) return; // ignore auth changes while explicitly in guest mode pre-reveal
   const authBtn = document.getElementById('authBtn');
-  if (authBtn) {
-    if (user) {
-      authBtn.textContent = user.displayName || 'Account';
-      authBtn.title = 'Esci';
-    } else {
-      authBtn.textContent = 'Accedi';
-      authBtn.title = 'Accedi con Google';
-    }
-  }
 
   if (user) {
+    window._guestMode = false;
+    if (authBtn) { authBtn.textContent = user.displayName || 'Account'; authBtn.title = 'Esci'; }
+    setGateStatus('Connessione ai tuoi dati…');
     setSyncStatus('loading', 'Connessione…');
     if (unsubscribeFirestore) unsubscribeFirestore();
-    unsubscribeFirestore = onSnapshot(DOC_REF, (snap) => {
+    let revealed = false;
+    unsubscribeFirestore = onSnapshot(DOC_REF, { includeMetadataChanges: true }, (snap) => {
+      const fromCache = snap.metadata.fromCache;
+      const hasPendingWrites = snap.metadata.hasPendingWrites;
+
       if (snap.exists()) {
         try {
           const remote = JSON.parse(snap.data().data);
-          // merge into window.state and re-render if already initialised
+          if (!_isLessonsEmpty(remote)) window._everSawRemoteLessons = true;
           if (window._stateReady) {
+            // App already running (e.g. re-sync after reconnect): merge live
             Object.assign(window.state, remote);
             window.buildClassBar();
             window.render();
           } else {
+            // First load: store remote state, then reveal app once
             window._remoteState = remote;
           }
-          setSyncStatus('ok', 'Sincronizzato');
+          setSyncStatus(fromCache ? 'loading' : 'ok', fromCache ? 'Sincronizzazione…' : 'Sincronizzato');
+          if (!revealed && (!fromCache || hasPendingWrites)) {
+            // Trust this snapshot: it's either confirmed by the server, or
+            // it's our own pending write (so it's definitely real data).
+            revealed = true;
+            if (!window._gateResolved) revealApp();
+          } else if (!revealed && fromCache) {
+            // Cached snapshot WITH data: safe to reveal immediately too —
+            // a populated cache means real data exists, no need to wait.
+            revealed = true;
+            if (!window._gateResolved) revealApp();
+          }
         } catch(e) { setSyncStatus('err', 'Errore dati'); }
       } else {
-        setSyncStatus('ok', 'Nuovo documento');
-        if (window._stateReady) window._fbSave(window.state);
+        // Document doesn't exist according to this snapshot.
+        // Only trust this if it's NOT from cache (i.e. confirmed by the server) —
+        // an empty cache on first load does not mean the document is empty.
+        if (!fromCache) {
+          setSyncStatus('ok', 'Nuovo documento');
+          if (window._stateReady) {
+            window._fbSave(window.state);
+          } else {
+            window._remoteState = null;
+          }
+          if (!revealed) {
+            revealed = true;
+            if (!window._gateResolved) revealApp();
+          }
+        } else {
+          // Empty cache, no server confirmation yet — keep waiting.
+          setGateStatus('Verifica dati sul cloud…');
+        }
       }
     }, (err) => {
       console.error(err);
       setSyncStatus('err', 'Offline');
+      if (!window._gateResolved) { setGateStatus('⚠️ Connessione fallita. Riprova o usa la modalità ospite.'); }
     });
   } else {
+    if (authBtn) { authBtn.textContent = 'Accedi'; authBtn.title = 'Accedi con Google'; }
     setSyncStatus('err', 'Non autenticato');
     if (unsubscribeFirestore) { unsubscribeFirestore(); unsubscribeFirestore = null; }
   }
@@ -770,19 +892,29 @@ const DEFAULT_STATE = {
   cancelled: {},   // [className][slotKey] = {reason,mode}
 };
 
-let state = {...DEFAULT_STATE};
-try {
-  const ls = localStorage.getItem('teacherCal3');
-  if (ls) state = {...state, ...JSON.parse(ls)};
-} catch(e){}
+// ══════════════════════════════════════════════════════
+//  WAIT FOR GATE RESOLUTION before touching state/localStorage
+// ══════════════════════════════════════════════════════
+// The Firebase module script (loaded just above) resolves the gate by
+// setting window._gateResolved = true, plus either window._guestMode = true
+// (use localStorage) or window._remoteState = {...} (Firestore data, may be
+// null if logged in with no existing document). We block here with a
+// synchronous-looking wait using a deferred IIFE pattern via a tiny poll,
+// so that no part of this script reads/writes storage before the person
+// has chosen how they want to use the app.
+function _waitForGate(cb) {
+  if (window._gateResolved) { cb(); return; }
+  const iv = setInterval(() => {
+    if (window._gateResolved) { clearInterval(iv); cb(); }
+  }, 20);
+}
 
-// If Firebase already pushed remote state before this script ran, apply it
-if (window._remoteState) { Object.assign(state, window._remoteState); window._remoteState = null; }
+let state = {...DEFAULT_STATE};
 window.state = state;
-window._stateReady = true;
+window._stateReady = false;
 
 function persist() {
-  localStorage.setItem('teacherCal3', JSON.stringify(state));
+  if (window._guestMode) localStorage.setItem('teacherCal3', JSON.stringify(state));
   if (window._fbSave) window._fbSave(state);
 }
 
@@ -1331,7 +1463,17 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
   if (cancData) {
     html+=`<div style="font-size:.72rem;color:#B03030;font-style:italic">🚫 ${cancData.reason||'Lezione cancellata'}</div>`;
   } else if (data&&data.lesson) {
-    html+=`<div class="sc-lesson">${data.lesson.length>55?data.lesson.slice(0,53)+'…':data.lesson}</div>`;
+    const nlIdx = data.lesson.indexOf('\n');
+    const lTitle = nlIdx !== -1 ? data.lesson.slice(0, nlIdx) : (nlIdx===-1 && data.lesson.length<=55 ? data.lesson : data.lesson);
+    const lBody  = nlIdx !== -1 ? data.lesson.slice(nlIdx+1).trim() : '';
+    if (nlIdx !== -1) {
+      // Has explicit title + body
+      html+=`<div class="sc-lesson-title">${lTitle.length>50?lTitle.slice(0,48)+'…':lTitle}</div>`;
+      if (lBody) html+=`<div class="sc-lesson-body">${lBody.length>60?lBody.slice(0,58)+'…':lBody}</div>`;
+    } else {
+      // No title, just plain body text
+      html+=`<div class="sc-lesson">${data.lesson.length>55?data.lesson.slice(0,53)+'…':data.lesson}</div>`;
+    }
     const prev=prevLessonData(date,eff,cls);
     if (prev&&prev.homework) html+=`<div class="sc-hw-prev"><strong>Prev:</strong> ${prev.homework.length>75?prev.homework.slice(0,73)+'…':prev.homework}</div>`;
   } else {
@@ -1406,31 +1548,44 @@ function openModal(key, date, patternSubj, time, status, className) {
 
   document.getElementById('overlay').classList.add('open');
 }
-function closeModal(e) {
-  if (!e||e.target===document.getElementById('overlay')) {
-    document.getElementById('overlay').classList.remove('open'); modalKey=null;
-  }
-}
-function saveSlot() {
-  if (!modalKey) return;
+function _persistCurrentSlot() {
+  if (!modalKey || !modalClass) return;
   if (!state.lessons[modalClass]) state.lessons[modalClass]={};
   const title = (document.getElementById('fLessonTitle').value||'').trim();
   const body  = (document.getElementById('fLessonBody').value||'').trim();
   const lesson = title ? (body ? title+'\n'+body : title) : body;
-  state.lessons[modalClass][modalKey] = {
-    lesson,
-    material: matSerialize(),
-    homework: document.getElementById('fHomework').value.trim(),
-    notes:    document.getElementById('fNotes').value.trim(),
-    subjectOverride: _currentOverride||null,
-  };
-  persist(); closeModal(); render();
+  const material = matSerialize();
+  const homework = document.getElementById('fHomework').value.trim();
+  const notes    = document.getElementById('fNotes').value.trim();
+  const override = _currentOverride||null;
+  // Avoid writing a totally empty object that would still count as "has data"
+  if (!lesson && !material && !homework && !notes && !override) {
+    delete state.lessons[modalClass][modalKey];
+  } else {
+    state.lessons[modalClass][modalKey] = { lesson, material, homework, notes, subjectOverride: override };
+  }
+  persist();
+}
+function closeModal(e) {
+  if (!e||e.target===document.getElementById('overlay')) {
+    if (document.getElementById('overlay').classList.contains('open')) _persistCurrentSlot();
+    document.getElementById('overlay').classList.remove('open'); modalKey=null;
+    render();
+  }
+}
+function saveSlot() {
+  if (!modalKey) return;
+  _persistCurrentSlot();
+  closeModal(); render();
 }
 function clearSlot() {
   if (!modalKey) return;
   if (confirm('Svuotare questo slot?')) {
     if (state.lessons[modalClass]) delete state.lessons[modalClass][modalKey];
-    persist(); closeModal(); render();
+    persist();
+    modalKey=null; // prevent auto-save in closeModal from re-writing it
+    document.getElementById('overlay').classList.remove('open');
+    render();
   }
 }
 
@@ -2088,7 +2243,7 @@ function renderMaterialsBody(body) {
     const subjLbl = sc ? sc.label : item.subject;
     const parsedMat = matDeserialize(item.material);
     const matHtml = parsedMat.length
-      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.9rem;">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span></span>`).join('')
+      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Usato':'Non ancora usato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span></span>`).join('')
       : `<span>${item.material}</span>`;
     row.innerHTML = `
       <div class="mi-label">
@@ -2186,45 +2341,60 @@ function autoResizeTA(el) {
 // ══════════════════════════════════════════════════════
 //  MATERIAL CHECKLIST
 // ══════════════════════════════════════════════════════
-// Material stored as "text||checked" lines separated by \n
-// e.g. "Libro||true\nFotocopie||false\nLIM||false"
+// Material stored as "text||used||ready" lines separated by \n
+// e.g. "Libro||true||false\nFotocopie||false||true"
 function matSerialize() {
   const items = document.querySelectorAll('#matChecklist .mat-check-item');
   return [...items].map(row => {
-    const chk = row.querySelector('input[type=checkbox]');
-    const txt = row.querySelector('input[type=text]');
-    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false');
-  }).filter(s => s.replace('||false','').replace('||true','').trim()).join('\n');
+    const chk   = row.querySelector('.mat-used-check');
+    const ready = row.querySelector('.mat-ready-check');
+    const txt   = row.querySelector('input[type=text]');
+    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false');
+  }).filter(s => {
+    const parts = s.split('||');
+    return parts[0].trim();
+  }).join('\n');
 }
 function matDeserialize(raw) {
   if (!raw) return [];
   return raw.split('\n').map(line => {
-    const idx = line.lastIndexOf('||');
-    if (idx === -1) return { text: line, checked: false };
-    return { text: line.slice(0, idx), checked: line.slice(idx+2) === 'true' };
+    const parts = line.split('||');
+    const text = parts[0] || '';
+    const checked = parts[1] === 'true';
+    const ready   = parts[2] === 'true';
+    return { text, checked, ready };
   }).filter(i => i.text.trim());
 }
 function matBuildChecklist(items) {
   const box = document.getElementById('matChecklist');
   box.innerHTML = '';
-  (items.length ? items : []).forEach((item, i) => matAddRow(box, item.text, item.checked));
+  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready));
   matAddAddButton(box);
 }
-function matAddRow(box, text='', checked=false) {
+function matAddRow(box, text='', checked=false, ready=false) {
   // insert before the add-button if present
   const addBtn = box.querySelector('.mat-add-btn');
   const row = document.createElement('div');
   row.className = 'mat-check-item';
-  const chk = document.createElement('input'); chk.type='checkbox'; chk.checked=checked;
+
+  const readyWrap = document.createElement('span'); readyWrap.className='mat-ready-wrap';
+  readyWrap.title = 'Pronto / già preparato';
+  const readyChk = document.createElement('input'); readyChk.type='checkbox';
+  readyChk.className='mat-ready-check'; readyChk.checked=ready;
+  readyWrap.appendChild(readyChk);
+
+  const chk = document.createElement('input'); chk.type='checkbox'; chk.className='mat-used-check';
+  chk.checked=checked; chk.title='Spunta quando lo hai usato';
+
   const inp = document.createElement('input'); inp.type='text'; inp.value=text;
   inp.placeholder='Aggiungi voce…';
   if (checked) inp.classList.add('checked-item');
-  chk.onchange = () => {
-    inp.classList.toggle('checked-item', chk.checked);
-  };
+
+  chk.onchange = () => { inp.classList.toggle('checked-item', chk.checked); };
+
   // Enter key → new row
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); matAddRow(box, '', false); }
+    if (e.key === 'Enter') { e.preventDefault(); matAddRow(box, '', false, false); }
     if (e.key === 'Backspace' && inp.value === '') {
       e.preventDefault();
       const prev = row.previousElementSibling;
@@ -2235,8 +2405,8 @@ function matAddRow(box, text='', checked=false) {
     }
   });
   const rm = document.createElement('button'); rm.className='rm-mat-btn'; rm.textContent='✕';
-  rm.onclick = () => { row.remove(); if (!box.querySelector('.mat-check-item')) matAddRow(box,'',false); };
-  row.appendChild(chk); row.appendChild(inp); row.appendChild(rm);
+  rm.onclick = () => { row.remove(); if (!box.querySelector('.mat-check-item')) matAddRow(box,'',false,false); };
+  row.appendChild(readyWrap); row.appendChild(chk); row.appendChild(inp); row.appendChild(rm);
   if (addBtn) box.insertBefore(row, addBtn); else box.appendChild(row);
   inp.focus();
   return row;
@@ -2244,13 +2414,13 @@ function matAddRow(box, text='', checked=false) {
 function matAddAddButton(box) {
   const btn = document.createElement('button'); btn.className='mat-add-btn';
   btn.textContent = 'Aggiungi voce'; btn.type='button';
-  btn.onclick = (e) => { e.preventDefault(); matAddRow(box,'',false); };
+  btn.onclick = (e) => { e.preventDefault(); matAddRow(box,'',false,false); };
   box.appendChild(btn);
 }
 // Convert stored material string to plain readable text for display
 function matDisplayText(raw) {
   if (!raw) return '';
-  return matDeserialize(raw).map(i => (i.checked?'☑':'☐')+' '+i.text).join('\n');
+  return matDeserialize(raw).map(i => (i.ready?'✅':'⬜')+(i.checked?'☑':'☐')+' '+i.text).join('\n');
 }
 function matPlainText(raw) {
   // just the text items, no checkboxes, for compact display
@@ -2269,9 +2439,26 @@ function setEvpPanel(panelKey) {
 // ══════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════
-buildClassBar();
-cursor=new Date();
-render();
+window.startApp = function() {
+  // Populate state now that the gate has resolved
+  if (window._guestMode) {
+    try {
+      const ls = localStorage.getItem('teacherCal3');
+      if (ls) Object.assign(state, JSON.parse(ls));
+    } catch(e){}
+  } else if (window._remoteState) {
+    Object.assign(state, window._remoteState);
+    window._remoteState = null;
+  }
+  window._stateReady = true;
+  if (!state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
+
+  buildClassBar();
+  cursor = new Date();
+  render();
+};
+_waitForGate(() => { if (!window._stateReady) window.startApp(); });
 </script>
+</div>
 </body>
 </html>
