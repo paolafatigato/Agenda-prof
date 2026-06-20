@@ -393,6 +393,44 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 .mat-item .mi-text{font-size:0.82rem;color:var(--text);}
 .mat-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
 
+/* LESSON NAV (frecce ‹ › nel modal) */
+
+/* Info al centro — sempre visibile in cima al modal */
+.modal-lesson-nav{display:flex;align-items:center;justify-content:center;
+  margin-bottom:.6rem;gap:8px;}
+.lesson-nav-info{font-size:0.74rem;color:var(--muted);text-align:center;
+  font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:calc(100% - 10px);}
+
+/* Frecce: fixed a metà viewport, ai lati del modal — solo desktop */
+.lesson-nav-btn{
+  position:fixed;
+  top:50vh;
+  transform:translateY(-50%);
+  z-index:999;
+  background:var(--white);
+  border:2px solid var(--border);
+  color:var(--grape);
+  border-radius:50%;
+  width:44px;height:44px;
+  font-size:1.4rem;
+  cursor:pointer;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 14px rgba(0,0,0,.15);
+  transition:background .13s,border-color .13s,box-shadow .13s,opacity .13s;
+  line-height:1;
+  padding:0;
+}
+#lessonNavPrev{left:calc(50vw - min(260px, 47.5vw) - 58px);}
+#lessonNavNext{right:calc(50vw - min(260px, 47.5vw) - 58px);}
+.lesson-nav-btn:hover:not(:disabled){
+  background:var(--grape);border-color:var(--grape);color:#fff;
+  box-shadow:0 4px 18px rgba(116,79,135,.35);}
+.lesson-nav-btn:disabled{opacity:.22;cursor:default;box-shadow:none;}
+
+/* Nascondi i bottoni fixed quando il modal è chiuso */
+#overlay:not(.open) .lesson-nav-btn{display:none;}
+
 /* MOBILE RESPONSIVE */
 @media (max-width:768px) {
   #calArea{padding:1.1rem 1.4rem 1rem;}
@@ -419,6 +457,20 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   .slot-card .sc-lesson-title{font-size:0.6rem;max-height:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
   .slot-card .sc-lesson-body{display:none;}
   .slot-card .sc-hw-prev{display:none;}
+
+  /* LESSON NAV su mobile: bottoni inline nel modal, non fixed */
+  .lesson-nav-btn{
+    position:static;
+    transform:none;
+    top:auto;left:auto;right:auto;
+    width:36px;height:36px;
+    font-size:1.1rem;
+    border-radius:8px;
+    box-shadow:none;
+    flex-shrink:0;
+  }
+  .modal-lesson-nav{justify-content:space-between;}
+  .lesson-nav-info{flex:1;}
 }
 
 /* AUTH GATE */
@@ -562,6 +614,12 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 <div id="modal">
   <h2 id="modalTitle"></h2>
   <div class="modal-date" id="modalDate"></div>
+  <!-- Navigazione lezioni ‹ › -->
+  <div class="modal-lesson-nav">
+    <button class="lesson-nav-btn" id="lessonNavPrev" onclick="navigateLesson(-1)" title="Lezione precedente (stessa classe)">‹</button>
+    <span class="lesson-nav-info" id="lessonNavInfo"></span>
+    <button class="lesson-nav-btn" id="lessonNavNext" onclick="navigateLesson(1)" title="Lezione successiva (stessa classe)">›</button>
+  </div>
   <div class="modal-badges">
     <!-- inline subject badge with dropdown -->
     <div class="subj-badge-wrap" id="subjBadgeWrap">
@@ -1720,9 +1778,76 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
 }
 
 // ══════════════════════════════════════════════════════
+//  LESSON MODAL — NAVIGAZIONE TRA LEZIONI (‹ ›)
+// ══════════════════════════════════════════════════════
+
+// Restituisce tutte le lezioni della stessa classe ordinate per data+ora
+// Ogni elemento: { key, date, patternSubj, time }
+function _allLessonsForClass(className) {
+  const pattern = state.patterns[className] || {};
+  const start = parseDate(state.schoolStart);
+  const end   = parseDate(state.schoolEnd);
+  if (!start || !end) return [];
+  const results = [];
+  let d = new Date(start);
+  while (d <= end) {
+    const dow = d.getDay();
+    if (dow >= 1 && dow <= 5) { // lun-ven
+      const sd = dow - 1;
+      const slots = (pattern[sd] || []).map((s, i) => ({
+        ...s,
+        slotKey: fmtDate(d) + `-${sd}-${i}`,
+        date: new Date(d)
+      }));
+      slots.forEach(s => results.push({ key: s.slotKey, date: s.date, patternSubj: s.subject, time: s.time }));
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return results;
+}
+
+// Aggiorna le frecce ‹ › e il testo "X / N" nel modal
+function _updateLessonNavUI() {
+  const all = _allLessonsForClass(modalClass);
+  const idx = all.findIndex(e => e.key === modalKey);
+  const prevBtn = document.getElementById('lessonNavPrev');
+  const nextBtn = document.getElementById('lessonNavNext');
+  const info    = document.getElementById('lessonNavInfo');
+  if (!prevBtn || !nextBtn || !info) return;
+  prevBtn.disabled = idx <= 0;
+  nextBtn.disabled = idx < 0 || idx >= all.length - 1;
+  if (idx >= 0) {
+    const entry = all[idx];
+    const subjLabel_cur = subjLabel(effectiveSubject(entry.key, entry.patternSubj, modalClass));
+    info.textContent = `${DAYS_IT[entry.date.getDay()]} ${entry.date.getDate()} ${MONTHS_IT[entry.date.getMonth()]} · ${subjLabel_cur} · ${idx+1}/${all.length}`;
+  } else {
+    info.textContent = '';
+  }
+}
+
+// Naviga alla lezione precedente (-1) o successiva (+1), salvando prima
+function navigateLesson(dir) {
+  if (!modalKey || !modalClass) return;
+  _persistCurrentSlot();           // salva automaticamente
+  const all = _allLessonsForClass(modalClass);
+  const idx = all.findIndex(e => e.key === modalKey);
+  if (idx < 0) return;
+  const next = all[idx + dir];
+  if (!next) return;
+  // Riapri il modal con la nuova lezione (senza chiuderlo)
+  _openModalInternal(next.key, next.date, next.patternSubj, next.time, null, modalClass);
+}
+
+// ══════════════════════════════════════════════════════
 //  LESSON MODAL
 // ══════════════════════════════════════════════════════
 function openModal(key, date, patternSubj, time, status, className) {
+  _openModalInternal(key, date, patternSubj, time, status, className);
+  // Setup swipe su mobile
+  _initModalSwipe();
+}
+
+function _openModalInternal(key, date, patternSubj, time, status, className) {
   modalKey=key; modalPatternSubject=patternSubj; modalClass = className || activeClass;
   const data=(state.lessons[modalClass]||{})[key]||{};
   const canc=(state.cancelled[modalClass]||{})[key];
@@ -1776,6 +1901,9 @@ function openModal(key, date, patternSubj, time, status, className) {
 
   const cancelBtn=document.getElementById('cancelLessonBtn');
   cancelBtn.textContent=canc?'🔄 Gestisci cancellazione':'🚫 Cancella lezione';
+
+  // Aggiorna le frecce di navigazione
+  _updateLessonNavUI();
 
   document.getElementById('overlay').classList.add('open');
 }
@@ -1866,6 +1994,37 @@ function clearSlot() {
     document.getElementById('overlay').classList.remove('open');
     render();
   }
+}
+
+// ══════════════════════════════════════════════════════
+//  SWIPE SU MOBILE (‹ ›) — inizializzato una volta sola
+// ══════════════════════════════════════════════════════
+let _swipeInit = false;
+function _initModalSwipe() {
+  if (_swipeInit) return;
+  _swipeInit = true;
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  modal.addEventListener('touchstart', (e) => {
+    // Ignora se sta scorrendo una textarea o un checklist
+    if (e.target.closest('textarea,input,select,.mat-checklist')) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!touchStartX) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+    // Swipe orizzontale: minimo 60px, max 350ms, rapporto dx/dy > 1.5
+    if (dt < 350 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) navigateLesson(1);   // swipe sinistra → prossima
+      else        navigateLesson(-1);  // swipe destra → precedente
+    }
+    touchStartX = 0;
+  }, { passive: true });
 }
 
 // ══════════════════════════════════════════════════════
