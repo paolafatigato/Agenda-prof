@@ -471,6 +471,15 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   }
   .modal-lesson-nav{justify-content:space-between;}
   .lesson-nav-info{flex:1;}
+
+  /* Modal ancorato in alto: i bottoni ‹ › restano sempre alla stessa altezza */
+  #overlay{align-items:flex-start;}
+  #modal{
+    margin-top:60px;          /* margine fisso dal top — sotto l'header */
+    max-height:calc(100vh - 70px);
+    border-radius:17px 17px 0 0;
+    width:100%;
+  }
 }
 
 /* AUTH GATE */
