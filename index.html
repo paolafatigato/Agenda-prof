@@ -2386,7 +2386,9 @@ function closeExtraViewIfBg(e) {
 }
 function openExtraView(title, renderControls, renderBody) {
   document.getElementById('evpTitle').textContent = title;
-  renderControls(document.getElementById('evpControls'));
+  const ctrlEl = document.getElementById('evpControls');
+  ctrlEl.innerHTML = ''; // pulisce sempre i controlli della vista precedente
+  renderControls(ctrlEl);
   renderBody(document.getElementById('evpBody'));
   document.getElementById('extraViewOverlay').classList.add('open');
 }
