@@ -283,6 +283,11 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .mat-check-item .rm-mat-btn{background:none;border:none;color:var(--border);
   cursor:pointer;font-size:1rem;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s;}
 .mat-check-item .rm-mat-btn:hover{color:var(--coral);}
+.mat-link-btn{background:none;border:none;color:var(--border);cursor:pointer;
+  font-size:0.85rem;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s;}
+.mat-link-btn:hover{color:var(--grape);}
+.mat-link-btn.has-link{color:var(--sky);}
+.mat-link-btn.has-link:hover{color:var(--blue);}
 .mat-add-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;
   font-size:0.78rem;color:var(--muted);cursor:pointer;background:none;border:none;
   font-family:inherit;transition:color .12s;width:100%;}
@@ -2178,8 +2183,7 @@ window._onTodoTaskUpdate = function(linkId, completed) {
       let rowChanged = false;
       items.forEach(it => { if (it.linkId === linkId && it.ready !== completed) { it.ready = completed; rowChanged = true; } });
       if (rowChanged) {
-        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}`).join('\n');
-        changed = true;
+        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}||${i.link||''}`).join('\n');        changed = true;
         // If this lesson's modal happens to be open right now, refresh its checklist live
         if (modalKey === key && modalClass === cls) {
           matBuildChecklist(items);
@@ -3130,8 +3134,7 @@ function renderProgrammaBody(body) {
     card.innerHTML = `
       <div class="pl-date">${i+1}. ${dateStr} – ${e.time}</div>
       ${e.data.lesson ? `<div class="pl-lesson">📖 ${e.data.lesson}</div>` : ''}
-      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${matPlainText(e.data.material)||e.data.material}</div>` : ''}
-      ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
+      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${matPlainHtml(e.data.material)||e.data.material}</div>` : ''}      ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
       ${e.data.notes ? `<div class="pl-notes">📝 ${e.data.notes}</div>` : ''}
     `;
     body.appendChild(card);
@@ -3208,7 +3211,7 @@ function futureSlots(className) {
 function regenerateMaterialLinkIds(raw) {
   if (!raw) return raw;
   return matDeserialize(raw).map(item =>
-    (item.text||'') + '||' + (item.checked?'true':'false') + '||' + (item.ready?'true':'false') + '||' + _genLinkId()
+    (item.text||'') + '||' + (item.checked?'true':'false') + '||' + (item.ready?'true':'false') + '||' + _genLinkId() + '||' + (item.link||'')
   ).join('\n');
 }
 function updateSyncProgPreview() {
@@ -3316,7 +3319,7 @@ function renderMaterialsBody(body) {
     const subjLbl = sc ? sc.label : item.subject;
     const parsedMat = matDeserialize(item.material);
     const matHtml = parsedMat.length
-      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Usato':'Non ancora usato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span></span>`).join('')
+      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Usato':'Non ancora usato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span>${i.link?`<a href="${escAttr(i.link)}" target="_blank" rel="noopener" title="Apri link" style="text-decoration:none;">🔗</a>`:''}</span>`).join('')
       : `<span>${item.material}</span>`;
     row.innerHTML = `
       <div class="mi-label">
@@ -3427,7 +3430,8 @@ function matSerialize() {
     const txt   = row.querySelector('input[type=text]');
     let linkId  = row.dataset.linkId;
     if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
-    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false') + '||' + linkId;
+    const link = row.dataset.link || '';
+    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false') + '||' + linkId + '||' + link;
   }).filter(s => {
     const parts = s.split('||');
     return parts[0].trim();
@@ -3441,21 +3445,23 @@ function matDeserialize(raw) {
     const checked = parts[1] === 'true';
     const ready   = parts[2] === 'true';
     const linkId  = parts[3] || _genLinkId();
-    return { text, checked, ready, linkId };
+    const link    = parts[4] || '';
+    return { text, checked, ready, linkId, link };
   }).filter(i => i.text.trim());
 }
 function matBuildChecklist(items) {
   const box = document.getElementById('matChecklist');
   box.innerHTML = '';
-  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready, item.linkId));
+  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready, item.linkId, item.link));
   matAddAddButton(box);
 }
-function matAddRow(box, text='', checked=false, ready=false, linkId=null) {
+function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='') {
   // insert before the add-button if present
   const addBtn = box.querySelector('.mat-add-btn');
   const row = document.createElement('div');
   row.className = 'mat-check-item';
   row.dataset.linkId = linkId || _genLinkId();
+  row.dataset.link = link || '';
 
   const readyWrap = document.createElement('span'); readyWrap.className='mat-ready-wrap';
   readyWrap.title = 'Pronto / già preparato';
@@ -3485,9 +3491,29 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null) {
       }
     }
   });
+  const linkBtn = document.createElement('button'); linkBtn.type='button'; linkBtn.className='mat-link-btn';
+  const updateLinkBtn = () => {
+    const has = !!row.dataset.link;
+    linkBtn.textContent = '🔗';
+    linkBtn.classList.toggle('has-link', has);
+    linkBtn.title = has ? 'Apri link — Shift+clic per modificare' : 'Aggiungi link (Canva, Drive, PDF da stampare…)';
+  };
+  linkBtn.onclick = (e) => {
+    e.preventDefault();
+    const current = row.dataset.link || '';
+    if (current && !e.shiftKey) {
+      window.open(current, '_blank', 'noopener');
+    } else {
+      const val = prompt('Link al materiale (Canva, Drive, PDF da stampare…):', current);
+      if (val === null) return;
+      row.dataset.link = val.trim();
+      updateLinkBtn();
+    }
+  };
+  updateLinkBtn();
   const rm = document.createElement('button'); rm.className='rm-mat-btn'; rm.textContent='✕';
   rm.onclick = () => { row.remove(); if (!box.querySelector('.mat-check-item')) matAddRow(box,'',false,false); };
-  row.appendChild(readyWrap); row.appendChild(chk); row.appendChild(inp); row.appendChild(rm);
+  row.appendChild(readyWrap); row.appendChild(chk); row.appendChild(inp); row.appendChild(linkBtn); row.appendChild(rm);
   if (addBtn) box.insertBefore(row, addBtn); else box.appendChild(row);
   inp.focus();
   return row;
@@ -3507,6 +3533,15 @@ function matPlainText(raw) {
   // just the text items, no checkboxes, for compact display
   if (!raw) return '';
   return matDeserialize(raw).map(i=>i.text).filter(Boolean).join(', ');
+}
+function escAttr(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function matPlainHtml(raw) {
+  // compact comma-joined display, with 🔗 for items that have a link
+  if (!raw) return '';
+  return matDeserialize(raw).map(i => {
+    if (!i.text) return '';
+    return i.link ? `<a href="${escAttr(i.link)}" target="_blank" rel="noopener" style="color:inherit;">${i.text} 🔗</a>` : i.text;
+  }).filter(Boolean).join(', ');
 }
 
 // ══════════════════════════════════════════════════════
