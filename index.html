@@ -179,14 +179,34 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
   background:var(--white);border-radius:7px;padding:4px 5px;border:1px solid var(--border);}
 .slot-entry select{border:none;background:transparent;font-size:0.72rem;color:var(--text);font-weight:500;padding:0;width:100%;}
 .slot-entry input[type=time]{border:none;background:transparent;font-size:0.7rem;color:var(--muted);padding:0;width:100%;}
-.add-slot-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:6px;
+.slot-entry select.slot-day-sel{color:var(--grape);font-weight:700;border-top:1px dashed var(--border);padding-top:3px;margin-top:2px;}.add-slot-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:6px;
   font-size:0.7rem;color:var(--muted);cursor:pointer;padding:2px 0;}
 .add-slot-btn:hover{border-color:var(--grape);color:var(--grape);}
 .rm-slot-btn{background:none;border:none;color:var(--coral);cursor:pointer;font-size:0.75rem;padding:0 2px;align-self:flex-end;}
 .class-list{display:flex;flex-direction:column;gap:7px;margin-bottom:.7rem;}
 .class-item{background:var(--bg2);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;}
 .class-item .ci-name{font-size:0.85rem;font-weight:700;flex:1;}
+.class-item .ci-name-input{font-size:0.85rem;font-weight:700;flex:1;border:1.5px solid transparent;
+  background:transparent;color:var(--text);font-family:inherit;padding:3px 6px;border-radius:6px;
+  transition:background .12s,border-color .12s;min-width:0;}
+.class-item .ci-name-input:hover{background:rgba(255,255,255,.6);}
+.class-item .ci-name-input:focus{outline:none;background:var(--white);border-color:var(--grape);}
 .class-item .ci-rm{background:none;border:none;color:var(--coral);cursor:pointer;font-size:1rem;}
+/* BACKUP */
+.backup-box{background:var(--bg2);border-radius:10px;padding:11px;font-size:0.78rem;color:var(--muted);margin-bottom:.4rem;}
+.backup-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.btn-backup{background:var(--sky);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;}
+.btn-backup:hover{background:var(--blue);}
+.btn-restore{background:var(--white);color:var(--text);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;}
+.btn-restore:hover{border-color:var(--grape);}
+/* CLASSROOM MANAGER CONNECTOR */
+.classroom-sync-box{background:var(--bg2);border-radius:10px;padding:10px 11px;margin-bottom:.7rem;font-size:0.76rem;color:var(--muted);line-height:1.45;}
+.classroom-sync-box .cs-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px;}
+.btn-classroom{background:var(--mauve);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+.btn-classroom:hover{background:var(--grape);}
+.btn-classroom:disabled{opacity:.6;cursor:default;}
+.btn-classroom.secondary{background:var(--white);color:var(--grape);border:1.5px solid var(--mauve);}
+.btn-classroom.secondary:hover{background:#F8F2FF;}
 .class-add-row{display:flex;gap:6px;}
 .class-add-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;font-size:0.82rem;font-family:inherit;background:var(--bg);}
 .class-add-row button{background:var(--grape);color:#fff;border:none;border-radius:8px;padding:5px 14px;font-size:0.82rem;cursor:pointer;font-weight:600;}
@@ -294,6 +314,15 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .btn-confirm-cancel{background:var(--coral);color:#fff;border:none;border-radius:9px;padding:8px 22px;font-size:0.88rem;font-weight:700;cursor:pointer;}
 .btn-undo-cancel{background:#E8F4E8;color:var(--green);border:1.5px solid #A8D4A8;border-radius:9px;padding:8px 16px;font-size:0.86rem;cursor:pointer;font-weight:600;}
 
+/* SYNC PROGRAMMA (copia lezioni future da un'altra classe) */
+#syncProgOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
+#syncProgOverlay.open{display:flex;}
+#syncProgModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(440px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
+#syncProgModal h2{font-size:1rem;font-weight:700;color:var(--grape);margin-bottom:.5rem;}
+#syncProgModal .sp-target{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;}
+#syncProgModal .sp-preview{background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:0.8rem;color:var(--muted);line-height:1.5;margin:.8rem 0 1.1rem;}
+.btn-confirm-sync{background:var(--grape);color:#fff;border:none;border-radius:9px;padding:8px 22px;font-size:0.88rem;font-weight:700;cursor:pointer;}
+.btn-confirm-sync:hover{background:var(--blue);}
 /* DRAG & DROP */
 .drag-over{outline:2.5px dashed var(--grape)!important;background:#F8F2FF!important;}
 [draggable="true"]{cursor:grab;user-select:none;}
@@ -381,8 +410,31 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 .prog-lesson .pl-lesson{font-size:0.84rem;color:var(--text);margin-bottom:4px;font-weight:600;}
 .prog-lesson .pl-hw{font-size:0.76rem;color:var(--blue);margin-top:4px;}
 .prog-lesson .pl-mat{font-size:0.74rem;color:var(--green);margin-top:3px;}
-.prog-lesson .pl-notes{font-size:0.73rem;color:var(--muted);margin-top:3px;font-style:italic;}
-.prog-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
+.prog-lesson .pl-notes{font-size:0.73rem;color:var(--muted);margin-top:3px;font-style:italic;}.prog-empty{text-align:center;padding:2.5rem 1rem;color:var(--border);font-size:0.9rem;font-style:italic;}
+.btn-print-sched{background:var(--grape);color:#fff;border:none;border-radius:8px;padding:7px 15px;
+  font-size:0.8rem;font-weight:700;cursor:pointer;margin-left:auto;}
+.btn-print-sched:hover{background:var(--blue);}
+
+/* ══════════════════════════════════════════════════════
+   PRINTABLE WEEKLY SCHEDULE (stile screenshot)
+   ══════════════════════════════════════════════════════ */
+#printScheduleArea{display:none;}
+.ps-title{font-family:'Segoe UI',system-ui,sans-serif;font-size:1.35rem;font-weight:800;
+  color:#2C2018;margin-bottom:14px;text-align:center;}
+.ps-grid{display:grid;border-radius:16px;overflow:hidden;border:2px solid #F3E6FF;background:#F3E6FF;gap:2px;}
+.ps-head{background:#F3D9FF;color:#5A3A70;font-weight:800;font-size:0.95rem;text-align:center;
+  padding:11px 4px;letter-spacing:.04em;text-transform:uppercase;}
+.ps-hour{background:#FBF4FF;color:#8A7A6A;font-weight:800;font-size:0.95rem;
+  display:flex;align-items:center;justify-content:center;}
+.ps-cell{background:#F9EEFF;padding:5px;min-height:56px;display:flex;flex-direction:column;
+  gap:4px;justify-content:center;}
+.ps-block{border-radius:11px;color:#fff;font-weight:800;font-size:0.98rem;text-align:center;
+  padding:11px 6px;text-shadow:0 1px 3px rgba(0,0,0,.28);}
+@media print {
+  body > *:not(#printScheduleArea){display:none !important;}
+  #printScheduleArea{display:block !important;padding:0;}
+  @page { size: landscape; margin: 10mm; }
+}
 /* Materiali */
 .mat-day-section{margin-bottom:1.2rem;}
 .mat-day-header{font-size:0.82rem;font-weight:700;color:var(--grape);margin-bottom:8px;
@@ -585,12 +637,34 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 <div id="settingsPanel">
   <h2>⚙️ Impostazioni</h2>
   <div class="s-section">
+    <h3>💾 Backup dati</h3>
+    <div class="backup-box">
+      Scarica una copia di tutte le classi, l'orario e le lezioni pianificate.
+      Fallo prima di rinominare classi o cambiare l'orario, così puoi sempre tornare indietro.
+      <div class="backup-actions">
+        <button class="btn-backup" onclick="exportData()">⬇️ Scarica backup (.json)</button>
+        <button class="btn-restore" onclick="document.getElementById('sRestoreFile').click()">⬆️ Ripristina da backup</button>
+        <input type="file" id="sRestoreFile" accept="application/json" style="display:none" onchange="importDataFile(this)">
+      </div>
+    </div>
+  </div>
+  <div class="s-section">
     <h3>Anno scolastico</h3>
     <div class="s-row"><label>Inizio</label><input type="date" id="sSchoolStart"></div>
     <div class="s-row"><label>Fine</label><input type="date" id="sSchoolEnd"></div>
   </div>
   <div class="s-section">
     <h3>Classi</h3>
+    <div class="classroom-sync-box">
+      🔗 Collega Classroom Manager per usare gli stessi colori classe in entrambe le app.
+      <div class="cs-row">
+        <button class="btn-classroom" id="classroomConnectBtn" onclick="window.connectClassroomManagerFromButton()">Collega a Classroom Manager</button>
+        <button class="btn-classroom secondary" id="classroomSyncBtn" onclick="window.syncColorsFromClassroomManagerFromButton()" style="display:none;">🎨 Sincronizza colori</button>
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:var(--muted);margin:-.2rem 0 .6rem;">
+      Clicca sul nome per rinominarla — orario, lezioni e compiti già inseriti restano collegati alla classe.
+    </p>
     <div class="class-list" id="sClassList"></div>
     <div class="class-add-row">
       <input type="text" id="sNewClass" placeholder="Es: 2ª B" maxlength="20">
@@ -731,6 +805,21 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   <button class="pb-cancel" onclick="hidePasteBar()">✕ Annulla</button>
 </div>
 <div id="toast"></div>
+<div id="printScheduleArea"></div>
+
+<!-- SYNC PROGRAMMA -->
+<div id="syncProgOverlay" onclick="closeSyncProgIfBg(event)">
+<div id="syncProgModal">
+  <h2>📋 Copia programma da un'altra classe</h2>
+  <p class="sp-target" id="syncProgTargetLabel"></p>
+  <div class="s-row"><label>Da</label><select id="syncProgSourceSel" onchange="updateSyncProgPreview()"></select></div>
+  <p class="sp-preview" id="syncProgPreview"></p>
+  <div class="cancel-modal-actions">
+    <button class="btn-undo-cancel" onclick="closeSyncProgOverlay()">Annulla</button>
+    <button class="btn-confirm-sync" onclick="runSyncProgramma()">📋 Copia ora</button>
+  </div>
+</div>
+</div>
 
 <!-- Firebase -->
 <script type="module">
@@ -740,6 +829,8 @@ import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyArCiV6JbFzyukcwpqwphrmbqLqbhKC15Q",
@@ -937,6 +1028,123 @@ function listenTodoMaterialUpdates() {
   }).catch(e => console.warn('Listener Todo non avviato:', e));
 }
 window._onTodoConnected = function() { listenTodoMaterialUpdates(); };
+
+// ══════════════════════════════════════════════════════
+//  CLASSROOM MANAGER INTEGRATION — read-only, third Firebase project
+//  Same project as Classroom Manager / Teacher Registro (Realtime
+//  Database). We only ever READ users/{uid}/classes and
+//  users/{uid}/grading/settings/classColors — never write here.
+// ══════════════════════════════════════════════════════
+const classroomConfig = {
+  apiKey: "AIzaSyA6O12KFRkZ4gGBi2LEGKZni33c3a2NBcU",
+  authDomain: "classroomanager.firebaseapp.com",
+  databaseURL: "https://classroomanager-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "classroomanager",
+  storageBucket: "classroomanager.firebasestorage.app",
+  messagingSenderId: "995055049853",
+  appId: "1:995055049853:web:5b3674ae12f7c0b504e514"
+};
+const classroomApp  = initializeApp(classroomConfig, 'classroomManager');
+const classroomAuth = getAuth(classroomApp);
+const classroomDb   = getDatabase(classroomApp);
+window._classroomSyncEnabled = false;
+
+onAuthStateChanged(classroomAuth, (user) => {
+  window._classroomSyncEnabled = !!user;
+  updateClassroomConnectButton();
+});
+
+async function connectClassroomManager() {
+  if (window._classroomSyncEnabled) { updateClassroomConnectButton(); return; }
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(classroomAuth, provider);
+    window._classroomSyncEnabled = true;
+    console.log('✅ Collegata a Classroom Manager:', result.user.email);
+  } catch (e) {
+    console.warn('Classroom Manager non collegata:', e.message);
+    window._classroomSyncEnabled = false;
+  }
+  updateClassroomConnectButton();
+}
+window.connectClassroomManagerFromButton = async function() {
+  const btn = document.getElementById('classroomConnectBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Connessione…'; }
+  await connectClassroomManager();
+  if (btn) btn.disabled = false;
+};
+
+function updateClassroomConnectButton() {
+  const btn = document.getElementById('classroomConnectBtn');
+  const syncBtn = document.getElementById('classroomSyncBtn');
+  if (!btn) return;
+  if (window._classroomSyncEnabled) {
+    btn.textContent = '✅ Classroom Manager collegata';
+    btn.disabled = true;
+    if (syncBtn) syncBtn.style.display = 'inline-block';
+  } else {
+    btn.textContent = 'Collega a Classroom Manager';
+    btn.disabled = false;
+    if (syncBtn) syncBtn.style.display = 'none';
+  }
+}
+window.updateClassroomConnectButton = updateClassroomConnectButton;
+
+// Normalizza un nome classe per il confronto tra le due app
+// (es. "1ª A" e "1A" combaciano).
+function _normClassName(n) {
+  return String(n || '').trim().toUpperCase().replace(/[ªº°\s]/g, '');
+}
+
+// Legge users/{uid}/classes + users/{uid}/grading/settings/classColors
+// da Classroom Manager e restituisce { nomeClasseNormalizzato: colore }.
+async function fetchClassroomColors() {
+  if (!window._classroomSyncEnabled || !classroomAuth.currentUser) {
+    throw new Error('Non collegata a Classroom Manager.');
+  }
+  const uid = classroomAuth.currentUser.uid;
+  const [classesSnap, colorsSnap] = await Promise.all([
+    get(ref(classroomDb, `users/${uid}/classes`)),
+    get(ref(classroomDb, `users/${uid}/grading/settings/classColors`))
+  ]);
+  const classesData = classesSnap.val();
+  const colorsById = colorsSnap.val() || {};
+  const rawClasses = Array.isArray(classesData) ? classesData : Object.values(classesData || {});
+  const byNormName = {};
+  rawClasses.forEach((cls) => {
+    if (!cls || !cls.name) return;
+    const color = cls.id ? colorsById[cls.id] : null;
+    if (color) byNormName[_normClassName(cls.name)] = color;
+  });
+  return byNormName;
+}
+
+// Abbina le classi di Agenda Prof a quelle di Classroom Manager per nome
+// (normalizzato) e aggiorna state.classColors con i colori trovati.
+window.syncColorsFromClassroomManagerFromButton = async function() {
+  const btn = document.getElementById('classroomSyncBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizzazione…'; }
+  try {
+    const remoteColors = await fetchClassroomColors();
+    if (!settingsTemp.classColors) settingsTemp.classColors = {};
+    let matched = 0;
+    const unmatched = [];
+    settingsTemp.classes.forEach((cn) => {
+      const color = remoteColors[_normClassName(cn)];
+      if (color) { settingsTemp.classColors[cn] = color; matched++; }
+      else unmatched.push(cn);
+    });
+    renderClassList();
+    if (matched) showToast(`🎨 Colori sincronizzati per ${matched} classe/i`);
+    if (unmatched.length) {
+      alert('Nessuna corrispondenza trovata in Classroom Manager per: ' + unmatched.join(', ') +
+        '\n\nControlla che i nomi delle classi siano scritti allo stesso modo nelle due app.');
+    }
+  } catch (e) {
+    alert('Sincronizzazione non riuscita: ' + e.message);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🎨 Sincronizza colori'; }
+};
 
 // Returns true if a state object has zero lesson entries across all classes
 function _isLessonsEmpty(stateObj) {
@@ -2100,9 +2308,22 @@ function undoCancel() {
 let settingsTemp={};
 function openSettings() {
   settingsTemp=JSON.parse(JSON.stringify(state));
+  // Track each class's original name (as currently saved) so a rename
+  // mid-session can be traced back to the right key in state.lessons /
+  // state.cancelled when we save — see applyDataMigrations().
+  settingsTemp._nameMap = {};
+  settingsTemp.classes.forEach(c => { settingsTemp._nameMap[c]=c; });
+  // Tag every pattern slot with its original day+index, so moving it to a
+  // different day, reordering it, or removing it can be told apart —
+  // see applyDataMigrations()/migrateClassPatternSlots().
+  settingsTemp.classes.forEach(c => {
+    const pat = settingsTemp.patterns[c] || {};
+    for (let d=0; d<5; d++) { (pat[d]||[]).forEach((slot,idx)=>{ slot._origIdx=idx; slot._origDay=d; }); }
+  });
   document.getElementById('sSchoolStart').value=settingsTemp.schoolStart;
   document.getElementById('sSchoolEnd').value=settingsTemp.schoolEnd;
   renderClassList(); renderSubjectList(); renderPatternClassSelect(); renderPatternEditor();
+  updateClassroomConnectButton();
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
@@ -2114,8 +2335,178 @@ function saveSettings() {
   state.patterns=settingsTemp.patterns;
   state.classColors = settingsTemp.classColors || {};
   state.subjects = settingsTemp.subjects || {};
-  if (!state.classes.includes(activeClass)&&state.classes.length>0) activeClass=state.classes[0];
+  applyDataMigrations();
   persist(); closeSettings(); buildClassBar(); render();
+}
+
+// Finds the class's ORIGINAL name (as of when Settings was opened) from
+// its current name in settingsTemp — needed because state.lessons /
+// state.cancelled are still keyed by the original name until save time.
+function origNameFor(currentName) {
+  for (const orig in (settingsTemp._nameMap||{})) { if (settingsTemp._nameMap[orig]===currentName) return orig; }
+  return currentName;
+}
+
+// Carries lessons/cancelled data across a settings session's renames,
+// day-moves and pattern-slot removals, so nothing planned gets silently
+// orphaned or misaligned. Runs once, right before saving.
+function applyDataMigrations() {
+  const nameMap = settingsTemp._nameMap || {};
+  Object.keys(nameMap).forEach(origName => {
+    const currentName = nameMap[origName];
+    migrateClassPatternSlots(origName, currentName);
+    // Move the whole class's data under the new name, if renamed.
+    if (currentName !== origName) {
+      if (state.lessons[origName]) {
+        state.lessons[currentName] = Object.assign({}, state.lessons[currentName]||{}, state.lessons[origName]);
+        delete state.lessons[origName];
+      }
+      if (state.cancelled[origName]) {
+        state.cancelled[currentName] = Object.assign({}, state.cancelled[currentName]||{}, state.cancelled[origName]);
+        delete state.cancelled[origName];
+      }
+    }
+  });
+  // Keep the active class selection pointed at its (possibly renamed) class.
+  if (!state.classes.includes(activeClass)) {
+    const renamedTo = nameMap[activeClass];
+    activeClass = (renamedTo && state.classes.includes(renamedTo)) ? renamedTo : (state.classes[0]||'');
+  }
+}
+// For one class, reconciles every pattern slot's ORIGINAL day+index against
+// where it ended up in settingsTemp.patterns[currentName] — same-day
+// reorders are a simple re-key (every date), a move to a different weekday
+// shifts only FUTURE content over in order (see migrateSlotAcrossDays),
+// and anything no longer present anywhere was a confirmed removal.
+function migrateClassPatternSlots(origName, currentName) {
+  const moves = []; // {origDay, origIdx, newDay, newIdx}
+  for (let newDay=0; newDay<5; newDay++) {
+    const arr = (settingsTemp.patterns[currentName]||{})[newDay] || [];
+    arr.forEach((slot, newIdx) => {
+      if (!slot || slot._origDay===undefined || slot._origIdx===undefined) return; // brand-new slot, nothing to carry over
+      moves.push({ origDay:slot._origDay, origIdx:slot._origIdx, newDay, newIdx });
+    });
+  }
+  for (let od=0; od<5; od++) {
+    const idxMap = {};        // same-day reorders: rename every date
+    const preserveIdxs = new Set(); // moved to another day: past dates stay put here
+    moves.filter(m=>m.origDay===od).forEach(m=>{
+      if (m.newDay===od) idxMap[m.origIdx]=m.newIdx; else preserveIdxs.add(m.origIdx);
+    });
+    moves.filter(m=>m.origDay===od && m.newDay!==od).forEach(m=>{
+      migrateSlotAcrossDays(origName, od, m.origIdx, m.newDay, m.newIdx);
+    });
+    remapDaySlots(origName, od, idxMap, preserveIdxs);
+  }
+}
+// Shifts this slot's FUTURE lesson content (today onward, oldest first) onto
+// the new weekday's future occurrences, in the same order — so "lesson 3"
+// stays lesson 3, just happening on the new day from now on. Past dates are
+// left exactly where they are, as an accurate record of what really happened.
+function migrateSlotAcrossDays(origName, oldDay, oldIdx, newDay, newIdx) {
+  const end = parseDate(state.schoolEnd);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (!end || today > end) return;
+  const oldRe = new RegExp('^(\\d{4}-\\d{2}-\\d{2})-'+oldDay+'-'+oldIdx+'$');
+  const lessons = state.lessons[origName]||{};
+  const entries = Object.keys(lessons)
+    .filter(k => oldRe.test(k))
+    .map(k => ({ key:k, date:parseDate(k.match(oldRe)[1]), data:lessons[k] }))
+    .filter(x => x.date && x.date>=today && x.data && (x.data.lesson||x.data.homework||x.data.material||x.data.notes))
+    .sort((a,b)=>a.date-b.date);
+  if (!entries.length) return;
+  const targets = [];
+  const d = new Date(today);
+  while (d<=end && targets.length<entries.length) {
+    if (d.getDay()-1===newDay) targets.push(fmtDate(d)+'-'+newDay+'-'+newIdx);
+    d.setDate(d.getDate()+1);
+  }
+  entries.forEach((entry,i) => {
+    delete state.lessons[origName][entry.key];
+    if (targets[i]) state.lessons[origName][targets[i]] = entry.data;
+    // if there aren't enough future occurrences before school-year end,
+    // any leftover entries have nowhere left to land and are dropped
+  });
+}
+// Renames lesson/cancelled slotKeys for one class+day according to idxMap
+// (origIdx -> newIdx, same day). Keys whose index is in preserveIdxs moved
+// to a different day this session (see migrateSlotAcrossDays) — their past
+// entries are left untouched here on purpose. Anything else belonged to a
+// slot that was removed outright, and is dropped.
+function remapDaySlots(origName, d, idxMap, preserveIdxs) {
+  preserveIdxs = preserveIdxs || new Set();
+  const re = new RegExp('^(.+)-'+d+'-(\\d+)$');
+  ['lessons','cancelled'].forEach(bucket => {
+    const obj = state[bucket][origName];
+    if (!obj) return;
+    const rebuilt = {};
+    Object.keys(obj).forEach(key => {
+      const m = key.match(re);
+      if (!m) { rebuilt[key]=obj[key]; return; } // different day — untouched
+      const datePart=m[1], oldIdx=parseInt(m[2],10);
+      if (idxMap.hasOwnProperty(oldIdx)) { rebuilt[datePart+'-'+d+'-'+idxMap[oldIdx]] = obj[key]; return; }
+      if (preserveIdxs.has(oldIdx)) { rebuilt[key] = obj[key]; return; }
+      // else: slot removed — data dropped (user already confirmed this in removePatternSlot)
+    });
+    state[bucket][origName] = rebuilt;
+  });
+}
+// True if any date has real lesson content or a cancellation logged for
+// this class+day+slot-index (checked against the ORIGINAL class name).
+function slotHasPlannedData(origName, d, origIdx) {
+  if (origIdx===undefined) return false;
+  const re = new RegExp('^.+-'+d+'-'+origIdx+'$');
+  const lessons = state.lessons[origName]||{};
+  const canc = state.cancelled[origName]||{};
+  for (const k in lessons) {
+    if (re.test(k)) { const v=lessons[k]; if (v && (v.lesson||v.homework||v.material||v.notes)) return true; }
+  }
+  for (const k in canc) { if (re.test(k)) return true; }
+  return false;
+}
+// True if this class (by its CURRENT name in settingsTemp) has any real
+// lesson content or cancellations logged anywhere, under its original name.
+function classHasPlannedData(currentName) {
+  const origName = origNameFor(currentName);
+  const lessons = state.lessons[origName]||{};
+  const canc = state.cancelled[origName]||{};
+  if (Object.keys(canc).length) return true;
+  return Object.values(lessons).some(v => v && (v.lesson||v.homework||v.material||v.notes));
+}
+
+// ══════════════════════════════════════════════════════
+//  BACKUP — esporta/importa tutti i dati come file .json
+// ══════════════════════════════════════════════════════
+function exportData() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `agenda-prof-backup-${fmtDate(new Date())}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('⬇️ Backup scaricato');
+}
+function importDataFile(fileInput) {
+  const file = fileInput.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let imported;
+    try { imported = JSON.parse(e.target.result); }
+    catch(err) { alert('Il file non è un backup valido (JSON non leggibile).'); fileInput.value=''; return; }
+    if (!imported || typeof imported !== 'object' || !Array.isArray(imported.classes)) {
+      alert('Il file non sembra un backup di Agenda Prof.'); fileInput.value=''; return;
+    }
+    if (!confirm('Ripristinando questo backup, TUTTI i dati attuali (classi, orario, lezioni, compiti) verranno sostituiti con quelli del file. Continuare?')) { fileInput.value=''; return; }
+    Object.assign(state, {...DEFAULT_STATE, ...imported});
+    persist();
+    closeSettings();
+    if (!state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
+    buildClassBar(); cursor = new Date(); render();
+    showToast('✅ Backup ripristinato');
+    fileInput.value='';
+  };
+  reader.readAsText(file);
 }
 
 function renderClassList() {
@@ -2128,10 +2519,25 @@ function renderClassList() {
         <div class="color-circle" id="cc-${i}" style="background:${color}"></div>
         <input type="color" value="${color}" onchange="updateClassColor('${c}',this.value,${i})">
       </div>
-      <span class="ci-name" style="flex:1">${c}</span>
+      <input type="text" class="ci-name-input" value="${c}" maxlength="20" title="Clicca per rinominare"
+        onblur="renameClassFromInput(${i},this)" onkeydown="if(event.key==='Enter'){this.blur();}">
       <button class="ci-rm" onclick="removeClassAt(${i})">✕</button>`;
     list.appendChild(row);
   });
+}
+// Renames a class in-session: moves its pattern/color under the new name
+// immediately, and updates _nameMap so applyDataMigrations() finds it at
+// save time. Lessons/cancelled data is NOT touched here — only at save.
+function renameClassFromInput(idx, inputEl) {
+  const oldName = settingsTemp.classes[idx];
+  const newName = inputEl.value.trim();
+  if (!newName || newName === oldName) { inputEl.value = oldName; return; }
+  if (settingsTemp.classes.includes(newName)) { alert('Esiste già una classe con questo nome.'); inputEl.value = oldName; return; }
+  if (settingsTemp.patterns[oldName]) { settingsTemp.patterns[newName]=settingsTemp.patterns[oldName]; delete settingsTemp.patterns[oldName]; }
+  if (settingsTemp.classColors && settingsTemp.classColors[oldName]!==undefined) { settingsTemp.classColors[newName]=settingsTemp.classColors[oldName]; delete settingsTemp.classColors[oldName]; }
+  for (const orig in settingsTemp._nameMap) { if (settingsTemp._nameMap[orig]===oldName) settingsTemp._nameMap[orig]=newName; }
+  settingsTemp.classes[idx] = newName;
+  renderClassList(); renderPatternClassSelect(); renderPatternEditor();
 }
 function addClassFromInput() {
   const inp=document.getElementById('sNewClass');
@@ -2141,11 +2547,17 @@ function addClassFromInput() {
   if(!settingsTemp.patterns[name]) settingsTemp.patterns[name]={};
   if(!settingsTemp.classColors) settingsTemp.classColors = {};
   settingsTemp.classColors[name] = '#49ACEF';
+  if(!settingsTemp._nameMap) settingsTemp._nameMap={};
+  settingsTemp._nameMap[name] = name;
   inp.value=''; renderClassList(); renderPatternClassSelect(); renderPatternEditor();
 }
 function removeClassAt(i) {
   const name=settingsTemp.classes[i];
-  if(!confirm(`Rimuovere "${name}"?`)) return;
+  const hasData = classHasPlannedData(name);
+  const msg = hasData
+    ? `"${name}" ha già lezioni o compiti pianificati. Rimuovendola dall'elenco, quelle attività verranno eliminate definitivamente (fai prima un backup se vuoi conservarle). Continuare?`
+    : `Rimuovere "${name}"?`;
+  if(!confirm(msg)) return;
   settingsTemp.classes.splice(i,1); delete settingsTemp.patterns[name];
   if(settingsTemp.classColors) delete settingsTemp.classColors[name];
   renderClassList(); renderPatternClassSelect(); renderPatternEditor();
@@ -2215,8 +2627,11 @@ function renderPatternEditor() {
       const subjKeys = Object.keys(settingsTemp.subjects||{});
       subjKeys.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=(settingsTemp.subjects[k] && settingsTemp.subjects[k].label) ? settingsTemp.subjects[k].label : k; if(s.subject===k) o.selected=true; sel.appendChild(o); });
       const timeIn = document.createElement('input'); timeIn.type='time'; timeIn.value = s.time||'08:00'; timeIn.onchange = function(){ updatePatternSlot(cn,d,si,'time', this.value); };
+      const daySel = document.createElement('select'); daySel.className='slot-day-sel'; daySel.title="Sposta quest'ora su un altro giorno";
+      DAY_NAMES.forEach((dn,di)=>{ const o=document.createElement('option'); o.value=di; o.textContent='→ '+dn; if(di===d) o.selected=true; daySel.appendChild(o); });
+      daySel.onchange = function(){ movePatternSlotDay(cn,d,si,this.value); };
       const rmBtn = document.createElement('button'); rmBtn.className='rm-slot-btn'; rmBtn.textContent='✕'; rmBtn.onclick = function(){ removePatternSlot(cn,d,si); };
-      entry.appendChild(sel); entry.appendChild(timeIn); entry.appendChild(rmBtn);
+      entry.appendChild(sel); entry.appendChild(timeIn); entry.appendChild(daySel); entry.appendChild(rmBtn);
       col.appendChild(entry);
     });
     const addBtn=document.createElement('button'); addBtn.className='add-slot-btn';
@@ -2236,8 +2651,34 @@ function addPatternSlot(cn,d){
   renderPatternEditor();
 }
 function removePatternSlot(cn,d,si){
+  const slot = (settingsTemp.patterns[cn][d]||[])[si];
+  const origName = origNameFor(cn);
+  const checkDay = (slot && slot._origDay!==undefined) ? slot._origDay : d;
+  if (slot && slotHasPlannedData(origName, checkDay, slot._origIdx)) {
+    if (!confirm("Quest'ora ha lezioni o compiti già pianificati su una o più date. Togliendola dall'orario, quelle attività verranno eliminate definitivamente al salvataggio (fai prima un backup se vuoi conservarle). Continuare?")) return;
+  }
   settingsTemp.patterns[cn][d].splice(si,1);
   if(!settingsTemp.patterns[cn][d].length) delete settingsTemp.patterns[cn][d];
+  renderPatternEditor();
+}
+// Sposta un'ora su un altro giorno della settimana. Le lezioni future già
+// pianificate per quell'ora seguono sullo stesso giorno nuovo, nell'ordine
+// in cui erano state scritte; quelle già svolte restano sul giorno vecchio.
+function movePatternSlotDay(cn, oldDay, si, newDay) {
+  newDay = parseInt(newDay,10);
+  if (newDay===oldDay) return;
+  const slot = settingsTemp.patterns[cn][oldDay][si];
+  const origName = origNameFor(cn);
+  const checkDay = (slot && slot._origDay!==undefined) ? slot._origDay : oldDay;
+  if (slot && slotHasPlannedData(origName, checkDay, slot._origIdx)) {
+    if (!confirm(`Le lezioni future già pianificate per quest'ora passeranno da ${DAY_NAMES[oldDay]} a ${DAY_NAMES[newDay]}, nello stesso ordine in cui erano state scritte. Le lezioni già svolte in passato restano registrate su ${DAY_NAMES[oldDay]}. Confermi lo spostamento?`)) {
+      renderPatternEditor(); return;
+    }
+  }
+  settingsTemp.patterns[cn][oldDay].splice(si,1);
+  if (!settingsTemp.patterns[cn][oldDay].length) delete settingsTemp.patterns[cn][oldDay];
+  if (!settingsTemp.patterns[cn][newDay]) settingsTemp.patterns[cn][newDay]=[];
+  settingsTemp.patterns[cn][newDay].push(slot);
   renderPatternEditor();
 }
 
@@ -2414,9 +2855,68 @@ function showScheduleView() {
       wrap.appendChild(l);
     });
     ctrl.appendChild(wrap);
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn-print-sched';
+    printBtn.textContent = '🖨️ Stampa';
+    printBtn.title = 'Stampa l\'orario settimanale (una casella colorata per classe, come sul muro)';
+    printBtn.onclick = printSchedule;
+    ctrl.appendChild(printBtn);
   }, (body) => {
     renderScheduleBody(body);
   });
+}
+
+// ─── STAMPA ORARIO (griglia colorata, una casella per classe) ───
+function printSchedule() {
+  const checkboxes = document.querySelectorAll('#evpControls input[type=checkbox]');
+  const selectedClasses = [...checkboxes].filter(c=>c.checked).map(c=>c.value);
+  if (!selectedClasses.length) { alert('Seleziona almeno una classe da stampare.'); return; }
+
+  // Righe = ore intere uniche tra le classi selezionate (es. 8, 9, 10…)
+  const hours = new Set();
+  selectedClasses.forEach(cn => {
+    const pat = state.patterns[cn]||{};
+    for (let d=0; d<5; d++) { (pat[d]||[]).forEach(s => { if (s.time) hours.add(parseInt(s.time.slice(0,2),10)); }); }
+  });
+  const sortedHours = [...hours].sort((a,b)=>a-b);
+  if (!sortedHours.length) { alert('Nessun orario configurato per le classi selezionate.'); return; }
+
+  const DAY_SHORT = ['MON','TUE','WED','THU','FRI'];
+  const area = document.getElementById('printScheduleArea');
+  area.innerHTML = '';
+  const title = document.createElement('div');
+  title.className = 'ps-title';
+  title.textContent = '🗓️ Orario Settimanale';
+  area.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'ps-grid';
+  grid.style.gridTemplateColumns = '56px repeat(5, 1fr)';
+
+  const corner = document.createElement('div'); corner.className='ps-head'; corner.style.background='#FBF4FF'; grid.appendChild(corner);
+  DAY_SHORT.forEach(d => { const h=document.createElement('div'); h.className='ps-head'; h.textContent=d; grid.appendChild(h); });
+
+  sortedHours.forEach(hour => {
+    const hc = document.createElement('div'); hc.className='ps-hour'; hc.textContent=hour; grid.appendChild(hc);
+    for (let d=0; d<5; d++) {
+      const cell = document.createElement('div'); cell.className='ps-cell';
+      selectedClasses.forEach(cn => {
+        ((state.patterns[cn]||{})[d]||[]).forEach(s => {
+          if (!s.time || parseInt(s.time.slice(0,2),10)!==hour) return;
+          const color = (state.classColors&&state.classColors[cn]) ? state.classColors[cn] : '#DDA0DD';
+          const block = document.createElement('div');
+          block.className = 'ps-block';
+          block.style.background = color;
+          block.textContent = cn.replace(/[ªº°\s]/g,'');
+          cell.appendChild(block);
+        });
+      });
+      grid.appendChild(cell);
+    }
+  });
+  area.appendChild(grid);
+
+  window.print();
 }
 function renderScheduleBody(body) {
   body.innerHTML = '';
@@ -2561,10 +3061,19 @@ function showLessonsView() {
     renderSubjectSelector(selS);
     selS.onchange = () => renderProgrammaBody(document.getElementById('evpBody'));
     ctrl.appendChild(selS);
+    // Copy-from-another-class button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy-lesson';
+    copyBtn.style.marginLeft = 'auto';
+    copyBtn.textContent = "📋 Copia da un'altra classe";
+    copyBtn.title = "Copia le lezioni future già pianificate per un'altra classe su questa, negli stessi ore/giorni di questa classe";
+    copyBtn.onclick = openCopyProgrammaDialog;
+    ctrl.appendChild(copyBtn);
   }, (body) => {
     renderProgrammaBody(body);
   });
 }
+
 function renderSubjectSelector(sel) {
   sel.innerHTML = '';
   Object.keys(state.subjects||{}).forEach(k => {
@@ -2627,6 +3136,121 @@ function renderProgrammaBody(body) {
     `;
     body.appendChild(card);
   });
+}
+
+// ══════════════════════════════════════════════════════
+//  COPIA PROGRAMMA DA UN'ALTRA CLASSE (una tantum, solo lezioni future)
+//  Prende le lezioni future già scritte per una classe sorgente e le
+//  distribuisce, nello stesso ordine, sulle prossime ore libere della
+//  classe di destinazione — rispettando l'orario proprio di ciascuna.
+//  Non tocca mai un'ora che ha già del contenuto.
+// ══════════════════════════════════════════════════════
+let syncProgTargetClass = null;
+
+function openCopyProgrammaDialog() {
+  const cn = document.getElementById('prog-sel-class').value;
+  if (!cn) return;
+  const others = state.classes.filter(c=>c!==cn);
+  if (!others.length) { alert("Serve almeno un'altra classe da cui copiare."); return; }
+  syncProgTargetClass = cn;
+  document.getElementById('syncProgTargetLabel').textContent =
+    `Le lezioni future (da oggi in poi) verranno copiate su "${cn}", nelle sue prossime ore libere.`;
+  const sel = document.getElementById('syncProgSourceSel');
+  sel.innerHTML = '';
+  others.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  updateSyncProgPreview();
+  document.getElementById('syncProgOverlay').classList.add('open');
+}
+function closeSyncProgOverlay() { document.getElementById('syncProgOverlay').classList.remove('open'); }
+function closeSyncProgIfBg(e) { if (e.target===document.getElementById('syncProgOverlay')) closeSyncProgOverlay(); }
+
+// Le lezioni future (da oggi a fine anno) di una classe che hanno un
+// contenuto reale, in ordine cronologico — esclude le ore cancellate.
+function futureLessonEntries(className) {
+  const end = parseDate(state.schoolEnd);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (!end || today > end) return [];
+  const lessons = state.lessons[className]||{};
+  const cancelled = state.cancelled[className]||{};
+  const entries = [];
+  const d = new Date(today);
+  while (d <= end) {
+    const dow = d.getDay();
+    if (dow>=1 && dow<=5) {
+      slotsOnDay(d, className).forEach(s => {
+        if (cancelled[s.slotKey]) return;
+        const data = lessons[s.slotKey];
+        if (data && (data.lesson||data.homework||data.material||data.notes)) entries.push({ slotKey:s.slotKey, data });
+      });
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return entries;
+}
+// Tutte le ore future (da oggi a fine anno) di una classe, con o senza
+// contenuto — sono i "posti" su cui il programma copiato può atterrare.
+function futureSlots(className) {
+  const end = parseDate(state.schoolEnd);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (!end || today > end) return [];
+  const cancelled = state.cancelled[className]||{};
+  const slots = [];
+  const d = new Date(today);
+  while (d <= end) {
+    const dow = d.getDay();
+    if (dow>=1 && dow<=5) { slotsOnDay(d, className).forEach(s => { if (!cancelled[s.slotKey]) slots.push(s); }); }
+    d.setDate(d.getDate()+1);
+  }
+  return slots;
+}
+// Rigenera i linkId della checklist materiali, così le voci copiate non
+// restano agganciate agli stessi task Todo della classe di origine.
+function regenerateMaterialLinkIds(raw) {
+  if (!raw) return raw;
+  return matDeserialize(raw).map(item =>
+    (item.text||'') + '||' + (item.checked?'true':'false') + '||' + (item.ready?'true':'false') + '||' + _genLinkId()
+  ).join('\n');
+}
+function updateSyncProgPreview() {
+  const sel = document.getElementById('syncProgSourceSel');
+  const src = sel.value;
+  const preview = document.getElementById('syncProgPreview');
+  if (!src) { preview.textContent=''; return; }
+  const n = futureLessonEntries(src).length;
+  preview.textContent = n
+    ? `${n} lezione${n!==1?'e':''} future di "${src}" pronte per essere copiate.`
+    : `"${src}" non ha lezioni future con del contenuto da copiare.`;
+}
+function runSyncProgramma() {
+  const src = document.getElementById('syncProgSourceSel').value;
+  const tgt = syncProgTargetClass;
+  if (!src || !tgt) return;
+  const srcEntries = futureLessonEntries(src);
+  if (!srcEntries.length) { alert('Nessuna lezione futura da copiare per questa classe.'); return; }
+  const tgtSlots = futureSlots(tgt);
+  if (!tgtSlots.length) { alert(`"${tgt}" non ha più ore in programma da qui alla fine dell'anno scolastico.`); return; }
+
+  if (!state.lessons[tgt]) state.lessons[tgt] = {};
+  let copied = 0, skipped = 0, si = 0;
+  for (const slot of tgtSlots) {
+    if (si >= srcEntries.length) break;
+    const existing = state.lessons[tgt][slot.slotKey];
+    const hasContent = existing && (existing.lesson||existing.homework||existing.material||existing.notes);
+    if (hasContent) { skipped++; continue; }
+    const entry = srcEntries[si++];
+    const copy = { ...entry.data };
+    if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
+    state.lessons[tgt][slot.slotKey] = copy;
+    copied++;
+  }
+  const leftover = srcEntries.length - si;
+
+  persist(); closeSyncProgOverlay(); render();
+  renderProgrammaBody(document.getElementById('evpBody'));
+  let msg = `✅ Copiate ${copied} lezioni su "${tgt}".`;
+  if (skipped) msg += ` ${skipped} ore avevano già del contenuto e sono state lasciate invariate.`;
+  if (leftover) msg += ` ${leftover} lezioni di "${src}" non hanno trovato posto entro fine anno scolastico.`;
+  alert(msg);
 }
 
 // ─── 3. MATERIALI DEL GIORNO ─────────────────────────
