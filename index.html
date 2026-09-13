@@ -119,6 +119,14 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
   border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
 .day-cell:hover{background:var(--bg2);}
 .day-cell.cancelled-cell{background:#FFF0EF;}
+.free-hour-cell{cursor:default;}
+.free-hour-cell:hover{background:var(--white);}
+.free-hour-note{width:100%;border:1.5px dashed var(--border);border-radius:8px;background:transparent;
+  font-family:inherit;font-size:0.82rem;color:var(--text);padding:6px 8px;resize:none;
+  min-height:32px;line-height:1.4;transition:border-color .15s,background .15s;box-sizing:border-box;}
+.free-hour-note:hover{border-color:var(--muted);}
+.free-hour-note:focus{outline:none;border-color:var(--grape);border-style:solid;background:var(--bg2);}
+.free-hour-note::placeholder{color:var(--border);font-style:italic;}
 
 /* SLOT CARD */
 .slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
@@ -1398,6 +1406,7 @@ const DEFAULT_STATE = {
   },
   lessons:   {},   // [className][slotKey] = {lesson,material,homework,notes,subjectOverride}
   cancelled: {},   // [className][slotKey] = {reason,mode}
+  freeNotes: {},   // ['YYYY-MM-DD-H'] = free text for a gap hour with no class that day
 };
 
 // ══════════════════════════════════════════════════════
@@ -1507,7 +1516,32 @@ function slotsOnDay(date, className) {
   return (pattern[sd]||[]).map((s,i) => ({...s, slotKey: fmtDate(date)+`-${sd}-${i}`}));
 }
 function fmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function isToday(d) { return fmtDate(d)===fmtDate(new Date()); }
+// Earliest/latest hour across every class's weekly pattern — used to bound
+// the "ore libere" (gap hours) shown in the all-classes day view.
+function dailyHourRange() {
+  let min = null, max = null;
+  Object.values(state.patterns||{}).forEach(pat => {
+    Object.values(pat||{}).forEach(daySlots => {
+      (daySlots||[]).forEach(s => {
+        if (!s.time) return;
+        const h = parseInt(s.time.slice(0,2), 10);
+        if (isNaN(h)) return;
+        if (min===null || h<min) min=h;
+        if (max===null || h>max) max=h;
+      });
+    });
+  });
+  if (min===null) { min=8; max=13; }
+  return {min, max};
+}
+// Saves (or clears, if empty) a free-text note for a gap hour with no class.
+function saveFreeNote(dateStr, hour, text) {
+  const key = dateStr+'-'+hour;
+  const trimmed = (text||'').trim();
+  if (trimmed) state.freeNotes[key] = trimmed;
+  else delete state.freeNotes[key];
+  persist();
+}function isToday(d) { return fmtDate(d)===fmtDate(new Date()); }
 
 // ══════════════════════════════════════════════════════
 //  PREV LESSON (same effective subject, same class)
@@ -1914,37 +1948,51 @@ function renderDay(area) {
     return;
   }
 
-  // ALL CLASSES
+  // ALL CLASSES — merged hour-by-hour timeline; classes with nothing today
+  // are skipped entirely, and hours with no class become editable free notes.
   banner.textContent = 'Tutte le classi';
   area.appendChild(banner);
-  const classes = state.classes;
-  for (const cn of classes) {
-    const header=document.createElement('div');
-    header.style.cssText='margin-top:12px;margin-bottom:6px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px;';
-    const sw=document.createElement('span'); sw.className='class-swatch'; sw.style.background=(state.classColors&&state.classColors[cn])?state.classColors[cn]:'#DDD';
-    header.appendChild(sw); header.appendChild(document.createTextNode(cn));
-    area.appendChild(header);
-    const slots=slotsOnDay(d,cn);
-    if (!slots.length) {
-      const msg=document.createElement('div'); msg.style.cssText='color:var(--border);font-style:italic;margin-bottom:8px'; msg.textContent='Nessuna lezione programmata.'; area.appendChild(msg); continue;
+  const {min:minH, max:maxH} = dailyHourRange();
+  const dateStr = fmtDate(d);
+  for (let h=minH; h<=maxH; h++) {
+    const matches = []; // {cn, s}
+    for (const cn of state.classes) {
+      slotsOnDay(d, cn).forEach(s => {
+        if (s.time && parseInt(s.time.slice(0,2),10)===h) matches.push({cn, s});
+      });
     }
-    for (const s of slots) {
-      const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='50px 1fr'; row.style.gap='0'; row.style.marginBottom='8px';
-      const th=document.createElement('div'); th.className='day-time'; th.textContent=s.time; row.appendChild(th);
-      const cell=document.createElement('div'); cell.className='day-cell'+(((state.cancelled[cn]||{})[s.slotKey])?' cancelled-cell':'');
+    const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='50px 1fr'; row.style.gap='0'; row.style.marginBottom='8px';
+    const th=document.createElement('div'); th.className='day-time'; th.textContent=String(h).padStart(2,'0')+':00'; row.appendChild(th);
+    if (!matches.length) {
+      const cell=document.createElement('div'); cell.className='day-cell free-hour-cell';
+      const ta=document.createElement('textarea');
+      ta.className='free-hour-note'; ta.rows=1;
+      ta.placeholder='Ora libera — annota cosa devi fare…';
+      ta.value = state.freeNotes[dateStr+'-'+h] || '';
+      ta.oninput = () => autoResizeTA(ta);
+      ta.onblur = () => saveFreeNote(dateStr, h, ta.value);
+      cell.appendChild(ta);
+      row.appendChild(cell);
+      area.appendChild(row);
+      requestAnimationFrame(()=>autoResizeTA(ta));
+      continue;
+    }
+    const cell=document.createElement('div'); cell.className='day-cell';
+    matches.forEach(({cn, s}) => {
+      if ((state.cancelled[cn]||{})[s.slotKey]) cell.classList.add('cancelled-cell');
       const card=buildSlotCard(d,s.slotKey,s.subject,s.time,(state.lessons[cn]||{})[s.slotKey],'full', (state.cancelled[cn]||{})[s.slotKey], cn);
       card.draggable = true;
       const _sk = s.slotKey;
+      card.style.marginBottom = '6px';
       card.addEventListener('dragstart', (e)=>{ e.stopPropagation(); onSlotDragStart(e, _sk, cn); });
       card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
       cell.appendChild(card);
-      // allow dropping on this cell for the same class
-      cell.addEventListener('dragover', onCellDragOver);
-      cell.addEventListener('dragleave', onCellDragLeave);
-      cell.addEventListener('drop', (e)=>onCellDrop(e, new Date(d)));
-      row.appendChild(cell);
-      area.appendChild(row);
-    }
+    });
+    cell.addEventListener('dragover', onCellDragOver);
+    cell.addEventListener('dragleave', onCellDragLeave);
+    cell.addEventListener('drop', (e)=>onCellDrop(e, new Date(d)));
+    row.appendChild(cell);
+    area.appendChild(row);
   }
 }
 
