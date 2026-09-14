@@ -12,6 +12,7 @@
   --border:#DDD0C0;--white:#FFFFFF;--shadow:rgba(100,70,40,0.10);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;overflow-x:hidden;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
 /* HEADER */
@@ -508,8 +509,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   .nav-today{display:none !important;}
   .hbtn{padding:5px 10px;font-size:0.78rem;}
   .hbtn.settings-btn{margin-left:auto;}
-  #authBtn{flex-shrink:0;}
-  #todoConnectBtn{display:none !important;}
+#authBtn{flex-shrink:1;min-width:0;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;}  #todoConnectBtn{display:none !important;}
   #syncStatus{gap:5px;margin-left:auto;order:10;}
   
   /* MONTH VIEW MOBILE */
@@ -592,10 +592,10 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 <header>
   <h1>📅 Agenda</h1>
   <div class="view-tabs">
-    <button class="hbtn active" id="vYear"  onclick="setView('year')">Anno</button>
-    <button class="hbtn"        id="vMonth" onclick="setView('month')">Mese</button>
-    <button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
-    <button class="hbtn"        id="vDay"   onclick="setView('day')">Giorno</button>
+<button class="hbtn"        id="vYear"  onclick="setView('year')">Anno</button>
+<button class="hbtn"        id="vMonth" onclick="setView('month')">Mese</button>
+<button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
+<button class="hbtn active" id="vDay"   onclick="setView('day')">Giorno</button>
   </div>
   
   <div class="nav-btns">
@@ -1463,9 +1463,9 @@ function isMonthInSchoolYear(year, month) {
 // ══════════════════════════════════════════════════════
 //  VIEW STATE
 // ══════════════════════════════════════════════════════
-let view = 'year';
+let view = 'day';
 let cursor = new Date();
-let activeClass = state.classes[0] || '';
+let activeClass = '__all__';
 let modalKey = null, modalSubject = 'none', modalPatternSubject = 'none', modalClass = null;
 
 // ══════════════════════════════════════════════════════
@@ -2553,8 +2553,7 @@ function importDataFile(fileInput) {
     Object.assign(state, {...DEFAULT_STATE, ...imported});
     persist();
     closeSettings();
-    if (!state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
-    buildClassBar(); cursor = new Date(); render();
+if (activeClass !== '__all__' && !state.classes.includes(activeClass)) activeClass = state.classes[0] || '';    buildClassBar(); cursor = new Date(); render();
     showToast('✅ Backup ripristinato');
     fileInput.value='';
   };
@@ -3615,11 +3614,10 @@ window.startApp = function() {
     window._remoteState = null;
   }
   window._stateReady = true;
-  if (!state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
+if (activeClass !== '__all__' && !state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
+buildClassBar(); cursor = new Date(); render();
 
-  buildClassBar();
-  cursor = new Date();
-  render();
+
 };
 _waitForGate(() => { if (!window._stateReady) window.startApp(); });
 </script>
