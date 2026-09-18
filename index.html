@@ -307,6 +307,7 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .btn-cancel{background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:9px;padding:7px 15px;font-size:0.86rem;cursor:pointer;}
 .btn-clear{background:#FDECEA;color:var(--coral);border:1.5px solid #F5C4BE;border-radius:9px;padding:7px 12px;font-size:0.84rem;cursor:pointer;margin-right:auto;}
 .btn-cancel-lesson{background:#FFF0EF;color:#B03030;border:1.5px solid #F5B8B5;border-radius:9px;padding:7px 13px;font-size:0.84rem;cursor:pointer;}
+.btn-slip-lesson{background:#EAF3FB;color:var(--blue);border:1.5px solid #B8D8EE;border-radius:9px;padding:7px 13px;font-size:0.84rem;cursor:pointer;}
 
 /* CANCEL MODAL */
 #cancelOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
@@ -779,6 +780,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <button class="btn-clear"         onclick="clearSlot()">🗑 Svuota</button>
     <button class="btn-copy-lesson"   onclick="copyLesson(modalKey)">📋 Copia</button>
     <button class="btn-cancel-lesson" id="cancelLessonBtn" onclick="openCancelModal()">🚫 Cancella lezione</button>
+    <button class="btn-slip-lesson"   id="slipLessonBtn"   onclick="slipLessonsForward()">↪️ Slitta lezioni</button>
     <button class="btn-cancel"        onclick="closeModal()">Chiudi</button>
     <button class="btn-save"          onclick="saveSlot()">💾 Salva</button>
   </div>
@@ -2271,6 +2273,86 @@ function clearSlot() {
     document.getElementById('overlay').classList.remove('open');
     render();
   }
+}
+
+// ══════════════════════════════════════════════════════
+//  SLITTA — sposta in avanti tutte le lezioni pianificate
+//  della stessa materia, liberando lo slot corrente per
+//  scrivere cosa è successo davvero (urgenza, riunione…)
+// ══════════════════════════════════════════════════════
+function _nextMatchingSlotAfter(afterDate, subj, className) {
+  let d = new Date(afterDate); d.setDate(d.getDate()+1);
+  for (let i=0; i<400; i++) {
+    if (isInSchoolYear(d)) {
+      const slots = slotsOnDay(d, className);
+      for (const s of slots) {
+        const eff = effectiveSubject(s.slotKey, s.subject, className);
+        if (eff===subj && !(state.cancelled[className]||{})[s.slotKey]) return s.slotKey;
+      }
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return null;
+}
+function _hasLessonContent(className, key) {
+  const data = (state.lessons[className]||{})[key];
+  return !!(data && (data.lesson || data.homework || data.material || data.notes));
+}
+function _buildSlipChain(startKey, subj, className) {
+  const chain = [startKey];
+  let curKey = startKey;
+  for (let i=0; i<300; i++) {
+    const dateStr = curKey.split('-').slice(0,3).join('-');
+    const nextKey = _nextMatchingSlotAfter(parseDate(dateStr), subj, className);
+    if (!nextKey) return { chain, ranOut:true };
+    chain.push(nextKey);
+    if (!_hasLessonContent(className, nextKey)) return { chain, ranOut:false };
+    curKey = nextKey;
+  }
+  return { chain, ranOut:false };
+}
+function slipLessonsForward() {
+  if (!modalKey || !modalClass) return;
+  if (!_hasLessonContent(modalClass, modalKey)) {
+    alert('Questo slot è già vuoto: non c\'è nessuna lezione pianificata da far slittare.');
+    return;
+  }
+  const subj = effectiveSubject(modalKey, modalPatternSubject, modalClass);
+  const { chain, ranOut } = _buildSlipChain(modalKey, subj, modalClass);
+  if (ranOut) {
+    alert('Non ho trovato abbastanza slot liberi di questa materia entro la fine dell\'anno scolastico: slittamento non eseguito.');
+    return;
+  }
+  const n = chain.length - 1;
+  if (!confirm(`Questo sposterà in avanti di uno slot ${n} lezion${n===1?'e':'i'} già pianificat${n===1?'a':'e'} di "${subjLabel(subj)}" per ${modalClass}. Lo slot di oggi resterà libero per scrivere cosa avete fatto davvero. Continuare?`)) return;
+
+  if (!state.lessons[modalClass]) state.lessons[modalClass] = {};
+  for (let i = chain.length - 1; i >= 1; i--) {
+    const src = state.lessons[modalClass][chain[i-1]];
+    if (src) state.lessons[modalClass][chain[i]] = {...src};
+    else delete state.lessons[modalClass][chain[i]];
+  }
+  delete state.lessons[modalClass][chain[0]];
+  persist();
+
+  // svuota il modulo per scrivere cosa è successo davvero oggi
+  document.getElementById('fLessonTitle').value = '';
+  document.getElementById('fLessonBody').value = '';
+  autoResizeTA(document.getElementById('fLessonTitle'));
+  autoResizeTA(document.getElementById('fLessonBody'));
+  matBuildChecklist([]);
+  document.getElementById('fHomework').value = '';
+  autoResizeTA(document.getElementById('fHomework'));
+  document.getElementById('fNotes').value = '';
+  autoResizeTA(document.getElementById('fNotes'));
+  _currentOverride = null;
+  _rebuildSubjBadge(modalPatternSubject);
+  _updatePrevHw(modalPatternSubject);
+
+  const cancelBtn=document.getElementById('cancelLessonBtn');
+  if (cancelBtn) cancelBtn.textContent = ((state.cancelled[modalClass]||{})[modalKey]) ? '🔄 Gestisci cancellazione' : '🚫 Cancella lezione';
+
+  render();
 }
 
 // ══════════════════════════════════════════════════════
