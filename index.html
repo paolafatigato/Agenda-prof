@@ -16,18 +16,16 @@ html,body{width:100%;overflow-x:hidden;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
 /* HEADER */
-header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0.7rem 1.4rem;
+header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0.62rem 1.4rem;
   display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .view-tabs{display:flex;gap:5px;}
-.nav-btns{display:flex;gap:5px;margin-left:auto;align-items:center;}
+.nav-btns{display:flex;gap:8px;align-items:center;}
 .hbtn{border:1.5px solid var(--border);background:var(--bg);color:var(--text);border-radius:8px;
   padding:5px 13px;font-size:0.83rem;cursor:pointer;font-weight:500;transition:background .14s,border-color .14s;}
 .hbtn:hover{background:var(--bg2);border-color:var(--grape);}
 .hbtn.active{background:var(--grape);color:#fff;border-color:var(--grape);}
 .hbtn.settings-btn{background:var(--bg2);font-size:1rem;padding:5px 10px;}
 .hbtn.settings-btn:hover{border-color:var(--grape);}
-#currentLabel{font-size:0.92rem;font-weight:600;color:var(--blue);min-width:150px;text-align:center;}
 #syncStatus{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;position:relative;}
 .sync-dot.ok{background:var(--green);}
@@ -165,12 +163,12 @@ header h1{font-size:1.15rem;font-weight:700;color:var(--grape);}
 .pill-lit{background:#E8D5FF;color:#42286A;}
 
 /* SETTINGS */
-#settingsOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.45);z-index:300;
+#settingsOverlay,#setupOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.45);z-index:300;
   align-items:flex-start;justify-content:flex-end;}
-#settingsOverlay.open{display:flex;}
-#settingsPanel{background:var(--white);width:min(480px,96vw);height:100vh;overflow-y:auto;
+#settingsOverlay.open,#setupOverlay.open{display:flex;}
+#settingsPanel,#setupPanel{background:var(--white);width:min(480px,96vw);height:100vh;overflow-y:auto;
   padding:1.5rem;box-shadow:-6px 0 30px rgba(0,0,0,.15);}
-#settingsPanel h2{font-size:1.05rem;font-weight:700;color:var(--grape);margin-bottom:1.2rem;}
+#settingsPanel h2,#setupPanel h2{font-size:1.05rem;font-weight:700;color:var(--grape);margin-bottom:1.2rem;}
 .s-section{margin-bottom:1.5rem;}
 .s-section h3{font-size:0.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;
   letter-spacing:.04em;margin-bottom:.7rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);}
@@ -373,7 +371,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 
 /* SECONDARY NAV BAR */
 #secondaryNav{background:#DA9CFF;;padding:0.55rem 1.4rem;
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:58px;z-index:99;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:var(--hdr-h,58px);z-index:99;
   box-shadow:0 2px 12px rgba(116,79,135,.18);}
 #secondaryNav .snav-label{font-size:0.72rem;font-weight:700;color:#FDECEA;text-transform:uppercase;
   letter-spacing:0.08em;margin-right:4px;flex-shrink:0;}
@@ -509,17 +507,14 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 /* MOBILE RESPONSIVE */
 @media (max-width:768px) {
   #calArea{padding:1.1rem 1.4rem 1rem;}
-  header{flex-wrap:wrap;}
-  .view-tabs{width:100%;order:2;}
-  .nav-btns{width:100%;order:3;flex-wrap:nowrap;justify-content:flex-start;gap:3px;}
-  .nav-back{flex-shrink:0;}
-  .nav-label{flex:1;min-width:auto;text-align:center;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .nav-forward{flex-shrink:0;}
+  header{flex-wrap:wrap;gap:.5rem;}
+  #setupBtn{order:0;}
+  #headerDate{order:1;}
+  .nav-btns{order:2;flex-wrap:nowrap;gap:6px;}
+  .view-tabs{width:100%;order:3;}
   .nav-today{display:none !important;}
   .hbtn{padding:5px 10px;font-size:0.78rem;}
-  .hbtn.settings-btn{margin-left:auto;}
-#authBtn{flex-shrink:1;min-width:0;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;}  #todoConnectBtn{display:none !important;}
-  #syncStatus{gap:5px;margin-left:auto;order:10;}
+  #syncStatus{gap:5px;}
   
   /* MONTH VIEW MOBILE */
   .month-day{min-height:65px;padding:4px 3px;}
@@ -577,6 +572,66 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 #appRoot.gate-hidden{display:none;}
 .guest-badge{background:var(--bg2);color:var(--muted);font-size:0.7rem;font-weight:700;
   border-radius:20px;padding:2px 10px;border:1.5px dashed var(--border);}
+
+/* BOTTONI/MODAL AGGIUNTI */
+.btn-close-year{background:var(--coral);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;}
+.btn-close-year:hover{background:#D24A3F;}
+.btn-add-extra{margin-top:5px;background:#EAF3FB;color:var(--blue);border:1.5px dashed #B8D8EE;border-radius:8px;padding:3px 10px;font-size:.74rem;font-weight:600;cursor:pointer;}
+.btn-add-extra:hover{background:#D9ECFA;}
+#addLessonOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
+#addLessonOverlay.open{display:flex;}
+#addLessonModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(440px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
+#addLessonModal h2{font-size:1rem;font-weight:700;color:var(--grape);margin-bottom:.4rem;}
+#addLessonModal .al-when{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;}
+.al-shift{display:flex;gap:9px;align-items:flex-start;background:var(--bg2);border-radius:10px;padding:10px 12px;font-size:0.78rem;color:var(--muted);line-height:1.45;margin:.4rem 0 1.1rem;cursor:pointer;}
+.al-shift input{margin-top:3px;}
+
+/* HEADER: tasti tondi, data colorata, menu utente */
+body{--n1:#EE6054;--n2:#FF9B85;--sh:rgba(238,96,84,.35);}
+body[data-view="day"]{--n1:#EE6054;--n2:#FF9B85;--sh:rgba(238,96,84,.35);}
+body[data-view="week"]{--n1:#2F6690;--n2:#49ACEF;--sh:rgba(47,102,144,.35);}
+body[data-view="month"]{--n1:#744F87;--n2:#DA9CFF;--sh:rgba(116,79,135,.35);}
+body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
+.round-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);background:var(--bg);color:var(--grape);
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;line-height:1;cursor:pointer;flex-shrink:0;padding:0;
+  transition:background .14s,border-color .14s,transform .12s;}
+.round-btn:hover{background:var(--bg2);border-color:var(--grape);}
+.round-btn:active{transform:scale(.94);}
+.round-btn svg{width:19px;height:19px;fill:currentColor;}
+.round-btn.logged{border-color:var(--green);color:var(--green);}
+#headerDate{flex:1;display:flex;justify-content:center;min-width:0;}
+#currentLabel{max-width:100%;min-width:190px;text-align:center;font-size:1.05rem;font-weight:800;letter-spacing:.02em;color:#fff;
+  background:linear-gradient(135deg,var(--n1),var(--n2));border-radius:999px;padding:.4rem 1.3rem;box-shadow:0 3px 10px var(--sh);
+  text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#userMenuWrap{position:relative;}
+#userMenu{display:none;position:absolute;right:0;top:calc(100% + 12px);width:250px;background:var(--white);border:1.5px solid var(--border);
+  border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.16);padding:.9rem;z-index:250;}
+#userMenu.open{display:block;}
+.um-name{font-size:.95rem;font-weight:700;color:var(--text);word-break:break-word;}
+.um-sub{font-size:.72rem;color:var(--muted);margin:.15rem 0 .7rem;word-break:break-word;}
+.um-btn{display:block;width:100%;margin-top:6px;padding:8px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);
+  color:var(--text);font-size:.83rem;font-weight:600;cursor:pointer;text-align:left;}
+.um-btn:hover{border-color:var(--grape);background:var(--bg2);}
+.um-btn:disabled{opacity:.75;cursor:default;}
+
+/* FRECCE LATERALI a metà altezza dello schermo */
+.side-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:90;width:48px;height:48px;border-radius:50%;
+  border:2.5px solid var(--n1);background:var(--white);color:var(--n1);font-size:1.9rem;font-weight:700;line-height:1;
+  display:flex;align-items:center;justify-content:center;padding:0 0 4px;cursor:pointer;box-shadow:0 4px 14px var(--sh);
+  transition:transform .12s,background .14s,color .14s;}
+.side-arrow.left{left:10px;}
+.side-arrow.right{right:10px;}
+.side-arrow:hover{background:var(--n1);color:#fff;transform:translateY(-50%) scale(1.08);}
+.side-arrow:active{transform:translateY(-50%) scale(.94);}
+@media (min-width:769px){ #calArea{padding-left:74px;padding-right:74px;} }
+#setupPanel{width:min(560px,96vw);}
+/* mobile: DOPO le regole base, altrimenti verrebbero sovrascritte */
+@media (max-width:768px){
+  #currentLabel{font-size:.95rem;padding:.38rem .8rem;min-width:0;}
+  .side-arrow{width:36px;height:36px;font-size:1.5rem;opacity:.8;}
+  .side-arrow.left{left:3px;}
+  .side-arrow.right{right:3px;}
+}
   </style>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="manifest" href="manifest.json">
@@ -599,26 +654,32 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 
 <div id="appRoot" class="gate-hidden">
 <header>
-  <h1>📅 Agenda</h1>
+  <button class="round-btn" id="setupBtn" onclick="openCalendarSetup()" title="Classi, materie e orario" aria-label="Classi, materie e orario">📅</button>
   <div class="view-tabs">
 <button class="hbtn"        id="vYear"  onclick="setView('year')">Anno</button>
 <button class="hbtn"        id="vMonth" onclick="setView('month')">Mese</button>
 <button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
 <button class="hbtn active" id="vDay"   onclick="setView('day')">Giorno</button>
   </div>
-  
+  <div id="headerDate"><span id="currentLabel"></span></div>
   <div class="nav-btns">
-    <button class="hbtn nav-back" onclick="navigate(-1)">◀</button>
-    <span id="currentLabel" class="nav-label"></span>
-    <button class="hbtn nav-forward" onclick="navigate(1)">▶</button>
     <button class="hbtn nav-today" onclick="goToday()" style="display:none;">Oggi</button>
     <div id="syncStatus">
       <div class="sync-dot ok tooltip" id="syncDotFirebase" data-label="Sincronizzato" title="Sincronizzato"></div>
       <div class="sync-dot ok tooltip" id="syncDotTodo" data-label="Todo collegata" title="Todo collegata" style="display:none;"></div>
     </div>
-    <button class="hbtn" id="authBtn" onclick="toggleAuth()">Accedi</button>
-    <button class="hbtn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
-    <button class="hbtn settings-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
+    <div id="userMenuWrap">
+      <button class="round-btn" id="userBtn" onclick="toggleUserMenu(event)" title="Account" aria-label="Account">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5z"/></svg>
+      </button>
+      <div id="userMenu">
+        <div class="um-name" id="userMenuName">Non connesso</div>
+        <div class="um-sub" id="userMenuSub">Accedi per sincronizzare i dati</div>
+        <button class="um-btn" id="authBtn" onclick="closeUserMenu();toggleAuth()">Accedi con Google</button>
+        <button class="um-btn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
+      </div>
+    </div>
+    <button class="round-btn settings-btn" onclick="openSettings()" title="Impostazioni" aria-label="Impostazioni">⚙️</button>
   </div>
 </header>
 <!-- SECONDARY NAV BAR -->
@@ -652,9 +713,13 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   <div class="legend-item"><div class="legend-dot" style="background:var(--bg2);border:1px dashed var(--border);"></div> Fuori anno scolastico</div>
 </div>-->
 
+<!-- FRECCE LATERALI (a metà altezza dello schermo) -->
+<button class="side-arrow left"  id="dbPrev" onclick="navigate(-1)" title="Giorno precedente" aria-label="Precedente">‹</button>
+<button class="side-arrow right" id="dbNext" onclick="navigate(1)"  title="Giorno successivo" aria-label="Successivo">›</button>
+
 <div id="calArea"></div>
 
-<!-- SETTINGS -->
+<!-- IMPOSTAZIONI (⚙️) -->
 <div id="settingsOverlay" onclick="closeSettingsIfBg(event)">
 <div id="settingsPanel">
   <h2>⚙️ Impostazioni</h2>
@@ -671,19 +736,38 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     </div>
   </div>
   <div class="s-section">
-    <h3>Anno scolastico</h3>
-    <div class="s-row"><label>Inizio</label><input type="date" id="sSchoolStart"></div>
-    <div class="s-row"><label>Fine</label><input type="date" id="sSchoolEnd"></div>
-  </div>
-  <div class="s-section">
-    <h3>Classi</h3>
+    <h3>🔗 Sincronizza classi</h3>
     <div class="classroom-sync-box">
-      🔗 Collega Classroom Manager per usare gli stessi colori classe in entrambe le app.
+      Collega Classroom Manager per usare gli stessi colori classe in entrambe le app.
+      I colori sincronizzati si applicano subito alle classi con lo stesso nome.
       <div class="cs-row">
         <button class="btn-classroom" id="classroomConnectBtn" onclick="window.connectClassroomManagerFromButton()">Collega a Classroom Manager</button>
         <button class="btn-classroom secondary" id="classroomSyncBtn" onclick="window.syncColorsFromClassroomManagerFromButton()" style="display:none;">🎨 Sincronizza colori</button>
       </div>
     </div>
+  </div>
+  <div class="s-section">
+    <h3>🎓 Fine anno scolastico</h3>
+    <div class="backup-box">
+      Archivia l'anno in corso: scarica un backup completo, conserva le lezioni fino a oggi e svuota
+      tutto ciò che è pianificato da domani in poi. Classi, materie e orario settimanale restano.
+      <div class="backup-actions">
+        <button class="btn-close-year" onclick="closeSchoolYear()">🎓 Chiudi anno scolastico</button>
+      </div>
+    </div>
+  </div>
+  <div class="s-actions">
+    <button class="btn-cancel-s" onclick="closeSettings()">Chiudi</button>
+  </div>
+</div>
+</div>
+
+<!-- CLASSI · MATERIE · ORARIO (📅) -->
+<div id="setupOverlay" onclick="closeSetupIfBg(event)">
+<div id="setupPanel">
+  <h2>📅 Classi, materie e orario</h2>
+  <div class="s-section">
+    <h3>Classi</h3>
     <p style="font-size:.72rem;color:var(--muted);margin:-.2rem 0 .6rem;">
       Clicca sul nome per rinominarla — orario, lezioni e compiti già inseriti restano collegati alla classe.
     </p>
@@ -694,7 +778,8 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     </div>
   </div>
   <div class="s-section">
-    <h3>Materie</h3>
+    <h3>Materie <span style="font-weight:500;text-transform:none;">(facoltative)</span></h3>
+    <p style="font-size:.72rem;color:var(--muted);margin:-.2rem 0 .6rem;">Se insegni una sola materia puoi lasciare l'elenco vuoto: nell'orario lascia «— nessuna materia».</p>
     <div class="class-list" id="sSubjectList"></div>
     <div class="class-add-row">
       <input type="text" id="sNewSubject" placeholder="Es: Scienze" maxlength="30">
@@ -708,7 +793,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <p style="font-size:.72rem;color:var(--muted);margin-top:.3rem;">Puoi aggiungere più ore per giorno.</p>
   </div>
   <div class="s-actions">
-    <button class="btn-cancel-s" onclick="closeSettings()">Annulla</button>
+    <button class="btn-cancel-s" onclick="closeCalendarSetup()">Annulla</button>
     <button class="btn-save-s" onclick="saveSettings()">💾 Salva</button>
   </div>
 </div>
@@ -781,8 +866,29 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
     <button class="btn-copy-lesson"   onclick="copyLesson(modalKey)">📋 Copia</button>
     <button class="btn-cancel-lesson" id="cancelLessonBtn" onclick="openCancelModal()">🚫 Cancella lezione</button>
     <button class="btn-slip-lesson"   id="slipLessonBtn"   onclick="slipLessonsForward()">↪️ Slitta lezioni</button>
+    <button class="btn-cancel-lesson" id="removeExtraBtn"  onclick="removeExtraFromModal()" style="display:none">🗑 Rimuovi ora extra</button>
     <button class="btn-cancel"        onclick="closeModal()">Chiudi</button>
     <button class="btn-save"          onclick="saveSlot()">💾 Salva</button>
+  </div>
+</div>
+</div>
+
+<!-- AGGIUNGI LEZIONE (ora libera) -->
+<div id="addLessonOverlay" onclick="if(event.target===this)closeAddLesson()">
+<div id="addLessonModal">
+  <h2>➕ Aggiungi lezione</h2>
+  <p class="al-when" id="alWhen"></p>
+  <div class="s-row"><label>Classe</label><select id="alClass" onchange="alClassChanged()"></select></div>
+  <div class="s-row"><label>Ora</label><input type="time" id="alTime"></div>
+  <div class="s-row"><label>Materia</label><select id="alSubject"></select></div>
+  <label class="al-shift">
+    <input type="checkbox" id="alShift">
+    <span><strong>⏪ Anticipa le lezioni successive</strong><br>
+    La nuova ora prende il contenuto della prossima lezione già pianificata e tutte le seguenti slittano indietro di uno slot.</span>
+  </label>
+  <div class="cancel-modal-actions">
+    <button class="btn-cancel" onclick="closeAddLesson()">Annulla</button>
+    <button class="btn-confirm-sync" onclick="confirmAddLesson()">➕ Aggiungi</button>
   </div>
 </div>
 </div>
@@ -824,7 +930,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 <div id="pasteBar">
   <span>📋 Incolla lezione per:</span>
   <select id="pbClassSel"></select>
-  <span style="font-size:.78rem;opacity:.85">→ clicca su un giorno</span>
+  <span style="font-size:.78rem;opacity:.85">→ tocca una lezione (vale la sua classe) oppure un giorno (vale la classe scelta qui)</span>
   <button class="pb-cancel" onclick="hidePasteBar()">✕ Annulla</button>
 </div>
 <div id="toast"></div>
@@ -1149,15 +1255,16 @@ window.syncColorsFromClassroomManagerFromButton = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Sincronizzazione…'; }
   try {
     const remoteColors = await fetchClassroomColors();
-    if (!settingsTemp.classColors) settingsTemp.classColors = {};
+    const S = window.state;
+    if (!S.classColors) S.classColors = {};
     let matched = 0;
     const unmatched = [];
-    settingsTemp.classes.forEach((cn) => {
+    S.classes.forEach((cn) => {
       const color = remoteColors[_normClassName(cn)];
-      if (color) { settingsTemp.classColors[cn] = color; matched++; }
+      if (color) { S.classColors[cn] = color; matched++; }
       else unmatched.push(cn);
     });
-    renderClassList();
+    if (matched) { persist(); window.buildClassBar(); window.render(); }
     if (matched) showToast(`🎨 Colori sincronizzati per ${matched} classe/i`);
     if (unmatched.length) {
       alert('Nessuna corrispondenza trovata in Classroom Manager per: ' + unmatched.join(', ') +
@@ -1232,12 +1339,34 @@ function revealApp() {
   if (window.startApp) window.startApp();
 }
 
+// ── MENU UTENTE: nome + login/logout ──
+function setUserMenu(mode, name, email) {
+  const nm = document.getElementById('userMenuName');
+  const sub = document.getElementById('userMenuSub');
+  const ab = document.getElementById('authBtn');
+  const ub = document.getElementById('userBtn');
+  if (!nm || !ab) return;
+  if (ub) ub.classList.toggle('logged', mode === 'user');
+  if (mode === 'user') {
+    nm.textContent = name || 'Account';
+    if (sub) sub.textContent = email || 'Dati sincronizzati sul cloud';
+    ab.textContent = 'Esci'; ab.title = 'Esci';
+  } else if (mode === 'guest') {
+    nm.textContent = 'Ospite';
+    if (sub) sub.textContent = 'Dati solo su questo dispositivo';
+    ab.textContent = 'Accedi con Google'; ab.title = 'Accedi con Google per sincronizzare';
+  } else {
+    nm.textContent = 'Non connesso';
+    if (sub) sub.textContent = 'Accedi per sincronizzare i dati';
+    ab.textContent = 'Accedi con Google'; ab.title = 'Accedi con Google';
+  }
+}
+
 // ── GUEST MODE ──
 window.continueAsGuest = function() {
   window._guestMode = true;
   setSyncStatus('err', 'Modalità ospite');
-  const authBtn = document.getElementById('authBtn');
-  if (authBtn) { authBtn.textContent = '👤 Ospite'; authBtn.title = 'Modalità ospite — accedi con Google per sincronizzare'; }
+  setUserMenu('guest');
   revealApp();
 };
 
@@ -1305,7 +1434,7 @@ onAuthStateChanged(auth, (user) => {
 
   if (user) {
     window._guestMode = false;
-    if (authBtn) { authBtn.textContent = user.displayName || 'Account'; authBtn.title = 'Esci'; }
+    setUserMenu('user', user.displayName || user.email, user.email);
     setGateStatus('Connessione ai tuoi dati…');
     setSyncStatus('loading', 'Connessione…');
     updateTodoConnectButton();
@@ -1376,7 +1505,7 @@ onAuthStateChanged(auth, (user) => {
       if (!window._gateResolved) { setGateStatus('⚠️ Connessione fallita. Riprova o usa la modalità ospite.'); }
     });
   } else {
-    if (authBtn) { authBtn.textContent = 'Accedi'; authBtn.title = 'Accedi con Google'; }
+    setUserMenu('out');
     setSyncStatus('err', 'Non autenticato');
     if (unsubscribeFirestore) { unsubscribeFirestore(); unsubscribeFirestore = null; }
     updateTodoConnectButton();
@@ -1397,8 +1526,6 @@ const DAY_NAMES = ['Lun','Mar','Mer','Gio','Ven'];
 //  STATE  – merge localStorage + remote
 // ══════════════════════════════════════════════════════
 const DEFAULT_STATE = {
-  schoolStart: '2025-09-14',
-  schoolEnd:   '2026-06-12',
   classes: ['1ª A','2ª B','3ª C'],
   patterns: {
     '1ª A': {0:[{subject:'english',time:'08:00'}],1:[{subject:'lit',time:'09:00'}],2:[{subject:'english',time:'10:00'}]},
@@ -1417,6 +1544,8 @@ const DEFAULT_STATE = {
   lessons:   {},   // [className][slotKey] = {lesson,material,homework,notes,subjectOverride}
   cancelled: {},   // [className][slotKey] = {reason,mode}
   freeNotes: {},   // ['YYYY-MM-DD-H'] = free text for a gap hour with no class that day
+  extraSlots: {},  // [className]['YYYY-MM-DD'] = [{id,time,subject}]  ore extra / supplenze
+  yearClosedOn: null, // 'YYYY-MM-DD' = ultimo giorno dell'anno archiviato
 };
 
 // ══════════════════════════════════════════════════════
@@ -1453,21 +1582,26 @@ function parseDate(str) {
   const [y,m,d] = str.split('-').map(Number);
   return new Date(y, m-1, d);
 }
-function isInSchoolYear(date) {
-  const start = parseDate(state.schoolStart);
-  const end   = parseDate(state.schoolEnd);
-  if (!start || !end) return true;
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  return d >= start && d <= end;
-}
+function isInSchoolYear(date) { return true; }   // nessun anno scolastico: tutti i giorni attivi
 // Is the whole month outside the school year?
-function isMonthInSchoolYear(year, month) {
-  const start = parseDate(state.schoolStart);
-  const end   = parseDate(state.schoolEnd);
-  if (!start || !end) return true;
-  const mStart = new Date(year, month, 1);
-  const mEnd   = new Date(year, month+1, 0);
-  return mEnd >= start && mStart <= end;
+function isMonthInSchoolYear(year, month) { return true; }
+
+// Finestra di date usata da navigazione lezioni, programma svolto e slittamenti:
+// dalla data più vecchia con dati (o oggi) fino a 400 giorni dopo la più recente.
+function planningRange() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  let min = new Date(today), max = new Date(today);
+  const consider = (key) => {
+    const d = parseDate(String(key).slice(0,10));
+    if (!d || isNaN(d)) return;
+    if (d < min) min = d;
+    if (d > max) max = d;
+  };
+  ['lessons','cancelled','extraSlots'].forEach(b => {
+    Object.values(state[b]||{}).forEach(o => Object.keys(o||{}).forEach(consider));
+  });
+  const end = new Date(max); end.setDate(end.getDate()+400);
+  return { start: new Date(min), end };
 }
 
 // ══════════════════════════════════════════════════════
@@ -1498,7 +1632,7 @@ function subjConfig(key) {
 }
 function subjLabel(s) {
   const c = subjConfig(s);
-  return c ? c.label : '–';
+  return c ? c.label : ((!s || s==='none') ? 'Lezione' : '–');
 }
 function subjPillStyle(s, planned) {
   const c = subjConfig(s) || {};
@@ -1522,25 +1656,31 @@ function slotsOnDay(date, className) {
   const pattern = (state.patterns[className])||{};
   const dow = date.getDay();
   const sd  = (dow===0||dow===6) ? null : dow-1;
-  if (sd===null) return [];
-  return (pattern[sd]||[]).map((s,i) => ({...s, slotKey: fmtDate(date)+`-${sd}-${i}`}));
+  const ds  = fmtDate(date);
+  const base = (sd===null) ? [] : (pattern[sd]||[]).map((s,i) => ({...s, slotKey: ds+`-${sd}-${i}`}));
+  // ore extra (supplenze, ore aggiunte a mano): non fanno parte dell'orario settimanale
+  const extras = ((((state.extraSlots||{})[className]||{})[ds])||[])
+    .map(x => ({ subject: x.subject||'none', time: x.time, extra: true, slotKey: ds+'-x-'+x.id }));
+  return base.concat(extras);
 }
 function fmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 // Earliest/latest hour across every class's weekly pattern — used to bound
 // the "ore libere" (gap hours) shown in the all-classes day view.
-function dailyHourRange() {
+function dailyHourRange(dateStr) {
   let min = null, max = null;
+  const eat = (t) => {
+    if (!t) return;
+    const h = parseInt(t.slice(0,2), 10);
+    if (isNaN(h)) return;
+    if (min===null || h<min) min=h;
+    if (max===null || h>max) max=h;
+  };
   Object.values(state.patterns||{}).forEach(pat => {
-    Object.values(pat||{}).forEach(daySlots => {
-      (daySlots||[]).forEach(s => {
-        if (!s.time) return;
-        const h = parseInt(s.time.slice(0,2), 10);
-        if (isNaN(h)) return;
-        if (min===null || h<min) min=h;
-        if (max===null || h>max) max=h;
-      });
-    });
+    Object.values(pat||{}).forEach(daySlots => (daySlots||[]).forEach(s => eat(s.time)));
   });
+  if (dateStr) {   // le ore extra di QUEL giorno allargano la griglia
+    Object.values(state.extraSlots||{}).forEach(byDate => ((byDate||{})[dateStr]||[]).forEach(x => eat(x.time)));
+  }
   if (min===null) { min=8; max=13; }
   return {min, max};
 }
@@ -1557,11 +1697,14 @@ function saveFreeNote(dateStr, hour, text) {
 //  PREV LESSON (same effective subject, same class)
 // ══════════════════════════════════════════════════════
 function prevLessonData(date, subjectToMatch, className) {
-  if (!subjectToMatch||subjectToMatch==='none') return null;
+  if (!subjectToMatch) return null;              // 'none' (senza materia) ora è valido
   const lessons   = state.lessons[className]||{};
   const cancelled = state.cancelled[className]||{};
+  const closed = state.yearClosedOn || null;     // non guardo indietro oltre l'anno archiviato
+  const ds = fmtDate(date);
   let d = new Date(date); d.setDate(d.getDate()-1);
   for (let i=0; i<180; i++) {
+    if (closed && ds > closed && fmtDate(d) <= closed) break;
     const slots = slotsOnDay(d, className);
     for (let si=slots.length-1; si>=0; si--) {
       const s = slots[si];
@@ -1604,6 +1747,20 @@ window.buildClassBar = function() {
 // ══════════════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  MENU UTENTE (tasto tondo col pupino)
+// ══════════════════════════════════════════════════════
+function toggleUserMenu(e) { if (e) e.stopPropagation(); document.getElementById('userMenu').classList.toggle('open'); }
+function closeUserMenu() { const m = document.getElementById('userMenu'); if (m) m.classList.remove('open'); }
+document.addEventListener('click', (e) => { if (!e.target.closest('#userMenuWrap')) closeUserMenu(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeUserMenu(); });
+// La barra sticky delle viste rapide si aggancia all'altezza reale dell'header
+function _syncHeaderH() {
+  const h = document.querySelector('header');
+  if (h && h.offsetHeight) document.documentElement.style.setProperty('--hdr-h', h.offsetHeight + 'px');
+}
+window.addEventListener('resize', _syncHeaderH);
+
 function setView(v) {
   view=v;
   ['vYear','vMonth','vWeek','vDay'].forEach(id=>document.getElementById(id).classList.remove('active'));
@@ -1621,6 +1778,11 @@ function goToday() { cursor=new Date(); render(); }
 
 function updateLabel() {
   const el=document.getElementById('currentLabel');
+  document.body.dataset.view = view;   // colore data + frecce cambiano con la vista
+  const t = {year:['Anno precedente','Anno successivo'], month:['Mese precedente','Mese successivo'],
+             week:['Settimana precedente','Settimana successiva'], day:['Giorno precedente','Giorno successivo']}[view];
+  document.getElementById('dbPrev').title = t[0];
+  document.getElementById('dbNext').title = t[1];
   if      (view==='year')  el.textContent=cursor.getFullYear();
   else if (view==='month') el.textContent=MONTHS_IT[cursor.getMonth()]+' '+cursor.getFullYear();
   else if (view==='week')  {
@@ -1781,7 +1943,7 @@ function buildMonthCell(date, otherMonth) {
       pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
       pill.onclick=(e)=>{
         e.stopPropagation();
-        if (clipboard) { pasteOnDay(cd); return; }
+        if (clipboard) { pasteOnDay(cd, ck, activeClass); return; }
         openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null, activeClass);
       };
       cell.appendChild(pill);
@@ -1816,7 +1978,7 @@ function buildMonthCell(date, otherMonth) {
           pill.addEventListener('dragend', (e)=>onSlotDragEnd(e));
           pill.onclick=(e)=>{
             e.stopPropagation();
-            if (clipboard) { pasteOnDay(cd); return; }
+            if (clipboard) { pasteOnDay(cd, ck, cn); return; }
             openModal(ck,cd,s.subject,s.time,canc[ck]?'cancelled':null, cn);
           };
           cell.appendChild(pill);
@@ -1919,15 +2081,10 @@ function renderWeek(area) {
 // ══════════════════════════════════════════════════════
 function renderDay(area) {
   const d=cursor;
-  if (!isInSchoolYear(d)) {
-    const msg=document.createElement('div'); msg.className='out-of-school';
-    msg.textContent='📭 Questa data è fuori dall\'anno scolastico ('+state.schoolStart+' – '+state.schoolEnd+')';
-    area.appendChild(msg); return;
-  }
   const banner=document.createElement('div');
   banner.style.cssText='margin-bottom:1rem;font-size:.86rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
   if (activeClass!=='__all__') {
-    const slots=slotsOnDay(d,activeClass);
+    const slots=slotsOnDay(d,activeClass).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
     const lessons=state.lessons[activeClass]||{};
     const canc=state.cancelled[activeClass]||{};
     if (slots.length) {
@@ -1962,8 +2119,8 @@ function renderDay(area) {
   // are skipped entirely, and hours with no class become editable free notes.
   banner.textContent = 'Tutte le classi';
   area.appendChild(banner);
-  const {min:minH, max:maxH} = dailyHourRange();
   const dateStr = fmtDate(d);
+  const {min:minH, max:maxH} = dailyHourRange(dateStr);
   for (let h=minH; h<=maxH; h++) {
     const matches = []; // {cn, s}
     for (const cn of state.classes) {
@@ -1982,6 +2139,12 @@ function renderDay(area) {
       ta.oninput = () => autoResizeTA(ta);
       ta.onblur = () => saveFreeNote(dateStr, h, ta.value);
       cell.appendChild(ta);
+      const addBtn = document.createElement('button');
+      addBtn.className = 'btn-add-extra';
+      addBtn.textContent = '➕ Aggiungi lezione';
+      addBtn.title = 'Aggiungi una lezione extra (es. supplenza) in una delle tue classi';
+      addBtn.onclick = () => openAddLessonModal(dateStr, h);
+      cell.appendChild(addBtn);
       row.appendChild(cell);
       area.appendChild(row);
       requestAnimationFrame(()=>autoResizeTA(ta));
@@ -2025,7 +2188,7 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
   card.style.setProperty('--class-accent', accentColor);
   if (planned) card.style.opacity = '0.62';
   let html=`<div class="sc-title">${subjLabel(eff)}${overridden?` <span style="font-size:.6rem;opacity:.6">(era ${subjLabel(patternSubj)})</span>`:''}</div>`;
-  html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${cls}</div>`;
+  html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${cls}${String(key).includes('-x-')?' · ➕ extra':''}</div>`;
   if (cancData) {
     html+=`<div style="font-size:.72rem;color:#B03030;font-style:italic">🚫 ${cancData.reason||'Lezione cancellata'}</div>`;
   } else if (data&&data.lesson) {
@@ -2051,7 +2214,7 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
   const ck=key, cd=new Date(date), cs=patternSubj;
   card.onclick=(e)=>{
     e.stopPropagation();
-    if (clipboard) { pasteOnDay(cd); return; }
+    if (clipboard) { pasteOnDay(cd, ck, cls); return; }
     openModal(ck,cd,cs,time,cancData?'cancelled':null, cls);
   };
   return card;
@@ -2064,23 +2227,13 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
 // Restituisce tutte le lezioni della stessa classe ordinate per data+ora
 // Ogni elemento: { key, date, patternSubj, time }
 function _allLessonsForClass(className) {
-  const pattern = state.patterns[className] || {};
-  const start = parseDate(state.schoolStart);
-  const end   = parseDate(state.schoolEnd);
-  if (!start || !end) return [];
+  const { start, end } = planningRange();
   const results = [];
-  let d = new Date(start);
+  const d = new Date(start);
   while (d <= end) {
-    const dow = d.getDay();
-    if (dow >= 1 && dow <= 5) { // lun-ven
-      const sd = dow - 1;
-      const slots = (pattern[sd] || []).map((s, i) => ({
-        ...s,
-        slotKey: fmtDate(d) + `-${sd}-${i}`,
-        date: new Date(d)
-      }));
-      slots.forEach(s => results.push({ key: s.slotKey, date: s.date, patternSubj: s.subject, time: s.time }));
-    }
+    slotsOnDay(d, className)
+      .sort((a,b) => String(a.time).localeCompare(String(b.time)))
+      .forEach(s => results.push({ key: s.slotKey, date: new Date(d), patternSubj: s.subject, time: s.time }));
     d.setDate(d.getDate() + 1);
   }
   return results;
@@ -2137,7 +2290,9 @@ function _openModalInternal(key, date, patternSubj, time, status, className) {
   const todoBadge = document.getElementById('todoSyncBadge');
   if (todoBadge) todoBadge.style.display = window._todoSyncEnabled ? 'inline' : 'none';
 
-  document.getElementById('modalTitle').textContent=`${time} – ${modalClass}`;
+  const isExtra = String(key).includes('-x-');
+  document.getElementById('modalTitle').textContent=`${time} – ${modalClass}` + (isExtra ? ' · ora extra' : '');
+  const rmx = document.getElementById('removeExtraBtn'); if (rmx) rmx.style.display = isExtra ? '' : 'none';
   document.getElementById('modalDate').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()} ${MONTHS_IT[date.getMonth()]} ${date.getFullYear()}`;
 
   // ── Subject badge + dropdown ──
@@ -2448,7 +2603,8 @@ function undoCancel() {
 //  SETTINGS
 // ══════════════════════════════════════════════════════
 let settingsTemp={};
-function openSettings() {
+// 📅 Classi, materie e orario (lavora su una copia: si applica solo con « Salva »)
+function openCalendarSetup() {
   settingsTemp=JSON.parse(JSON.stringify(state));
   // Track each class's original name (as currently saved) so a rename
   // mid-session can be traced back to the right key in state.lessons /
@@ -2462,23 +2618,25 @@ function openSettings() {
     const pat = settingsTemp.patterns[c] || {};
     for (let d=0; d<5; d++) { (pat[d]||[]).forEach((slot,idx)=>{ slot._origIdx=idx; slot._origDay=d; }); }
   });
-  document.getElementById('sSchoolStart').value=settingsTemp.schoolStart;
-  document.getElementById('sSchoolEnd').value=settingsTemp.schoolEnd;
   renderClassList(); renderSubjectList(); renderPatternClassSelect(); renderPatternEditor();
+  document.getElementById('setupOverlay').classList.add('open');
+}
+function closeCalendarSetup() { document.getElementById('setupOverlay').classList.remove('open'); }
+function closeSetupIfBg(e) { if(e.target===document.getElementById('setupOverlay')) closeCalendarSetup(); }
+// ⚙️ Impostazioni: backup, sincronizza classi, fine anno (azioni immediate)
+function openSettings() {
   updateClassroomConnectButton();
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
 function closeSettingsIfBg(e) { if(e.target===document.getElementById('settingsOverlay')) closeSettings(); }
 function saveSettings() {
-  state.schoolStart=document.getElementById('sSchoolStart').value;
-  state.schoolEnd=document.getElementById('sSchoolEnd').value;
   state.classes=settingsTemp.classes;
   state.patterns=settingsTemp.patterns;
   state.classColors = settingsTemp.classColors || {};
   state.subjects = settingsTemp.subjects || {};
   applyDataMigrations();
-  persist(); closeSettings(); buildClassBar(); render();
+  persist(); closeCalendarSetup(); buildClassBar(); render();
 }
 
 // Finds the class's ORIGINAL name (as of when Settings was opened) from
@@ -2506,6 +2664,10 @@ function applyDataMigrations() {
       if (state.cancelled[origName]) {
         state.cancelled[currentName] = Object.assign({}, state.cancelled[currentName]||{}, state.cancelled[origName]);
         delete state.cancelled[origName];
+      }
+      if (state.extraSlots && state.extraSlots[origName]) {
+        state.extraSlots[currentName] = Object.assign({}, state.extraSlots[currentName]||{}, state.extraSlots[origName]);
+        delete state.extraSlots[origName];
       }
     }
   });
@@ -2546,9 +2708,8 @@ function migrateClassPatternSlots(origName, currentName) {
 // stays lesson 3, just happening on the new day from now on. Past dates are
 // left exactly where they are, as an accurate record of what really happened.
 function migrateSlotAcrossDays(origName, oldDay, oldIdx, newDay, newIdx) {
-  const end = parseDate(state.schoolEnd);
+  const end = planningRange().end;
   const today = new Date(); today.setHours(0,0,0,0);
-  if (!end || today > end) return;
   const oldRe = new RegExp('^(\\d{4}-\\d{2}-\\d{2})-'+oldDay+'-'+oldIdx+'$');
   const lessons = state.lessons[origName]||{};
   const entries = Object.keys(lessons)
@@ -2619,15 +2780,39 @@ function classHasPlannedData(currentName) {
 // ══════════════════════════════════════════════════════
 //  BACKUP — esporta/importa tutti i dati come file .json
 // ══════════════════════════════════════════════════════
-function exportData() {
+function exportData(prefix) {
   const dataStr = JSON.stringify(state, null, 2);
   const blob = new Blob([dataStr], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `agenda-prof-backup-${fmtDate(new Date())}.json`;
+  a.href = url; a.download = `${prefix||'agenda-prof-backup'}-${fmtDate(new Date())}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('⬇️ Backup scaricato');
+}
+// Chiude l'anno scolastico: backup completo + svuota tutto ciò che è pianificato DOPO oggi.
+function closeSchoolYear() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cut = fmtDate(today);
+  if (!confirm(`🎓 Chiudere l'anno scolastico?\n\n1. Scarico un backup completo di tutto l'anno.\n2. Le lezioni fino a oggi (${cut}) restano archiviate nell'agenda.\n3. Tutto ciò che è pianificato DOPO oggi (lezioni, compiti, ore cancellate, ore extra, note) viene svuotato.\n\nClassi, materie e orario settimanale restano invariati.`)) return;
+  exportData('agenda-prof-anno-chiuso');
+  if (!confirm('⬇️ Il backup dovrebbe essersi scaricato: controlla la cartella Download.\n\nOK = svuota il programma da domani in poi.\nAnnulla = fermati qui (non viene cancellato nulla).')) return;
+  const after = (key) => String(key).slice(0,10) > cut;
+  let removed = 0;
+  ['lessons','cancelled'].forEach(b => {
+    Object.keys(state[b]||{}).forEach(cn => {
+      Object.keys(state[b][cn]||{}).forEach(k => { if (after(k)) { delete state[b][cn][k]; removed++; } });
+    });
+  });
+  Object.keys(state.extraSlots||{}).forEach(cn => {
+    Object.keys(state.extraSlots[cn]||{}).forEach(ds => { if (ds > cut) delete state.extraSlots[cn][ds]; });
+  });
+  Object.keys(state.freeNotes||{}).forEach(k => { if (after(k)) delete state.freeNotes[k]; });
+  state.yearClosedOn = cut;
+  window._everSawRemoteLessons = false;   // azione volontaria: sblocca la protezione anti-svuotamento
+  persist();
+  closeSettings(); buildClassBar(); cursor = new Date(); render();
+  showToast(`🎓 Anno chiuso — ${removed} elementi svuotati`);
 }
 function importDataFile(fileInput) {
   const file = fileInput.files[0]; if (!file) return;
@@ -2741,7 +2926,6 @@ function addSubjectFromInput(){
 }
 function removeSubjectAt(i){
   const keys=Object.keys(settingsTemp.subjects||{});
-  if(keys.length<=1){ alert('Deve esserci almeno una materia.'); return; }
   const key = keys[i];
   if(!confirm(`Rimuovere materia "${settingsTemp.subjects[key].label}"?`)) return;
   delete settingsTemp.subjects[key]; renderSubjectList(); renderPatternEditor();
@@ -2764,7 +2948,7 @@ function renderPatternEditor() {
     slots.forEach((s,si)=>{
       const entry=document.createElement('div'); entry.className='slot-entry';
       const sel = document.createElement('select'); sel.onchange = function(){ updatePatternSlot(cn,d,si,'subject', this.value); };
-      const optNone = document.createElement('option'); optNone.value='none'; optNone.textContent='–'; if(s.subject==='none') optNone.selected=true; sel.appendChild(optNone);
+      const optNone = document.createElement('option'); optNone.value='none'; optNone.textContent='— nessuna materia'; if(s.subject==='none') optNone.selected=true; sel.appendChild(optNone);
       const subjKeys = Object.keys(settingsTemp.subjects||{});
       subjKeys.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=(settingsTemp.subjects[k] && settingsTemp.subjects[k].label) ? settingsTemp.subjects[k].label : k; if(s.subject===k) o.selected=true; sel.appendChild(o); });
       const timeIn = document.createElement('input'); timeIn.type='time'; timeIn.value = s.time||'08:00'; timeIn.onchange = function(){ updatePatternSlot(cn,d,si,'time', this.value); };
@@ -2788,7 +2972,7 @@ function updatePatternSlot(cn,d,si,field,val){
 function addPatternSlot(cn,d){
   if(!settingsTemp.patterns[cn]) settingsTemp.patterns[cn]={};
   if(!settingsTemp.patterns[cn][d]) settingsTemp.patterns[cn][d]=[];
-  settingsTemp.patterns[cn][d].push({subject:'english',time:'08:00'});
+  settingsTemp.patterns[cn][d].push({subject: Object.keys(settingsTemp.subjects||{})[0] || 'none', time:'08:00'});
   renderPatternEditor();
 }
 function removePatternSlot(cn,d,si){
@@ -2864,7 +3048,7 @@ function onCellDrop(e, targetDate) {
   if (!dragSrc) return;
   if (!isInSchoolYear(targetDate)) return;
   const targetClass = dragSrc.className || activeClass;
-  const slots = slotsOnDay(targetDate, targetClass);
+  const slots = slotsOnDay(targetDate, targetClass).filter(s=>!s.extra);
   if (!slots.length) {
     showToast('⚠️ Nessuna ora in questo giorno per '+targetClass);
     dragSrc = null; return;
@@ -2894,8 +3078,114 @@ function onCellDrop(e, targetDate) {
     delete state.cancelled[targetClass][targetSlot.slotKey];
   }
   if (state.cancelled[src.className]) delete state.cancelled[src.className][src.slotKey];
+  _deleteExtraSlot(src.className, src.slotKey);   // se veniva da un'ora extra, l'ora sparisce
   persist(); render();
   showToast('✅ Lezione spostata!');
+}
+
+// ══════════════════════════════════════════════════════
+//  ORE EXTRA — aggiungi una lezione in un'ora libera (es. supplenza)
+// ══════════════════════════════════════════════════════
+let _alDate = null;
+function _defaultSubjForClass(cn) {
+  const count = {};
+  Object.values(state.patterns[cn]||{}).forEach(arr => (arr||[]).forEach(s => { const k=s.subject||'none'; count[k]=(count[k]||0)+1; }));
+  const best = Object.keys(count).sort((a,b)=>count[b]-count[a])[0];
+  return best || Object.keys(state.subjects||{})[0] || 'none';
+}
+function openAddLessonModal(dateStr, hour) {
+  if (!state.classes.length) { alert('Aggiungi prima una classe nelle Impostazioni.'); return; }
+  _alDate = dateStr;
+  const d = parseDate(dateStr);
+  document.getElementById('alWhen').textContent = `${DAYS_IT[d.getDay()]} ${d.getDate()} ${MONTHS_IT[d.getMonth()]} — ora libera`;
+  const cs = document.getElementById('alClass'); cs.innerHTML = '';
+  state.classes.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; cs.appendChild(o); });
+  if (state.classes.includes(activeClass)) cs.value = activeClass;
+  document.getElementById('alTime').value = String(hour).padStart(2,'0')+':00';
+  document.getElementById('alShift').checked = false;
+  alClassChanged();
+  document.getElementById('addLessonOverlay').classList.add('open');
+}
+function alClassChanged() {
+  const cn = document.getElementById('alClass').value;
+  const ss = document.getElementById('alSubject'); ss.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value='none'; o0.textContent='— nessuna materia'; ss.appendChild(o0);
+  Object.keys(state.subjects||{}).forEach(k => {
+    const o = document.createElement('option'); o.value=k; o.textContent=state.subjects[k].label||k; ss.appendChild(o);
+  });
+  const want = _defaultSubjForClass(cn);
+  ss.value = [...ss.options].some(o=>o.value===want) ? want : 'none';
+}
+function closeAddLesson() { document.getElementById('addLessonOverlay').classList.remove('open'); }
+
+// Le ore (stessa materia, non cancellate) dalla nuova ora in poi, in ordine di tempo,
+// fino all'ultima che ha del contenuto: sono le ore che "arretrano" di uno slot.
+function _backChain(newKey, subj, cn) {
+  const all = _allLessonsForClass(cn);
+  const canc = state.cancelled[cn]||{};
+  const seq = [newKey];
+  let started = false, last = 0;
+  for (const e of all) {
+    if (!started) { if (e.key === newKey) started = true; continue; }
+    if (canc[e.key]) continue;
+    if (effectiveSubject(e.key, e.patternSubj, cn) !== subj) continue;
+    seq.push(e.key);
+    if (_hasLessonContent(cn, e.key)) last = seq.length - 1;
+  }
+  return seq.slice(0, last + 1);
+}
+function confirmAddLesson() {
+  const cn = document.getElementById('alClass').value;
+  const time = document.getElementById('alTime').value;
+  const subj = document.getElementById('alSubject').value || 'none';
+  const shift = document.getElementById('alShift').checked;
+  if (!cn || !_alDate) return;
+  if (!time) { alert("Inserisci l'orario della lezione."); return; }
+  if (!state.extraSlots) state.extraSlots = {};
+  if (!state.extraSlots[cn]) state.extraSlots[cn] = {};
+  if (!state.extraSlots[cn][_alDate]) state.extraSlots[cn][_alDate] = [];
+  const id = Math.random().toString(36).slice(2,7);
+  state.extraSlots[cn][_alDate].push({ id, time, subject: subj });
+  const key = _alDate+'-x-'+id;
+  if (shift) {
+    const chain = _backChain(key, subj, cn);
+    const n = chain.length - 1;
+    const moved = chain.slice(1).filter(k => _hasLessonContent(cn, k)).length;
+    if (n < 1) {
+      showToast('ℹ️ Nessuna lezione successiva da anticipare');
+    } else if (confirm(`Anticipare di uno slot ${moved} lezion${moved===1?'e':'i'} di "${subjLabel(subj)}" per ${cn}?\n\nLa nuova ora prende la prossima lezione già pianificata e le successive scalano indietro. OK = anticipa, Annulla = aggiungi l'ora senza spostare nulla.`)) {
+      if (!state.lessons[cn]) state.lessons[cn] = {};
+      for (let i = 0; i < n; i++) {
+        const src = state.lessons[cn][chain[i+1]];
+        if (src) state.lessons[cn][chain[i]] = {...src}; else delete state.lessons[cn][chain[i]];
+      }
+      delete state.lessons[cn][chain[n]];
+    }
+  }
+  persist(); closeAddLesson(); render();
+  openModal(key, parseDate(_alDate), subj, time, null, cn);
+}
+// Elimina un'ora extra (e il suo contenuto). Non fa nulla se la chiave non è di un'ora extra.
+function _deleteExtraSlot(cn, key) {
+  const m = String(key).match(/^(\d{4}-\d{2}-\d{2})-x-(.+)$/);
+  if (!m) return false;
+  const byDate = (state.extraSlots||{})[cn];
+  if (byDate && byDate[m[1]]) {
+    const rest = byDate[m[1]].filter(x => x.id !== m[2]);
+    if (rest.length) byDate[m[1]] = rest; else delete byDate[m[1]];
+  }
+  if (state.lessons[cn]) delete state.lessons[cn][key];
+  if (state.cancelled[cn]) delete state.cancelled[cn][key];
+  return true;
+}
+function removeExtraFromModal() {
+  if (!modalKey || !modalClass) return;
+  if (!confirm('Rimuovere questa ora extra e il suo contenuto?')) return;
+  _deleteExtraSlot(modalClass, modalKey);
+  persist();
+  modalKey = null;   // evita che la chiusura del modal la riscriva
+  document.getElementById('overlay').classList.remove('open');
+  render();
 }
 
 // ══════════════════════════════════════════════════════
@@ -2932,16 +3222,32 @@ function hidePasteBar() {
   clipboard = null;
   render();
 }
-function pasteOnDay(targetDate) {
+// Incolla la lezione copiata.
+//  • Clic direttamente su una lezione (slotKey + slotClass): si applica a QUELLA lezione e alla sua classe.
+//  • Clic su un giorno: si usa la classe scelta nella barra in basso.
+function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!clipboard) return false;
-  if (!isInSchoolYear(targetDate)) { showToast('⚠️ Data fuori dall\'anno scolastico'); return true; }
+  const copy = { ...clipboard };
+  if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
+
+  if (slotKey && slotClass) {
+    const ex = (state.lessons[slotClass]||{})[slotKey];
+    if (ex && (ex.lesson||ex.homework||ex.material||ex.notes) &&
+        !confirm('Questa ora ha già una lezione ('+slotClass+'). Sovrascrivere?')) return true;
+    if (!state.lessons[slotClass]) state.lessons[slotClass] = {};
+    state.lessons[slotClass][slotKey] = copy;
+    persist(); hidePasteBar();
+    showToast('✅ Lezione incollata in '+slotClass+'!');
+    return true;
+  }
+
   const targetClass = document.getElementById('pbClassSel').value;
-  const slots = slotsOnDay(targetDate, targetClass);
+  const slots = slotsOnDay(targetDate, targetClass).filter(s=>!s.extra);
   if (!slots.length) { showToast('⚠️ Nessuna ora in questo giorno per '+targetClass); return true; }
   const canc = state.cancelled[targetClass]||{};
   const targetSlot = slots.find(s=>!canc[s.slotKey])||slots[0];
   if (!state.lessons[targetClass]) state.lessons[targetClass]={};
-  state.lessons[targetClass][targetSlot.slotKey] = {...clipboard};
+  state.lessons[targetClass][targetSlot.slotKey] = copy;
   persist(); hidePasteBar();
   showToast('✅ Lezione incollata in '+targetClass+'!');
   return true;
@@ -3062,7 +3368,7 @@ function printSchedule() {
           block.style.borderLeft = `5px solid ${borderColor}`;
           block.style.borderRadius = '0 11px 11px 0';
           block.textContent = cn.replace(/[ªº°\s]/g,'');
-          block.title = `${cn} – ${sc ? sc.label : (s.subject||'')}`;
+          block.title = `${cn} – ${subjLabel(s.subject)}`;
           cell.appendChild(block);
         });
       });
@@ -3139,7 +3445,6 @@ function renderScheduleBody(body) {
       cell.style.verticalAlign = 'middle';
       const entries = (lookup[d][t]||[]);
       entries.forEach(({ cn, subject }) => {
-        if (!subject || subject === 'none') return;
         const sc = subjConfig(subject);
         const classColor = (state.classColors&&state.classColors[cn]) ? state.classColors[cn] : '#DDD';
         const slot = document.createElement('div');
@@ -3153,7 +3458,7 @@ function renderScheduleBody(body) {
         // Short class name (e.g. "2A")
         const shortCn = cn.replace(/[ªº°\s]/g,'');
         slot.textContent = shortCn;
-        slot.title = `${cn} – ${sc ? sc.label : subject}`;
+        slot.title = `${cn} – ${subjLabel(subject)}`;
         cell.appendChild(slot);
       });
       grid.appendChild(cell);
@@ -3216,6 +3521,14 @@ function showLessonsView() {
     renderSubjectSelector(selS);
     selS.onchange = () => renderProgrammaBody(document.getElementById('evpBody'));
     ctrl.appendChild(selS);
+    // Anni archiviati (visibile solo dopo aver chiuso un anno)
+    if (state.yearClosedOn) {
+      const lblA = document.createElement('label');
+      lblA.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:.78rem;cursor:pointer;';
+      lblA.innerHTML = '<input type="checkbox" id="prog-archived"> Includi anni archiviati';
+      lblA.querySelector('input').onchange = () => renderProgrammaBody(document.getElementById('evpBody'));
+      ctrl.appendChild(lblA);
+    }
     // Copy-from-another-class button
     const copyBtn = document.createElement('button');
     copyBtn.className = 'btn-copy-lesson';
@@ -3230,10 +3543,15 @@ function showLessonsView() {
 }
 
 function renderSubjectSelector(sel) {
+  const prev = sel.value;
   sel.innerHTML = '';
-  Object.keys(state.subjects||{}).forEach(k => {
+  const keys = Object.keys(state.subjects||{});
+  keys.forEach(k => {
     const o = document.createElement('option'); o.value=k; o.textContent=(state.subjects[k].label||k); sel.appendChild(o);
   });
+  const on = document.createElement('option'); on.value='none'; on.textContent='— senza materia'; sel.appendChild(on);
+  const oa = document.createElement('option'); oa.value='__all__'; oa.textContent='Tutte le materie'; sel.appendChild(oa);
+  sel.value = [...sel.options].some(o=>o.value===prev) ? prev : (keys[0] || 'none');
 }
 function renderProgrammaBody(body) {
   body.innerHTML = '';
@@ -3243,49 +3561,50 @@ function renderProgrammaBody(body) {
   const cn = selC.value;
   const subjKey = selS.value;
   if (!cn || !subjKey) { body.innerHTML='<div class="prog-empty">Seleziona classe e materia.</div>'; return; }
-  // iterate all school year days in order
-  const start = parseDate(state.schoolStart);
-  const end   = parseDate(state.schoolEnd);
-  if (!start || !end) { body.innerHTML='<div class="prog-empty">Configura l\'anno scolastico nelle Impostazioni.</div>'; return; }
+  // di default solo l'anno corrente; con la spunta anche gli anni archiviati
+  const incl = document.getElementById('prog-archived');
+  const range = planningRange();
+  let start = range.start;
+  if (state.yearClosedOn && !(incl && incl.checked)) {
+    start = parseDate(state.yearClosedOn); start.setDate(start.getDate()+1);
+  }
+  const end = range.end;
   const lessons = state.lessons[cn]||{};
   const cancelled = state.cancelled[cn]||{};
   const entries = [];
   const d = new Date(start);
   while (d <= end) {
-    const dow = d.getDay();
-    if (dow >= 1 && dow <= 5) {
-      const slots = slotsOnDay(d, cn);
-      slots.forEach(s => {
-        const eff = effectiveSubject(s.slotKey, s.subject, cn);
-        if (eff === subjKey && !cancelled[s.slotKey]) {
-          const data = lessons[s.slotKey];
-          if (data && (data.lesson||data.homework||data.material||data.notes)) {
-            entries.push({ date: new Date(d), slotKey: s.slotKey, time: s.time, data });
-          }
+    const slots = slotsOnDay(d, cn);
+    slots.forEach(s => {
+      const eff = effectiveSubject(s.slotKey, s.subject, cn);
+      if ((subjKey === '__all__' || eff === subjKey) && !cancelled[s.slotKey]) {
+        const data = lessons[s.slotKey];
+        if (data && (data.lesson||data.homework||data.material||data.notes)) {
+          entries.push({ date: new Date(d), slotKey: s.slotKey, time: s.time, data, eff });
         }
-      });
-    }
+      }
+    });
     d.setDate(d.getDate()+1);
   }
+  entries.sort((a,b) => (a.date - b.date) || String(a.time).localeCompare(String(b.time)));
   if (!entries.length) {
-    const sc = subjConfig(subjKey);
-    body.innerHTML = `<div class="prog-empty">Nessuna lezione registrata di ${sc?sc.label:subjKey} per ${cn}.</div>`;
+    body.innerHTML = `<div class="prog-empty">Nessuna lezione registrata${subjKey==='__all__'?'':' di '+subjLabel(subjKey)} per ${cn}.</div>`;
     return;
   }
-  // count label
   const countDiv = document.createElement('div');
   countDiv.style.cssText='font-size:.78rem;color:var(--muted);margin-bottom:.8rem;font-weight:600;';
   countDiv.textContent = `${entries.length} lezione${entries.length!==1?'e':''} registrata${entries.length!==1?'e':''}`;
   body.appendChild(countDiv);
   entries.forEach((e, i) => {
     const card = document.createElement('div'); card.className = 'prog-lesson';
-    const sc = subjConfig(subjKey);
+    const sc = subjConfig(e.eff);
     if (sc) { card.style.borderLeftColor = sc.border || sc.pillBg || 'var(--grape)'; }
     const dateStr = `${DAYS_IT[e.date.getDay()]} ${e.date.getDate()} ${MONTHS_IT[e.date.getMonth()]} ${e.date.getFullYear()}`;
     card.innerHTML = `
-      <div class="pl-date">${i+1}. ${dateStr} – ${e.time}</div>
+      <div class="pl-date">${i+1}. ${dateStr} – ${e.time}${subjKey==='__all__' ? ' · '+subjLabel(e.eff) : ''}</div>
       ${e.data.lesson ? `<div class="pl-lesson">📖 ${e.data.lesson}</div>` : ''}
-      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${matPlainHtml(e.data.material)||e.data.material}</div>` : ''}      ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
+      ${e.data.material ? `<div class="pl-mat">🎒 <strong>Materiale:</strong> ${matPlainHtml(e.data.material)||e.data.material}</div>` : ''}
+      ${e.data.homework ? `<div class="pl-hw">✏️ <strong>Compiti:</strong> ${e.data.homework}</div>` : ''}
       ${e.data.notes ? `<div class="pl-notes">📝 ${e.data.notes}</div>` : ''}
     `;
     body.appendChild(card);
@@ -3321,9 +3640,8 @@ function closeSyncProgIfBg(e) { if (e.target===document.getElementById('syncProg
 // Le lezioni future (da oggi a fine anno) di una classe che hanno un
 // contenuto reale, in ordine cronologico — esclude le ore cancellate.
 function futureLessonEntries(className) {
-  const end = parseDate(state.schoolEnd);
+  const end = planningRange().end;
   const today = new Date(); today.setHours(0,0,0,0);
-  if (!end || today > end) return [];
   const lessons = state.lessons[className]||{};
   const cancelled = state.cancelled[className]||{};
   const entries = [];
@@ -3344,9 +3662,8 @@ function futureLessonEntries(className) {
 // Tutte le ore future (da oggi a fine anno) di una classe, con o senza
 // contenuto — sono i "posti" su cui il programma copiato può atterrare.
 function futureSlots(className) {
-  const end = parseDate(state.schoolEnd);
+  const end = planningRange().end;
   const today = new Date(); today.setHours(0,0,0,0);
-  if (!end || today > end) return [];
   const cancelled = state.cancelled[className]||{};
   const slots = [];
   const d = new Date(today);
@@ -3508,8 +3825,8 @@ function _rebuildSubjBadge(chosenSubj) {
   const btn   = document.getElementById('modalBadgeBtn');
   const arrow = document.getElementById('modalBadgeArrow');
   const sc = subjConfig(chosenSubj);
-  const bg   = sc ? sc.pillBg   : (chosenSubj==='english'?'#C8E6FF':'#E8D5FF');
-  const text = sc ? sc.pillText : (chosenSubj==='english'?'#0D3D6E':'#42286A');
+  const bg   = sc ? sc.pillBg   : '#EEE6DA';
+  const text = sc ? sc.pillText : '#5A4A3C';
   btn.textContent   = subjLabel(chosenSubj);
   btn.style.background  = bg;
   btn.style.color       = text;
@@ -3720,7 +4037,7 @@ window.startApp = function() {
   window._stateReady = true;
 if (activeClass !== '__all__' && !state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
 buildClassBar(); cursor = new Date(); render();
-
+_syncHeaderH();
 
 };
 _waitForGate(() => { if (!window._stateReady) window.startApp(); });
