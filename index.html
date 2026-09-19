@@ -12,14 +12,15 @@
   --border:#DDD0C0;--white:#FFFFFF;--shadow:rgba(100,70,40,0.10);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;overflow-x:hidden;}
+html{width:100%;overflow-x:hidden;}
+body{width:100%;overflow-x:clip;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
 /* HEADER */
 header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0.62rem 1.4rem;
-  display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-.view-tabs{display:flex;gap:5px;}
-.nav-btns{display:flex;gap:8px;align-items:center;}
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0.8rem;position:sticky;top:0;z-index:100;}
+.view-tabs{display:flex;gap:5px;justify-self:start;}
+.nav-btns{display:flex;gap:8px;align-items:center;justify-self:end;}
 .hbtn{border:1.5px solid var(--border);background:var(--bg);color:var(--text);border-radius:8px;
   padding:5px 13px;font-size:0.83rem;cursor:pointer;font-weight:500;transition:background .14s,border-color .14s;}
 .hbtn:hover{background:var(--bg2);border-color:var(--grape);}
@@ -371,7 +372,7 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 
 /* SECONDARY NAV BAR */
 #secondaryNav{background:#DA9CFF;;padding:0.55rem 1.4rem;
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:var(--hdr-h,58px);z-index:99;
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
   box-shadow:0 2px 12px rgba(116,79,135,.18);}
 #secondaryNav .snav-label{font-size:0.72rem;font-weight:700;color:#FDECEA;text-transform:uppercase;
   letter-spacing:0.08em;margin-right:4px;flex-shrink:0;}
@@ -507,9 +508,10 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
 /* MOBILE RESPONSIVE */
 @media (max-width:768px) {
   #calArea{padding:1.1rem 1.4rem 1rem;}
-  header{flex-wrap:wrap;gap:.5rem;}
-  #setupBtn{order:0;}
-  #headerDate{order:1;}
+  header{display:flex;flex-wrap:wrap;gap:.5rem;padding-left:.9rem;padding-right:.9rem;}
+  #headerDate{order:1;flex:1;}
+  #secondaryNav{padding:.45rem .8rem;gap:6px;}
+  .sec-nav-btn{padding:5px 9px;font-size:.72rem;}
   .nav-btns{order:2;flex-wrap:nowrap;gap:6px;}
   .view-tabs{width:100%;order:3;}
   .nav-today{display:none !important;}
@@ -599,7 +601,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
 .round-btn:active{transform:scale(.94);}
 .round-btn svg{width:19px;height:19px;fill:currentColor;}
 .round-btn.logged{border-color:var(--green);color:var(--green);}
-#headerDate{flex:1;display:flex;justify-content:center;min-width:0;}
+#headerDate{display:flex;justify-content:center;min-width:0;justify-self:center;}
 #currentLabel{max-width:100%;min-width:190px;text-align:center;font-size:1.05rem;font-weight:800;letter-spacing:.02em;color:#fff;
   background:linear-gradient(135deg,var(--n1),var(--n2));border-radius:999px;padding:.4rem 1.3rem;box-shadow:0 3px 10px var(--sh);
   text-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -614,23 +616,51 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
 .um-btn:hover{border-color:var(--grape);background:var(--bg2);}
 .um-btn:disabled{opacity:.75;cursor:default;}
 
-/* FRECCE LATERALI a metà altezza dello schermo */
-.side-arrow{position:fixed;top:50%;transform:translateY(-50%);z-index:90;width:48px;height:48px;border-radius:50%;
-  border:2.5px solid var(--n1);background:var(--white);color:var(--n1);font-size:1.9rem;font-weight:700;line-height:1;
-  display:flex;align-items:center;justify-content:center;padding:0 0 4px;cursor:pointer;box-shadow:0 4px 14px var(--sh);
-  transition:transform .12s,background .14s,color .14s;}
+/* FRECCE LATERALI: strisce beige (gradiente + chevron chiaro), alte quanto il calendario visibile */
+:root{--beige-a:#E9D8BD;--beige-b:#D2BA96;--beige-ah:#E1CDAC;--beige-bh:#C4A87F;}
+/* top/bottom = padding verticale di #calArea (1.1rem sopra, 3rem sotto; su telefono 1rem): la striscia combacia col contenuto */
+#calWrap{position:relative;--ca-top:1.1rem;--ca-bottom:3rem;}
+.side-arrow{position:absolute;top:var(--ca-top);bottom:var(--ca-bottom);z-index:5;width:50px;border:none;border-radius:14px;
+  background:linear-gradient(180deg,var(--beige-a),var(--beige-b));color:#fff;
+  display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;
+  box-shadow:0 1px 3px rgba(120,90,50,.14);transition:background .15s,box-shadow .15s;}
 .side-arrow.left{left:10px;}
 .side-arrow.right{right:10px;}
-.side-arrow:hover{background:var(--n1);color:#fff;transform:translateY(-50%) scale(1.08);}
-.side-arrow:active{transform:translateY(-50%) scale(.94);}
+.side-arrow svg{width:28px;height:28px;fill:currentColor;filter:drop-shadow(0 1px 1px rgba(100,75,45,.4));}
+.side-arrow:hover{background:linear-gradient(180deg,var(--beige-ah),var(--beige-bh));box-shadow:0 2px 8px rgba(120,90,50,.24);}
+.side-arrow:active{filter:brightness(.96);}
+.side-arrow:focus-visible{outline:2px solid var(--grape);outline-offset:2px;}
+
+/* FRECCETTE accanto al periodo nell'header: stessi colori delle strisce */
+#headerDate{gap:8px;align-items:center;}
+.hd-arrow{width:28px;height:28px;flex-shrink:0;border-radius:50%;border:none;
+  background:linear-gradient(180deg,var(--beige-a),var(--beige-b));color:#fff;box-shadow:0 1px 3px rgba(120,90,50,.18);
+  display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:background .15s,box-shadow .15s;}
+.hd-arrow svg{width:20px;height:20px;fill:currentColor;filter:drop-shadow(0 1px 1px rgba(100,75,45,.4));}
+.hd-arrow:hover{background:linear-gradient(180deg,var(--beige-ah),var(--beige-bh));box-shadow:0 2px 6px rgba(120,90,50,.28);}
+.hd-arrow:focus-visible{outline:2px solid var(--grape);outline-offset:2px;}
 @media (min-width:769px){ #calArea{padding-left:74px;padding-right:74px;} }
 #setupPanel{width:min(560px,96vw);}
 /* mobile: DOPO le regole base, altrimenti verrebbero sovrascritte */
 @media (max-width:768px){
-  #currentLabel{font-size:.95rem;padding:.38rem .8rem;min-width:0;}
-  .side-arrow{width:36px;height:36px;font-size:1.5rem;opacity:.8;}
-  .side-arrow.left{left:3px;}
-  .side-arrow.right{right:3px;}
+  #currentLabel{font-size:.85rem;padding:.35rem .6rem;min-width:0;}
+  .round-btn{width:32px;height:32px;}
+  .round-btn svg{width:17px;height:17px;}
+  #calWrap{--ca-bottom:1rem;}
+  .side-arrow{width:18px;border-radius:9px;}
+  .side-arrow.left{left:2px;}
+  .side-arrow.right{right:2px;}
+  .side-arrow svg{width:18px;height:18px;}
+  .hd-arrow{width:26px;height:26px;}
+  #headerDate{gap:5px;}
+}
+@media (max-width:380px){
+  .round-btn{width:30px;height:30px;}
+  .nav-btns{gap:4px;}
+  .hd-arrow{width:24px;height:24px;}
+  .hd-arrow svg{width:16px;height:16px;}
+  #headerDate{gap:4px;}
+  #currentLabel{font-size:.8rem;padding:.35rem .5rem;}
 }
   </style>
 <link rel="icon" type="image/png" href="logo.png">
@@ -653,15 +683,26 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
 </div>
 
 <div id="appRoot" class="gate-hidden">
+<!-- 1 · IN ALTO AL CENTRO: viste rapide -->
+<div id="secondaryNav">
+  <button class="sec-nav-btn" id="navSchedule" onclick="showScheduleView()">📅 Orario Settimanale</button>
+  <button class="sec-nav-btn" id="navLessons" onclick="showLessonsView()">📖 Programma Svolto</button>
+  <button class="sec-nav-btn" id="navMaterials" onclick="showMaterialsView()">🎒 Materiali del Giorno</button>
+</div>
+
+<!-- 2 · HEADER: viste (sx) · periodo colorato (centro) · profilo / orario / impostazioni (dx) -->
 <header>
-  <button class="round-btn" id="setupBtn" onclick="openCalendarSetup()" title="Classi, materie e orario" aria-label="Classi, materie e orario">📅</button>
   <div class="view-tabs">
 <button class="hbtn"        id="vYear"  onclick="setView('year')">Anno</button>
 <button class="hbtn"        id="vMonth" onclick="setView('month')">Mese</button>
 <button class="hbtn"        id="vWeek"  onclick="setView('week')">Settimana</button>
 <button class="hbtn active" id="vDay"   onclick="setView('day')">Giorno</button>
   </div>
-  <div id="headerDate"><span id="currentLabel"></span></div>
+  <div id="headerDate">
+    <button class="hd-arrow" id="hdPrev" onclick="navigate(-1)" title="Giorno precedente" aria-label="Precedente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+    <span id="currentLabel"></span>
+    <button class="hd-arrow" id="hdNext" onclick="navigate(1)" title="Giorno successivo" aria-label="Successivo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg></button>
+  </div>
   <div class="nav-btns">
     <button class="hbtn nav-today" onclick="goToday()" style="display:none;">Oggi</button>
     <div id="syncStatus">
@@ -669,9 +710,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
       <div class="sync-dot ok tooltip" id="syncDotTodo" data-label="Todo collegata" title="Todo collegata" style="display:none;"></div>
     </div>
     <div id="userMenuWrap">
-      <button class="round-btn" id="userBtn" onclick="toggleUserMenu(event)" title="Account" aria-label="Account">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5z"/></svg>
-      </button>
+      <button class="round-btn" id="userBtn" onclick="toggleUserMenu(event)" title="Profilo" aria-label="Profilo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></button>
       <div id="userMenu">
         <div class="um-name" id="userMenuName">Non connesso</div>
         <div class="um-sub" id="userMenuSub">Accedi per sincronizzare i dati</div>
@@ -679,17 +718,12 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
         <button class="um-btn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
       </div>
     </div>
-    <button class="round-btn settings-btn" onclick="openSettings()" title="Impostazioni" aria-label="Impostazioni">⚙️</button>
+    <button class="round-btn" id="setupBtn" onclick="openCalendarSetup()" title="Orario, classi e materie" aria-label="Orario, classi e materie"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg></button>
+    <button class="round-btn settings-btn" onclick="openSettings()" title="Impostazioni" aria-label="Impostazioni"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
   </div>
 </header>
-<!-- SECONDARY NAV BAR -->
-<div id="secondaryNav">
-  <span class="snav-label">📚 Viste rapide:</span>
-  <button class="sec-nav-btn" id="navSchedule" onclick="showScheduleView()">📅 Orario Settimanale</button>
-  <button class="sec-nav-btn" id="navLessons" onclick="showLessonsView()">📖 Programma Svolto</button>
-  <button class="sec-nav-btn" id="navMaterials" onclick="showMaterialsView()">🎒 Materiali del Giorno</button>
-</div>
 
+<!-- 3 · CLASSE SELEZIONATA -->
 <div id="classBar"><span>Classe:</span><div id="classPills"></div></div>
 
 
@@ -713,11 +747,12 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}
   <div class="legend-item"><div class="legend-dot" style="background:var(--bg2);border:1px dashed var(--border);"></div> Fuori anno scolastico</div>
 </div>-->
 
-<!-- FRECCE LATERALI (a metà altezza dello schermo) -->
-<button class="side-arrow left"  id="dbPrev" onclick="navigate(-1)" title="Giorno precedente" aria-label="Precedente">‹</button>
-<button class="side-arrow right" id="dbNext" onclick="navigate(1)"  title="Giorno successivo" aria-label="Successivo">›</button>
-
-<div id="calArea"></div>
+<!-- 4 · PAGINA CENTRALE con strisce-freccia ai due lati (alte quanto la cal area) -->
+<div id="calWrap">
+  <button class="side-arrow left"  id="dbPrev" onclick="navigate(-1)" title="Giorno precedente" aria-label="Precedente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+  <div id="calArea"></div>
+  <button class="side-arrow right" id="dbNext" onclick="navigate(1)"  title="Giorno successivo" aria-label="Successivo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg></button>
+</div>
 
 <!-- IMPOSTAZIONI (⚙️) -->
 <div id="settingsOverlay" onclick="closeSettingsIfBg(event)">
@@ -1754,12 +1789,6 @@ function toggleUserMenu(e) { if (e) e.stopPropagation(); document.getElementById
 function closeUserMenu() { const m = document.getElementById('userMenu'); if (m) m.classList.remove('open'); }
 document.addEventListener('click', (e) => { if (!e.target.closest('#userMenuWrap')) closeUserMenu(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeUserMenu(); });
-// La barra sticky delle viste rapide si aggancia all'altezza reale dell'header
-function _syncHeaderH() {
-  const h = document.querySelector('header');
-  if (h && h.offsetHeight) document.documentElement.style.setProperty('--hdr-h', h.offsetHeight + 'px');
-}
-window.addEventListener('resize', _syncHeaderH);
 
 function setView(v) {
   view=v;
@@ -1781,8 +1810,8 @@ function updateLabel() {
   document.body.dataset.view = view;   // colore data + frecce cambiano con la vista
   const t = {year:['Anno precedente','Anno successivo'], month:['Mese precedente','Mese successivo'],
              week:['Settimana precedente','Settimana successiva'], day:['Giorno precedente','Giorno successivo']}[view];
-  document.getElementById('dbPrev').title = t[0];
-  document.getElementById('dbNext').title = t[1];
+  ['dbPrev','hdPrev'].forEach(id => { const b = document.getElementById(id); if (b) b.title = t[0]; });
+  ['dbNext','hdNext'].forEach(id => { const b = document.getElementById(id); if (b) b.title = t[1]; });
   if      (view==='year')  el.textContent=cursor.getFullYear();
   else if (view==='month') el.textContent=MONTHS_IT[cursor.getMonth()]+' '+cursor.getFullYear();
   else if (view==='week')  {
@@ -4037,7 +4066,6 @@ window.startApp = function() {
   window._stateReady = true;
 if (activeClass !== '__all__' && !state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
 buildClassBar(); cursor = new Date(); render();
-_syncHeaderH();
 
 };
 _waitForGate(() => { if (!window._stateReady) window.startApp(); });
