@@ -1,23 +1,15 @@
 {
+  "id": "/Agenda-prof/",
   "name": "Agenda Prof",
   "short_name": "Agenda",
-  "description": "A professional agenda application for teachers",
-  "start_url": "./",
+  "description": "Agenda e planner delle lezioni per insegnanti",
+  "lang": "it",
+  "start_url": "/Agenda-prof/",
+  "scope": "/Agenda-prof/",
   "display": "standalone",
   "background_color": "#FDF6EE",
   "theme_color": "#744F87",
   "icons": [
-    {
-      "src": "logo.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "logo.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

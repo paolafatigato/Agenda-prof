@@ -4315,5 +4315,11 @@ setTimeout(maybeShowGuide, 500);   // solo la prima volta su questo dispositivo
 _waitForGate(() => { if (!window._stateReady) window.startApp(); });
 </script>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+</script>
+
 </body>
 </html>
