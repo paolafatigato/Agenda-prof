@@ -1,8 +1,10 @@
 const CACHE = 'agenda-prof-v1';
-const CORE = ['./', './index.html', './manifest.json', './logo.png', './icon-192.png', './icon-512.png'];
+const CORE = ['./', './index.html', './manifest.json', './logo.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)));
+  e.waitUntil(caches.open(CACHE).then(c =>
+    Promise.all(CORE.map(u => c.add(u).catch(() => {})))
+  ));
   self.skipWaiting();
 });
 
