@@ -1066,7 +1066,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
-const DOC_REF = doc(db, 'agenda', 'main');
+let DOC_REF = null; // diventa per-utente dopo il login
 
 // ══════════════════════════════════════════════════════
 //  TODO APP INTEGRATION — second Firebase project
@@ -1397,7 +1397,7 @@ function setGateStatus(label) {
 
 // ── upload state to Firestore ──
 window._fbSave = async function(stateObj) {
-  if (window._guestMode) {
+  if (window._guestMode || !DOC_REF) {
     localStorage.setItem('teacherCal3', JSON.stringify(stateObj));
     return;
   }
@@ -1540,6 +1540,7 @@ onAuthStateChanged(auth, (user) => {
       window._todoConnectAttempted = true;
       connectTodoApp(false);
     }
+    DOC_REF = doc(db, 'users', user.uid, 'agenda', 'main');
     if (unsubscribeFirestore) unsubscribeFirestore();
     let revealed = false;
     unsubscribeFirestore = onSnapshot(DOC_REF, { includeMetadataChanges: true }, (snap) => {
