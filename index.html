@@ -1050,7 +1050,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where,
-         addDoc, updateDoc, getDocs, serverTimestamp }
+         addDoc, updateDoc, getDocs, serverTimestamp, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1170,23 +1170,72 @@ function todoUserTasksRef(listId) {
   return collection(todoDb, 'users', todoUserUid, 'lists', listId, 'tasks');
 }
 
-// Finds the "📅 Materiali Agenda" list, creating it if missing. Cached after first call.
-async function ensureTodoMaterialsList() {
-  if (todoMaterialsListId) return todoMaterialsListId;
+// Finds the "📅 Materiali Agenda" list, creating it if missing. The promise is
+// cached so concurrent callers (one per material row) share a single lookup
+// instead of each creating its own copy of the list.
+let _todoListPromise = null;
+function ensureTodoMaterialsList() {
+  if (todoMaterialsListId) return Promise.resolve(todoMaterialsListId);
+  if (!_todoListPromise) {
+    _todoListPromise = _findOrCreateTodoMaterialsList()
+      .then(id => { todoMaterialsListId = id; return id; })
+      .finally(() => { _todoListPromise = null; });
+  }
+  return _todoListPromise;
+}
+
+async function _findOrCreateTodoMaterialsList() {
   const listsSnap = await getDocs(todoUserListsRef());
-  let found = null;
-  listsSnap.forEach(d => { if (d.data().name === TODO_LIST_NAME) found = d.id; });
-  if (found) { todoMaterialsListId = found; return found; }
-  // Not found — create it
-  const countSnap = await getDocs(todoUserListsRef());
+  const matches = listsSnap.docs.filter(d => d.data().name === TODO_LIST_NAME);
+  if (matches.length) {
+    // Keep the oldest copy; fold any duplicates (created by past races) into it
+    const ts = d => (d.data().createdAt && d.data().createdAt.toMillis) ? d.data().createdAt.toMillis() : 0;
+    matches.sort((a, b) => ts(a) - ts(b));
+    const primary = matches[0];
+    if (matches.length > 1) await _mergeDuplicateTodoLists(primary, matches.slice(1));
+    return primary.id;
+  }
   const newList = await addDoc(todoUserListsRef(), {
     name: TODO_LIST_NAME,
     starred: false,
-    order: countSnap.size,
+    order: listsSnap.size,
     createdAt: serverTimestamp(),
   });
-  todoMaterialsListId = newList.id;
   return newList.id;
+}
+
+// Moves the tasks of duplicate "Materiali Agenda" lists into the primary one
+// (one task per agendaLinkId, "completed" wins) and deletes the duplicates.
+async function _mergeDuplicateTodoLists(primary, dups) {
+  try {
+    const primaryTasks = await getDocs(todoUserTasksRef(primary.id));
+    const byLink = {};
+    primaryTasks.forEach(t => { const l = t.data().agendaLinkId; if (l) byLink[l] = t; });
+    const deleted = new Set(primary.data().deletedAgendaLinks || []);
+    let order = primaryTasks.size;
+    for (const dup of dups) {
+      (dup.data().deletedAgendaLinks || []).forEach(l => deleted.add(l));
+      const dupTasks = await getDocs(todoUserTasksRef(dup.id));
+      const batch = writeBatch(todoDb);
+      dupTasks.forEach(t => {
+        const data = t.data();
+        const l = data.agendaLinkId;
+        if (l && byLink[l]) {
+          if (data.completed && !byLink[l].data().completed) batch.update(byLink[l].ref, { completed: true });
+        } else if (!(l && deleted.has(l))) {
+          const ref = doc(todoUserTasksRef(primary.id), t.id);
+          batch.set(ref, { ...data, order: order++ });
+          if (l) byLink[l] = { ref, data: () => data };
+        }
+        batch.delete(t.ref);
+      });
+      batch.delete(dup.ref);
+      await batch.commit();
+    }
+    if (deleted.size) await updateDoc(primary.ref, { deletedAgendaLinks: [...deleted] });
+  } catch (e) {
+    console.warn('Unione liste "Materiali Agenda" duplicate fallita:', e);
+  }
 }
 
 // Finds an existing task by its agendaLinkId, or null.
@@ -1197,10 +1246,32 @@ async function findTodoTaskByLinkId(listId, linkId) {
   return { id: snap.docs[0].id, ...snap.docs[0].data() };
 }
 
+// linkIds whose Todo task the user deleted (stored on the list doc by the
+// Todo app): those tasks must never be recreated.
+async function getDeletedAgendaLinks(listId) {
+  const snap = await getDoc(doc(todoUserListsRef(), listId));
+  return new Set((snap.exists() && snap.data().deletedAgendaLinks) || []);
+}
+
+function _isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 // Creates or updates a Todo task linked to a single Agenda material item.
 // deadlineDate: JS Date for the lesson day (task deadline = day before, per spec)
-async function syncMaterialToTodo(linkId, materialText, isDone, deadlineDate) {
-  if (!window._todoSyncEnabled || !linkId || !materialText) return;
+// pushCompleted: false when the caller only wants to sync text/deadline, so a
+// stale "ready" checkbox can't undo a completion made in the Todo app.
+const _todoSyncChains = {};
+function syncMaterialToTodo(linkId, materialText, isDone, deadlineDate, pushCompleted = true) {
+  if (!window._todoSyncEnabled || !linkId || !materialText) return Promise.resolve();
+  // Serialize syncs of the same item, so two quick saves can't both create it
+  const run = () => _syncMaterialToTodo(linkId, materialText, isDone, deadlineDate, pushCompleted);
+  const p = (_todoSyncChains[linkId] || Promise.resolve()).then(run, run);
+  _todoSyncChains[linkId] = p;
+  p.finally(() => { if (_todoSyncChains[linkId] === p) delete _todoSyncChains[linkId]; });
+  return p;
+}
+async function _syncMaterialToTodo(linkId, materialText, isDone, deadlineDate, pushCompleted) {
   try {
     const listId = await ensureTodoMaterialsList();
     const existing = await findTodoTaskByLinkId(listId, linkId);
@@ -1209,24 +1280,31 @@ async function syncMaterialToTodo(linkId, materialText, isDone, deadlineDate) {
     if (deadlineDate) {
       const d = new Date(deadlineDate);
       d.setDate(d.getDate() - 1); // day before the lesson
-      deadlineStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      deadlineStr = _isoDate(d);
     }
     if (existing) {
-      const updates = { name: taskName };
-      if (existing.completed !== isDone) updates.completed = isDone;
+      const updates = {};
+      if (existing.name !== taskName) updates.name = taskName;
+      if (pushCompleted && !!existing.completed !== isDone) updates.completed = isDone;
       if (deadlineStr && existing.deadline !== deadlineStr) updates.deadline = deadlineStr;
-      await updateDoc(doc(todoDb, 'users', todoUserUid, 'lists', listId, 'tasks', existing.id), updates);
-    } else if (!isDone) {
-      // Only create a fresh task if the material isn't already marked ready
-      const tasksSnap = await getDocs(todoUserTasksRef(listId));
-      await addDoc(todoUserTasksRef(listId), {
-        name: taskName, completed: false, notes: '', order: tasksSnap.size,
-        deadline: deadlineStr, plannedPeriod: null, plannedPeriodUntil: null,
-        overdue: false, recurrence: null, milestones: [],
-        agendaLinkId: linkId,
-        createdAt: serverTimestamp(),
-      });
+      if (Object.keys(updates).length)
+        await updateDoc(doc(todoDb, 'users', todoUserUid, 'lists', listId, 'tasks', existing.id), updates);
+      return;
     }
+    // Only create a fresh task if the material isn't already ready…
+    if (isDone) return;
+    // …the lesson isn't in the past…
+    if (deadlineDate && _isoDate(new Date(deadlineDate)) < _isoDate(new Date())) return;
+    // …and the user hasn't deleted its task from the Todo app.
+    if ((await getDeletedAgendaLinks(listId)).has(linkId)) return;
+    const tasksSnap = await getDocs(todoUserTasksRef(listId));
+    await addDoc(todoUserTasksRef(listId), {
+      name: taskName, completed: false, notes: '', order: tasksSnap.size,
+      deadline: deadlineStr, plannedPeriod: null, plannedPeriodUntil: null,
+      overdue: false, recurrence: null, milestones: [],
+      agendaLinkId: linkId,
+      createdAt: serverTimestamp(),
+    });
   } catch (e) {
     console.warn('Sync materiale → Todo fallita:', e);
   }
@@ -1235,17 +1313,19 @@ window.syncMaterialToTodo = syncMaterialToTodo;
 
 // Listens for completed-state changes on Todo tasks linked to Agenda materials,
 // and reflects them back into the Agenda's material "ready" checkbox.
+let _unsubTodoTasks = null;
 function listenTodoMaterialUpdates() {
   if (!window._todoSyncEnabled) return;
   ensureTodoMaterialsList().then(listId => {
+    if (_unsubTodoTasks) _unsubTodoTasks();
     // Listen to the whole list and filter client-side — avoids needing a
     // Firestore composite index for an inequality-on-agendaLinkId query.
-    onSnapshot(todoUserTasksRef(listId), (snap) => {
+    _unsubTodoTasks = onSnapshot(todoUserTasksRef(listId), (snap) => {
       snap.docChanges().forEach(change => {
         if (change.type === 'modified' || change.type === 'added') {
           const task = change.doc.data();
           if (task.agendaLinkId && window._onTodoTaskUpdate) {
-            window._onTodoTaskUpdate(task.agendaLinkId, task.completed);
+            window._onTodoTaskUpdate(task.agendaLinkId, !!task.completed);
           }
         }
       });
@@ -1559,6 +1639,7 @@ onAuthStateChanged(auth, (user) => {
             Object.assign(window.state, remote);
             window.buildClassBar();
             window.render();
+            if (window._applyTodoCompletions) window._applyTodoCompletions();
           } else {
             // First load: store remote state, then reveal app once
             window._remoteState = remote;
@@ -2480,10 +2561,11 @@ function _syncAllMaterialRowsToTodo() {
   const lessonDateStr = modalKey.slice(0, 10); // "YYYY-MM-DD"
   const lessonDate = parseDate(lessonDateStr);
   document.querySelectorAll('#matChecklist .mat-check-item').forEach(row => {
-    window._syncMaterialRow(row, lessonDate);
+    // Bulk save: only text/deadline — the "ready" state is pushed by its own checkbox
+    window._syncMaterialRow(row, lessonDate, false);
   });
 }
-window._syncMaterialRow = function(row, lessonDate) {
+window._syncMaterialRow = function(row, lessonDate, pushCompleted = true) {
   if (!window._todoSyncEnabled) return;
   const txt   = row.querySelector('input[type=text]');
   const ready = row.querySelector('.mat-ready-check');
@@ -2491,23 +2573,39 @@ window._syncMaterialRow = function(row, lessonDate) {
   if (!text) return;
   let linkId = row.dataset.linkId;
   if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
+  if (pushCompleted) window._todoCompletion[linkId] = ready.checked;
   const dateForDeadline = lessonDate || (modalKey ? parseDate(modalKey.slice(0,10)) : null);
-  if (window.syncMaterialToTodo) window.syncMaterialToTodo(linkId, text, ready.checked, dateForDeadline);
+  if (window.syncMaterialToTodo) window.syncMaterialToTodo(linkId, text, ready.checked, dateForDeadline, pushCompleted);
 };
+
+// Latest completed state of each linked Todo task, by linkId. Kept so it can
+// be re-applied when the Agenda data arrives after the Todo listener fired
+// (or when a remote snapshot replaces the local lessons).
+window._todoCompletion = {};
 
 // When a Todo task's completed state changes, reflect it into the matching
 // material's "ready" checkbox across all classes/lessons in local state.
 window._onTodoTaskUpdate = function(linkId, completed) {
+  window._todoCompletion[linkId] = completed;
+  window._applyTodoCompletions();
+};
+window._applyTodoCompletions = function() {
+  if (!window._stateReady) return; // re-applied by startApp once data is loaded
+  const map = window._todoCompletion;
+  if (!Object.keys(map).length) return;
   let changed = false;
   Object.keys(state.lessons || {}).forEach(cls => {
     Object.keys(state.lessons[cls] || {}).forEach(key => {
       const entry = state.lessons[cls][key];
-      if (!entry || !entry.material || !entry.material.includes(linkId)) return;
+      if (!entry || !entry.material || !entry.material.includes('||')) return;
       const items = matDeserialize(entry.material);
       let rowChanged = false;
-      items.forEach(it => { if (it.linkId === linkId && it.ready !== completed) { it.ready = completed; rowChanged = true; } });
+      items.forEach(it => {
+        if (it.linkId in map && it.ready !== map[it.linkId]) { it.ready = map[it.linkId]; rowChanged = true; }
+      });
       if (rowChanged) {
-        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}||${i.link||''}`).join('\n');        changed = true;
+        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}||${i.link||''}`).join('\n');
+        changed = true;
         // If this lesson's modal happens to be open right now, refresh its checklist live
         if (modalKey === key && modalClass === cls) {
           matBuildChecklist(items);
@@ -4310,6 +4408,7 @@ window.startApp = function() {
     window._remoteState = null;
   }
   window._stateReady = true;
+  window._applyTodoCompletions();
 if (activeClass !== '__all__' && !state.classes.includes(activeClass)) activeClass = state.classes[0] || '';
 buildClassBar(); cursor = new Date(); render();
 applyStaticTips(); initTooltips();
