@@ -124,14 +124,29 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .day-cell.cancelled-cell{background:#FFF0EF;}
 .free-hour-cell{cursor:default;}
 .free-hour-cell:hover{background:var(--white);}
-.free-hour-note{width:100%;border:1.5px dashed var(--border);border-radius:8px;background:transparent;
-  font-family:inherit;font-size:0.82rem;color:var(--text);padding:6px 8px;resize:none;
-  min-height:32px;line-height:1.4;transition:border-color .15s,background .15s;box-sizing:border-box;}
-.free-hour-note:hover{border-color:var(--muted);}
-.free-hour-note:focus{outline:none;border-color:var(--grape);border-style:solid;background:var(--bg2);}
-.free-hour-note::placeholder{color:var(--border);font-style:italic;}
-/* ore buco nella vista settimana: nota più compatta */
-.week-cell .free-hour-note{font-size:0.7rem;padding:4px 5px;min-height:26px;border-radius:6px;}
+/* ore buco: checklist centrata nello slot */
+.week-cell.gap-cell{display:flex;flex-direction:column;justify-content:center;padding:4px;}
+.week-cell .free-check,.week-cell .free-check:hover{border:none;}
+.week-cell .free-check:focus-within{background:var(--bg2);}
+.free-check{width:100%;border:1.5px dashed var(--border);border-radius:8px;padding:3px 0;
+  box-sizing:border-box;transition:border-color .15s,background .15s;}
+.free-check:hover{border-color:var(--muted);}
+.free-check:focus-within{border-color:var(--grape);border-style:solid;background:var(--bg2);}
+.fc-item{display:flex;align-items:center;gap:6px;padding:2px 7px;}
+.fc-item input[type=checkbox]{width:14px;height:14px;flex-shrink:0;margin:0;accent-color:var(--grape);cursor:pointer;}
+.fc-item input[type=text]{flex:1;min-width:0;border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:0.82rem;color:var(--text);padding:2px 0;line-height:1.35;}
+.fc-item input[type=text]::placeholder{color:var(--border);font-style:italic;}
+.fc-item input[type=text].done{text-decoration:line-through;color:var(--muted);}
+.fc-rm{background:none;border:none;color:var(--border);cursor:pointer;font-size:.85rem;
+  padding:0 2px;line-height:1;flex-shrink:0;opacity:0;transition:opacity .12s,color .12s;}
+.fc-item:hover .fc-rm,.fc-item:focus-within .fc-rm{opacity:1;}
+.fc-rm:hover{color:var(--coral);}
+/* versione compatta nelle colonne strette della settimana */
+.week-cell .fc-item{gap:4px;padding:1px 4px;}
+.week-cell .fc-item input[type=checkbox]{width:12px;height:12px;}
+.week-cell .fc-item input[type=text]{font-size:0.7rem;}
+.week-cell .fc-rm{font-size:.7rem;padding:0;}
 
 /* SLOT CARD */
 .slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
@@ -1868,9 +1883,61 @@ function dailyHourRange(dateStr) {
 function saveFreeNote(dateStr, hour, text) {
   const key = dateStr+'-'+hour;
   const trimmed = (text||'').trim();
+  if (!state.freeNotes) state.freeNotes = {};
   if (trimmed) state.freeNotes[key] = trimmed;
   else delete state.freeNotes[key];
   persist();
+}
+// Checklist per un'ora buco. Salvata in freeNotes come testo, una voce per riga:
+// "[x] fatto" / "[ ] da fare" (le vecchie note senza prefisso diventano voci da fare).
+function buildFreeChecklist(dateStr, hour, placeholder) {
+  const box = document.createElement('div'); box.className = 'free-check';
+  const raw = (state.freeNotes||{})[dateStr+'-'+hour] || '';
+  const save = () => {
+    const lines = [...box.querySelectorAll('.fc-item')].map(r => {
+      const t = r.querySelector('input[type=text]').value.trim();
+      return t ? (r.querySelector('input[type=checkbox]').checked ? '[x] ' : '[ ] ') + t : '';
+    }).filter(Boolean);
+    const next = lines.join('\n');
+    if (next !== ((state.freeNotes||{})[dateStr+'-'+hour] || '')) saveFreeNote(dateStr, hour, next);
+  };
+  const addRow = (text='', done=false, after=null) => {
+    const row = document.createElement('div'); row.className = 'fc-item';
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = done;
+    chk.title = 'Fatto';
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = text;
+    inp.placeholder = box.querySelector('.fc-item') ? 'Nuova voce…' : placeholder;
+    inp.classList.toggle('done', done);
+    chk.onchange = () => { inp.classList.toggle('done', chk.checked); save(); };
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addRow('', false, row).querySelector('input[type=text]').focus(); }
+      if (e.key === 'Backspace' && inp.value === '' && box.querySelectorAll('.fc-item').length > 1) {
+        e.preventDefault();
+        const prev = row.previousElementSibling || row.nextElementSibling;
+        row.remove();
+        if (prev) prev.querySelector('input[type=text]').focus();
+      }
+    });
+    const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'fc-rm'; rm.textContent = '✕';
+    rm.title = 'Elimina voce';
+    rm.onclick = () => {
+      row.remove();
+      if (!box.querySelector('.fc-item')) addRow();
+      save();
+    };
+    row.append(chk, inp, rm);
+    if (after) after.after(row); else box.appendChild(row);
+    return row;
+  };
+  raw.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => {
+    const m = l.match(/^\[( |x)\]\s?(.*)$/i);
+    addRow(m ? m[2] : l, !!m && m[1].toLowerCase() === 'x');
+  });
+  if (!box.querySelector('.fc-item')) addRow();
+  // salva quando il focus esce dalla checklist (non a ogni tasto)
+  box.addEventListener('focusout', e => { if (!box.contains(e.relatedTarget)) save(); });
+  box.addEventListener('click', e => e.stopPropagation());   // non incollare la lezione copiata
+  return box;
 }function isToday(d) { return fmtDate(d)===fmtDate(new Date()); }
 
 // ══════════════════════════════════════════════════════
@@ -2253,15 +2320,8 @@ function renderWeek(area) {
           slotsOnDay(d,cn).some(s => s.time && parseInt(s.time.slice(0,2),10)===hour));
         if (isGap && !noteHoursUsed.has(ds+'-'+hour)) {
           noteHoursUsed.add(ds+'-'+hour);
-          const ta=document.createElement('textarea');
-          ta.className='free-hour-note'; ta.rows=1;
-          ta.placeholder='Ora libera…';
-          ta.value = (state.freeNotes||{})[ds+'-'+hour] || '';
-          ta.oninput = () => autoResizeTA(ta);
-          ta.onblur = () => saveFreeNote(ds, hour, ta.value);
-          ta.addEventListener('click', e => e.stopPropagation());   // non incollare la lezione copiata
-          cell.appendChild(ta);
-          requestAnimationFrame(()=>autoResizeTA(ta));
+          cell.classList.add('gap-cell');
+          cell.appendChild(buildFreeChecklist(ds, hour, 'Ora libera…'));
         }
       }
 
@@ -2349,13 +2409,7 @@ function renderDay(area) {
     const th=document.createElement('div'); th.className='day-time'; th.textContent=String(h).padStart(2,'0')+':00'; row.appendChild(th);
     if (!matches.length) {
       const cell=document.createElement('div'); cell.className='day-cell free-hour-cell';
-      const ta=document.createElement('textarea');
-      ta.className='free-hour-note'; ta.rows=1;
-      ta.placeholder='Ora libera — annota cosa devi fare…';
-      ta.value = state.freeNotes[dateStr+'-'+h] || '';
-      ta.oninput = () => autoResizeTA(ta);
-      ta.onblur = () => saveFreeNote(dateStr, h, ta.value);
-      cell.appendChild(ta);
+      cell.appendChild(buildFreeChecklist(dateStr, h, 'Ora libera — aggiungi cosa devi fare…'));
       const addBtn = document.createElement('button');
       addBtn.className = 'btn-add-extra';
       addBtn.textContent = '➕ Aggiungi lezione';
@@ -2364,7 +2418,6 @@ function renderDay(area) {
       cell.appendChild(addBtn);
       row.appendChild(cell);
       area.appendChild(row);
-      requestAnimationFrame(()=>autoResizeTA(ta));
       continue;
     }
     const cell=document.createElement('div'); cell.className='day-cell';
