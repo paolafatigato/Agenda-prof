@@ -130,6 +130,8 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .free-hour-note:hover{border-color:var(--muted);}
 .free-hour-note:focus{outline:none;border-color:var(--grape);border-style:solid;background:var(--bg2);}
 .free-hour-note::placeholder{color:var(--border);font-style:italic;}
+/* ore buco nella vista settimana: nota più compatta */
+.week-cell .free-hour-note{font-size:0.7rem;padding:4px 5px;min-height:26px;border-radius:6px;}
 
 /* SLOT CARD */
 .slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
@@ -2204,8 +2206,15 @@ function renderWeek(area) {
       for (const cn of classesToUse) slotsOnDay(d,cn).forEach(s=>timeSlots.add(s.time));
     }
   }
+  // con tutte le classi: aggiungi anche le ore buco che nessun giorno della settimana usa
+  if (activeClass==='__all__' && timeSlots.size) {
+    const {min, max} = dailyHourRange();
+    const hoursPresent = new Set([...timeSlots].map(t=>parseInt(String(t).slice(0,2),10)));
+    for (let hh=min; hh<=max; hh++) if (!hoursPresent.has(hh)) timeSlots.add(String(hh).padStart(2,'0')+':00');
+  }
   const sortedTimes=[...timeSlots].sort();
   if (!sortedTimes.length) sortedTimes.push('08:00','09:00','10:00','11:00','12:00','13:00');
+  const noteHoursUsed = new Set();   // una sola nota per ora (se ci sono orari tipo 08:00 e 08:30)
   sortedTimes.forEach(time=>{
     const th=document.createElement('div'); th.className='week-time'; th.textContent=time; grid.appendChild(th);
     for (let i=0;i<7;i++) {
@@ -2236,6 +2245,23 @@ function renderWeek(area) {
             card.addEventListener('dragend', (e)=>onSlotDragEnd(e));
             cell.appendChild(card);
           });
+        }
+        // ora buco: nessuna classe ha lezione a quest'ora → nota libera, come nella vista giorno
+        const hour = parseInt(String(time).slice(0,2),10);
+        const ds = fmtDate(d);
+        const isGap = !isNaN(hour) && !state.classes.some(cn =>
+          slotsOnDay(d,cn).some(s => s.time && parseInt(s.time.slice(0,2),10)===hour));
+        if (isGap && !noteHoursUsed.has(ds+'-'+hour)) {
+          noteHoursUsed.add(ds+'-'+hour);
+          const ta=document.createElement('textarea');
+          ta.className='free-hour-note'; ta.rows=1;
+          ta.placeholder='Ora libera…';
+          ta.value = (state.freeNotes||{})[ds+'-'+hour] || '';
+          ta.oninput = () => autoResizeTA(ta);
+          ta.onblur = () => saveFreeNote(ds, hour, ta.value);
+          ta.addEventListener('click', e => e.stopPropagation());   // non incollare la lezione copiata
+          cell.appendChild(ta);
+          requestAnimationFrame(()=>autoResizeTA(ta));
         }
       }
 
