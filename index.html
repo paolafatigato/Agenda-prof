@@ -318,6 +318,11 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .mat-link-btn.has-link{filter:none;opacity:1;background:rgba(73,172,239,.18);
   border-color:var(--sky);box-shadow:0 0 0 2px rgba(73,172,239,.15);}
 @media (hover:hover){.mat-link-btn.has-link:hover{background:rgba(73,172,239,.32);border-color:var(--blue);}}
+.book-ac{position:fixed;z-index:650;background:var(--white);border:1.5px solid var(--border);border-radius:9px;
+  box-shadow:0 6px 20px var(--shadow);max-height:260px;overflow-y:auto;padding:3px 0;}
+.book-ac-item{display:flex;gap:7px;align-items:baseline;padding:5px 10px;font-size:.82rem;cursor:pointer;line-height:1.35;}
+.book-ac-item small{color:var(--muted);font-size:.68rem;margin-left:auto;white-space:nowrap;}
+.book-ac-item.active{background:var(--cream);}
 .mat-add-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;
   font-size:0.78rem;color:var(--muted);cursor:pointer;background:none;border:none;
   font-family:inherit;transition:color .12s;width:100%;}
@@ -1622,6 +1627,7 @@ window.toggleAuth = function() {
 // ── react to auth state changes ──
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
+  window._userEmail = user ? user.email : null; // the textbook links in the materials are only for the book's owner
   if (window._guestMode) return; // ignore auth changes while explicitly in guest mode pre-reveal
   const authBtn = document.getElementById('authBtn');
 
@@ -4235,6 +4241,9 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='
 
   chk.onchange = () => { inp.classList.toggle('checked-item', chk.checked); };
 
+  // before the Enter → new row handler below, so Enter picks from the textbook list
+  bookAutocomplete(inp, row, () => updateLinkBtn());
+
   // Enter key → new row
   inp.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); matAddRow(box, '', false, false); }
@@ -4258,7 +4267,9 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='
     e.preventDefault();
     const current = row.dataset.link || '';
     if (current && !e.shiftKey) {
-      window.open(current, '_blank', 'noopener');
+      // the textbook always opens in the same tab, instead of a new tab for every link
+      if (current.startsWith(BOOK_URL)) window.open(current, 'textbook');
+      else window.open(current, '_blank', 'noopener');
     } else {
       const val = prompt('Link al materiale (Canva, Drive, PDF da stampare…):', current);
       if (val === null) return;
@@ -4273,6 +4284,84 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='
   if (addBtn) box.insertBefore(row, addBtn); else box.appendChild(row);
   inp.focus();
   return row;
+}
+// ── Textbook links (only for the book's owner) ──
+// Typing in a material row lists the chapters and topics of the English textbook
+// (read from its contents.js); picking one fills in the text and a link that opens
+// the book on that page. The link uses the name of the spread (#s=…), not the page
+// number, so it keeps working when pages are added to the book.
+const BOOK_URL = 'https://paolafatigato.github.io/TextBook/';
+const BOOK_OWNER = 'paola.fatigato@gmail.com';
+let _bookCatalogue = null;
+function bookCatalogue() {
+  if (!_bookCatalogue) _bookCatalogue = fetch(BOOK_URL + 'contents.js', { cache: 'no-cache' })
+    .then(r => r.ok ? r.text() : Promise.reject(r.status))
+    .then(src => {
+      const C = new Function(src + '\nreturn CONTENTS;')();
+      const list = [];
+      C.parts.forEach(p => p.chapters.forEach(ch => {
+        if (ch.start) list.push({ title: ch.title, ref: ch.start, kind: 'capitolo' });
+      }));
+      C.topics.forEach(t => {
+        const ref = [].concat(t.pages[0])[0];
+        if (ref) list.push({ title: t.title, ref, kind: 'argomento' });
+      });
+      return list;
+    })
+    .catch(e => { console.warn('Indice del libro non disponibile:', e); _bookCatalogue = null; return []; });
+  return _bookCatalogue;
+}
+function bookAutocomplete(inp, row, onLink) {
+  let menu = null, matches = [], active = 0;
+  const close = () => { if (menu) { menu.remove(); menu = null; } matches = []; };
+  const pick = m => {
+    inp.value = m.title;
+    row.dataset.link = BOOK_URL + '#s=' + m.ref;
+    onLink();
+    close();
+  };
+  const paint = () => {
+    if (!matches.length) { close(); return; }
+    if (!menu) { menu = document.createElement('div'); menu.className = 'book-ac'; document.body.appendChild(menu); }
+    const r = inp.getBoundingClientRect();
+    const width = Math.min(Math.max(r.width, 260), window.innerWidth - 16);
+    menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.width = width + 'px';
+    menu.innerHTML = '';
+    matches.forEach((m, i) => {
+      const it = document.createElement('div');
+      it.className = 'book-ac-item' + (i === active ? ' active' : '');
+      it.innerHTML = `<span>📖 ${m.title.replace(/</g, '&lt;')}</span><small>${m.kind}</small>`;
+      it.onmousedown = e => { e.preventDefault(); pick(m); }; // before the input loses focus
+      menu.appendChild(it);
+    });
+    menu.children[active]?.scrollIntoView({ block: 'nearest' });
+  };
+  inp.addEventListener('input', async () => {
+    if (window._userEmail !== BOOK_OWNER) return;
+    const words = inp.value.toLowerCase().split(/\s+/).filter(Boolean);
+    if (inp.value.trim().length < 2) { close(); return; }
+    const list = await bookCatalogue();
+    matches = list.filter(m => words.every(w => m.title.toLowerCase().includes(w))).slice(0, 30);
+    active = 0;
+    paint();
+  });
+  inp.addEventListener('keydown', e => {
+    if (!menu) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + matches.length) % matches.length;
+      paint();
+    } else if (e.key === 'Enter') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      pick(matches[active]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); e.stopPropagation();
+      close();
+    }
+  });
+  inp.addEventListener('blur', close);
 }
 function matAddAddButton(box) {
   const btn = document.createElement('button'); btn.className='mat-add-btn';
