@@ -152,6 +152,21 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .slot-card{border-radius:9px;padding:5px 7px 6px;font-size:0.76rem;font-weight:600;
   cursor:pointer;height:100%;min-height:58px;display:flex;flex-direction:column;gap:2px;}
 .slot-card .sc-title{font-size:0.8rem;font-weight:700;}
+.slot-card .sc-ready{font-size:0.7rem;margin-right:3px;}
+/* Lesson not yet marked ready: soft pulsing glow */
+.slot-card.not-ready{animation:notReadyGlow 2.6s ease-in-out infinite;}
+@keyframes notReadyGlow{
+  0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--glow,#B48CE6) 55%,transparent),0 0 5px color-mix(in srgb,var(--glow,#B48CE6) 45%,transparent);}
+  50%{box-shadow:0 0 0 2px color-mix(in srgb,var(--glow,#B48CE6) 90%,transparent),0 0 14px color-mix(in srgb,var(--glow,#B48CE6) 80%,transparent);}
+}
+@media (prefers-reduced-motion:reduce){
+  .slot-card.not-ready{animation:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--glow,#B48CE6) 80%,transparent),0 0 10px color-mix(in srgb,var(--glow,#B48CE6) 65%,transparent);}
+}
+/* "Lezione pronta" toggle in the modal */
+.lesson-ready-toggle{display:flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:700;color:var(--muted);cursor:pointer;
+  border:1.5px solid var(--border);border-radius:20px;padding:3px 11px;background:var(--bg);user-select:none;transition:all .14s;}
+.lesson-ready-toggle input{width:15px;height:15px;margin:0;accent-color:var(--green);cursor:pointer;}
+.lesson-ready-toggle:has(input:checked){color:var(--green);border-color:var(--green);background:rgba(76,146,76,.1);}
 .slot-card .sc-override{font-size:0.64rem;opacity:.7;font-style:italic;}
 .slot-card .sc-lesson{font-size:0.72rem;font-weight:400;opacity:.85;}
 .slot-card .sc-lesson-title{font-size:0.78rem;font-weight:700;line-height:1.3;
@@ -946,7 +961,12 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
     <span id="prevHwText"></span>
   </div>
   <div class="modal-field">
-    <label>📖 Lezione</label>
+    <div class="act-head-row">
+      <label style="margin:0">📖 Lezione</label>
+      <label class="lesson-ready-toggle" title="Spunta quando hai preparato tutto per questa lezione: nel calendario smette di brillare">
+        <input type="checkbox" id="fLessonReady"> Lezione pronta
+      </label>
+    </div>
     <textarea id="fLessonTitle" class="act-lesson-title" rows="1"
       placeholder="Titolo lezione (opzionale)"
       oninput="autoResizeTA(this)"></textarea>
@@ -2470,7 +2490,16 @@ function buildSlotCard(date, key, patternSubj, time, data, size, cancData, class
   const accentColor = planned ? fadeHex(classColor, 0.36) : classColor;
   card.style.setProperty('--class-accent', accentColor);
   if (planned) card.style.opacity = '0.62';
-  let html=`<div class="sc-title">${subjLabel(eff)}${overridden?` <span style="font-size:.6rem;opacity:.6">(era ${subjLabel(patternSubj)})</span>`:''}</div>`;
+  // ✅ when the teacher marked the lesson as ready; lessons still to prepare (today onwards) glow
+  const isReady = !!(data && data.ready);
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  if (hasData && !cancData && !isReady && date >= today0) {
+    card.classList.add('not-ready');
+    // glow in the class color, lilac when the class has none
+    card.style.setProperty('--glow', (state.classColors&&state.classColors[cls]) || '#B48CE6');
+  }
+  const readyMark = (isReady && !cancData) ? '<span class="sc-ready" title="Lezione pronta">✅</span>' : '';
+  let html=`<div class="sc-title">${readyMark}${subjLabel(eff)}${overridden?` <span style="font-size:.6rem;opacity:.6">(era ${subjLabel(patternSubj)})</span>`:''}</div>`;
   html+=`<div class="sc-class" style="font-size:.64rem;opacity:.6">${time} · ${cls}${String(key).includes('-x-')?' · ➕ extra':''}</div>`;
   if (cancData) {
     html+=`<div style="font-size:.72rem;color:#B03030;font-style:italic">🚫 ${cancData.reason||'Lezione cancellata'}</div>`;
@@ -2602,6 +2631,7 @@ function _openModalInternal(key, date, patternSubj, time, status, className) {
   document.getElementById('fLessonTitle').value = parsed.title;
   autoResizeTA(document.getElementById('fLessonTitle'));
   actBuildList(parsed.activities);
+  document.getElementById('fLessonReady').checked = !!data.ready;
 
   document.getElementById('fHomework').value=data.homework||'';
   autoResizeTA(document.getElementById('fHomework'));
@@ -2624,11 +2654,12 @@ function _persistCurrentSlot() {
   const homework = document.getElementById('fHomework').value.trim();
   const notes    = document.getElementById('fNotes').value.trim();
   const override = _currentOverride||null;
+  const ready    = document.getElementById('fLessonReady').checked;
   // Avoid writing a totally empty object that would still count as "has data"
-  if (!lesson && !material && !homework && !notes && !override) {
+  if (!lesson && !material && !homework && !notes && !override && !ready) {
     delete state.lessons[modalClass][modalKey];
   } else {
-    state.lessons[modalClass][modalKey] = { lesson, material, activities, homework, notes, subjectOverride: override };
+    state.lessons[modalClass][modalKey] = { lesson, material, activities, homework, notes, subjectOverride: override, ready };
   }
   persist();
   _syncAllMaterialRowsToTodo();
@@ -2785,6 +2816,7 @@ function slipLessonsForward() {
   document.getElementById('fLessonTitle').value = '';
   autoResizeTA(document.getElementById('fLessonTitle'));
   actBuildList([]);
+  document.getElementById('fLessonReady').checked = false;
   document.getElementById('fHomework').value = '';
   autoResizeTA(document.getElementById('fHomework'));
   document.getElementById('fNotes').value = '';
@@ -3516,7 +3548,7 @@ function hidePasteBar() {
 //  • Clic su un giorno: si usa la classe scelta nella barra in basso.
 function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!clipboard) return false;
-  const copy = { ...clipboard };
+  const copy = { ...clipboard, ready: false };   // another class: still to prepare
   if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
 
   if (slotKey && slotClass) {
@@ -3996,7 +4028,7 @@ function runSyncProgramma() {
     const hasContent = existing && (existing.lesson||existing.homework||existing.material||existing.notes);
     if (hasContent) { skipped++; continue; }
     const entry = srcEntries[si++];
-    const copy = { ...entry.data };
+    const copy = { ...entry.data, ready: false };
     if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
     state.lessons[tgt][slot.slotKey] = copy;
     copied++;
@@ -4302,7 +4334,7 @@ function actPostpone(card) {
   const tgt = state.lessons[modalClass][nextKey] || {};
   const p = lessonActivities(tgt);
   const merged = lessonFromActivities(p.title, [act, ...p.activities]);
-  state.lessons[modalClass][nextKey] = { ...tgt, ...merged };
+  state.lessons[modalClass][nextKey] = { ...tgt, ...merged, ready: false };   // new activity there: to prepare again
 
   card.remove();
   if (!document.querySelector('#actList .act-card')) actAddCard('', []);
@@ -4594,7 +4626,7 @@ function guideSteps() {
       (sample ? '<p class="g-note">Vedi delle classi di esempio (1ª A, 2ª B, 3ª C)? Rinominale o eliminale e metti le tue.</p>' : '') },
     { e:'✏️', t:'2 · Scrivi le lezioni', h:
       '<p>Tocca una lezione nel calendario per aprirla e scrivi:</p><ul>' +
-      _gLi('📖', '<b>Lezione</b> — il titolo, se c\'è') +
+      _gLi('📖', '<b>Lezione</b> — il titolo, se c\'è, e la spunta <b>✅ Lezione pronta</b> quando hai preparato tutto: finché manca, nel calendario la lezione brilla') +
       _gLi('🧩', '<b>Attività</b> — una o più per lezione, ognuna con il suo <b>materiale</b> (spunta ✅ pronto e ☑ stampato)') +
       _gLi('↪️', '<b>Rimanda</b> — non hai fatto in tempo? Quell\'attività e il suo materiale passano alla lezione successiva, le altre restano') +
       _gLi('✏️', '<b>Compiti</b> per la prossima volta: li ritrovi la volta dopo nella stessa classe') +
