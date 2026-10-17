@@ -292,6 +292,25 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
   font-family:inherit;font-size:0.84rem;color:var(--text);
   padding:6px 9px 8px;resize:vertical;min-height:60px;line-height:1.5;display:block;}
 
+/* Lesson title + activity cards */
+.act-lesson-title{font-weight:700;font-size:0.88rem;min-height:36px !important;}
+.act-head-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap;}
+.act-legend{display:flex;gap:14px;font-size:0.68rem;color:var(--muted);}
+.act-card{border:1.5px solid var(--border);border-radius:11px;background:var(--bg);padding:8px 9px 9px;margin-bottom:8px;transition:border-color .14s;}
+.act-card:focus-within{border-color:var(--grape);}
+.act-card-head{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.act-num{font-size:0.74rem;font-weight:700;color:var(--grape);margin-right:auto;}
+.act-postpone-btn{background:#EAF3FB;color:var(--blue);border:1.5px solid #B8D8EE;border-radius:8px;padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;}
+.act-postpone-btn:hover{background:#D8EAF8;}
+.act-rm-btn{background:none;border:none;color:var(--border);cursor:pointer;font-size:1rem;padding:0 3px;line-height:1;transition:color .12s;}
+.act-rm-btn:hover{color:var(--coral);}
+.modal-field .act-card textarea.act-text{background:var(--white);min-height:52px;}
+.act-mat-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin:7px 0 3px;}
+.act-card .mat-checklist{background:var(--white);}
+.act-add-btn{width:100%;background:none;border:1.5px dashed var(--border);border-radius:11px;padding:7px;font-size:0.8rem;
+  color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s;}
+.act-add-btn:hover{color:var(--grape);border-color:var(--grape);}
+
 /* Material checklist */
 .mat-checklist{width:100%;background:var(--bg);border:1.5px solid var(--border);
   border-radius:9px;padding:5px 0;transition:border-color .14s;min-height:44px;}
@@ -927,34 +946,22 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
     <span id="prevHwText"></span>
   </div>
   <div class="modal-field">
-    <label>📖 Lezione / Attività</label>
-    <div id="fLesson" style="border:1.5px solid var(--border);border-radius:9px;background:var(--bg);transition:border-color .14s;" onclick="this.style.borderColor='var(--grape)'" onblur="this.style.borderColor='var(--border)'">
-      <textarea id="fLessonTitle" class="flesson-title" rows="1"
-        placeholder="Titolo lezione (opzionale)"
-        oninput="autoResizeTA(this)"
-        onfocus="document.getElementById('fLesson').style.borderColor='var(--grape)'"
-        onblur="document.getElementById('fLesson').style.borderColor='var(--border)'"
-      ></textarea>
-      <span class="flesson-divider"></span>
-      <textarea id="fLessonBody" class="flesson-body" rows="3"
-        placeholder="Descrizione, attività, pagine del libro…"
-        oninput="autoResizeTA(this)"
-        onfocus="document.getElementById('fLesson').style.borderColor='var(--grape)'"
-        onblur="document.getElementById('fLesson').style.borderColor='var(--border)'"
-      ></textarea>
-    </div>
+    <label>📖 Lezione</label>
+    <textarea id="fLessonTitle" class="act-lesson-title" rows="1"
+      placeholder="Titolo lezione (opzionale)"
+      oninput="autoResizeTA(this)"></textarea>
   </div>
   <div class="modal-field">
-    <label>🎒 Materiale necessario</label>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:18px;font-size:0.68rem;color:var(--muted);
-      margin-bottom:3px;padding-left:9px;padding-right:9px;">
-      <span style="display:flex;gap:18px;">
+    <div class="act-head-row">
+      <label style="margin:0">🧩 Attività</label>
+      <span class="act-legend">
         <span title="Spunta quando il materiale è pronto/preparato">✅ pronto</span>
         <span title="Spunta quando hai stampato questo materiale">☑ stampato</span>
+        <span id="todoSyncBadge" style="display:none;font-weight:600;" title="I materiali non pronti vengono inviati come task alla tua Todo app">🔗 Todo</span>
       </span>
-      <span id="todoSyncBadge" style="display:none;font-weight:600;" title="I materiali non pronti vengono inviati come task alla tua Todo app">🔗 Todo</span>
     </div>
-    <div class="mat-checklist" id="matChecklist"></div>
+    <div id="actList"></div>
+    <button type="button" class="act-add-btn" onclick="actAddCard('', [], true)">➕ Aggiungi attività</button>
   </div>
   <div class="modal-field">
     <label>✏️ Compiti per la prossima volta</label>
@@ -2590,21 +2597,11 @@ function _openModalInternal(key, date, patternSubj, time, status, className) {
     document.getElementById('prevHwText').textContent=prev.homework;
   } else document.getElementById('prevHwBox').style.display='none';
 
-  // Split lesson: title is first line, rest is body
-  const fullLesson = data.lesson||'';
-  const nlIdx = fullLesson.indexOf('\n');
-  if (nlIdx !== -1) {
-    document.getElementById('fLessonTitle').value = fullLesson.slice(0, nlIdx);
-    document.getElementById('fLessonBody').value  = fullLesson.slice(nlIdx+1);
-  } else {
-    document.getElementById('fLessonTitle').value = '';
-    document.getElementById('fLessonBody').value  = fullLesson;
-  }
+  // Title + activities (each with its own material)
+  const parsed = lessonActivities(data);
+  document.getElementById('fLessonTitle').value = parsed.title;
   autoResizeTA(document.getElementById('fLessonTitle'));
-  autoResizeTA(document.getElementById('fLessonBody'));
-
-  // Material checklist
-  matBuildChecklist(matDeserialize(data.material||''));
+  actBuildList(parsed.activities);
 
   document.getElementById('fHomework').value=data.homework||'';
   autoResizeTA(document.getElementById('fHomework'));
@@ -2623,9 +2620,7 @@ function _persistCurrentSlot() {
   if (!modalKey || !modalClass) return;
   if (!state.lessons[modalClass]) state.lessons[modalClass]={};
   const title = (document.getElementById('fLessonTitle').value||'').trim();
-  const body  = (document.getElementById('fLessonBody').value||'').trim();
-  const lesson = title ? (body ? title+'\n'+body : title+'\n') : body;
-  const material = matSerialize();
+  const { lesson, material, activities } = lessonFromActivities(title, actCollect());
   const homework = document.getElementById('fHomework').value.trim();
   const notes    = document.getElementById('fNotes').value.trim();
   const override = _currentOverride||null;
@@ -2633,7 +2628,7 @@ function _persistCurrentSlot() {
   if (!lesson && !material && !homework && !notes && !override) {
     delete state.lessons[modalClass][modalKey];
   } else {
-    state.lessons[modalClass][modalKey] = { lesson, material, homework, notes, subjectOverride: override };
+    state.lessons[modalClass][modalKey] = { lesson, material, activities, homework, notes, subjectOverride: override };
   }
   persist();
   _syncAllMaterialRowsToTodo();
@@ -2645,7 +2640,7 @@ function _syncAllMaterialRowsToTodo() {
   if (!window._todoSyncEnabled || !modalKey) return;
   const lessonDateStr = modalKey.slice(0, 10); // "YYYY-MM-DD"
   const lessonDate = parseDate(lessonDateStr);
-  document.querySelectorAll('#matChecklist .mat-check-item').forEach(row => {
+  document.querySelectorAll('#actList .mat-check-item').forEach(row => {
     // Bulk save: only text/deadline — the "ready" state is pushed by its own checkbox
     window._syncMaterialRow(row, lessonDate, false);
   });
@@ -2689,11 +2684,13 @@ window._applyTodoCompletions = function() {
         if (it.linkId in map && it.ready !== map[it.linkId]) { it.ready = map[it.linkId]; rowChanged = true; }
       });
       if (rowChanged) {
-        entry.material = items.map(i => `${i.text}||${i.checked?'true':'false'}||${i.ready?'true':'false'}||${i.linkId}||${i.link||''}`).join('\n');
+        entry.material = items.map(matLine).join('\n');
         changed = true;
-        // If this lesson's modal happens to be open right now, refresh its checklist live
+        // If this lesson's modal happens to be open right now, refresh its checkboxes live
         if (modalKey === key && modalClass === cls) {
-          matBuildChecklist(items);
+          document.querySelectorAll('#actList .mat-check-item').forEach(row => {
+            if (row.dataset.linkId in map) row.querySelector('.mat-ready-check').checked = map[row.dataset.linkId];
+          });
         }
       }
     });
@@ -2786,10 +2783,8 @@ function slipLessonsForward() {
 
   // svuota il modulo per scrivere cosa è successo davvero oggi
   document.getElementById('fLessonTitle').value = '';
-  document.getElementById('fLessonBody').value = '';
   autoResizeTA(document.getElementById('fLessonTitle'));
-  autoResizeTA(document.getElementById('fLessonBody'));
-  matBuildChecklist([]);
+  actBuildList([]);
   document.getElementById('fHomework').value = '';
   autoResizeTA(document.getElementById('fHomework'));
   document.getElementById('fNotes').value = '';
@@ -3972,9 +3967,7 @@ function futureSlots(className) {
 // restano agganciate agli stessi task Todo della classe di origine.
 function regenerateMaterialLinkIds(raw) {
   if (!raw) return raw;
-  return matDeserialize(raw).map(item =>
-    (item.text||'') + '||' + (item.checked?'true':'false') + '||' + (item.ready?'true':'false') + '||' + _genLinkId() + '||' + (item.link||'')
-  ).join('\n');
+  return matDeserialize(raw).map(item => matLine({ ...item, linkId: _genLinkId() })).join('\n');
 }
 function updateSyncProgPreview() {
   const sel = document.getElementById('syncProgSourceSel');
@@ -4063,7 +4056,7 @@ function renderMaterialsBody(body) {
   hdr.innerHTML = `📅 <span style="color:var(--text)">${dateLabel}</span>`;
   body.appendChild(hdr);
   if (!items.length) {
-    body.innerHTML += '<div class="mat-empty">Nessun materiale registrato per questo giorno.<br><span style="font-size:.8rem">Apri le lezioni del giorno e aggiungi il campo "Materiale necessario".</span></div>';
+    body.innerHTML += '<div class="mat-empty">Nessun materiale registrato per questo giorno.<br><span style="font-size:.8rem">Apri le lezioni del giorno e aggiungi il materiale alle attività.</span></div>';
     return;
   }
   // sort by time
@@ -4184,20 +4177,20 @@ function autoResizeTA(el) {
 // material item to its twin task in the Todo app.
 // e.g. "Libro||true||false||a1b2c3\nFotocopie||false||true||d4e5f6"
 function _genLinkId() { return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function matSerialize() {
-  const items = document.querySelectorAll('#matChecklist .mat-check-item');
-  return [...items].map(row => {
-    const chk   = row.querySelector('.mat-used-check');
-    const ready = row.querySelector('.mat-ready-check');
-    const txt   = row.querySelector('input[type=text]');
-    let linkId  = row.dataset.linkId;
-    if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
-    const link = row.dataset.link || '';
-    return (txt.value.trim()) + '||' + (chk.checked ? 'true' : 'false') + '||' + (ready.checked ? 'true' : 'false') + '||' + linkId + '||' + link;
-  }).filter(s => {
-    const parts = s.split('||');
-    return parts[0].trim();
-  }).join('\n');
+// An optional 6th field is the index of the activity the material belongs to
+// (missing = 0, the first activity), so lessons saved before activities existed still load.
+function matLine(i) {
+  return (i.text||'') + '||' + (i.checked?'true':'false') + '||' + (i.ready?'true':'false') + '||' + i.linkId + '||' + (i.link||'') + (i.act ? '||' + i.act : '');
+}
+function matRowData(row) {
+  let linkId = row.dataset.linkId;
+  if (!linkId) { linkId = _genLinkId(); row.dataset.linkId = linkId; }
+  return {
+    text:    row.querySelector('input[type=text]').value.trim(),
+    checked: row.querySelector('.mat-used-check').checked,
+    ready:   row.querySelector('.mat-ready-check').checked,
+    linkId, link: row.dataset.link || '',
+  };
 }
 function matDeserialize(raw) {
   if (!raw) return [];
@@ -4208,16 +4201,119 @@ function matDeserialize(raw) {
     const ready   = parts[2] === 'true';
     const linkId  = parts[3] || _genLinkId();
     const link    = parts[4] || '';
-    return { text, checked, ready, linkId, link };
+    const act     = parseInt(parts[5]) || 0;
+    return { text, checked, ready, linkId, link, act };
   }).filter(i => i.text.trim());
 }
-function matBuildChecklist(items) {
-  const box = document.getElementById('matChecklist');
+function matBuildChecklist(items, box) {
   box.innerHTML = '';
-  (items.length ? items : []).forEach((item) => matAddRow(box, item.text, item.checked, item.ready, item.linkId, item.link));
+  items.forEach((item) => matAddRow(box, item.text, item.checked, item.ready, item.linkId, item.link, false));
   matAddAddButton(box);
 }
-function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='') {
+
+// ══════════════════════════════════════════════════════
+//  ATTIVITÀ — una lezione = titolo + più attività,
+//  ognuna con il suo testo e il suo materiale
+// ══════════════════════════════════════════════════════
+// Stored as: lesson = "title\nactivity texts…" (kept for every view that shows the lesson),
+// activities = [text, …], and each material line carries its activity index.
+function lessonActivities(data) {
+  data = data || {};
+  const full = data.lesson || '';
+  const nl = full.indexOf('\n');
+  const title = nl !== -1 ? full.slice(0, nl) : '';
+  const body  = nl !== -1 ? full.slice(nl+1) : full;
+  const texts = Array.isArray(data.activities) ? data.activities.slice() : (body.trim() ? [body] : []);
+  const mats = matDeserialize(data.material || '');
+  mats.forEach(m => { while (m.act >= texts.length) texts.push(''); });
+  return { title, activities: texts.map((text, i) => ({ text, items: mats.filter(m => m.act === i) })) };
+}
+function lessonFromActivities(title, acts) {
+  acts = acts.filter(a => a.text.trim() || a.items.length);
+  const body = acts.map(a => a.text.trim()).filter(Boolean).join('\n');
+  return {
+    lesson: title ? title + '\n' + body : body,
+    material: acts.flatMap((a, i) => a.items.map(m => matLine({ ...m, act: i }))).join('\n'),
+    activities: acts.map(a => a.text.trim()),
+  };
+}
+function actCollect() {
+  return [...document.querySelectorAll('#actList .act-card')].map(card => ({
+    text: card.querySelector('.act-text').value,
+    items: [...card.querySelectorAll('.mat-check-item')].map(matRowData).filter(i => i.text),
+  }));
+}
+function actBuildList(activities) {
+  document.getElementById('actList').innerHTML = '';
+  if (!activities.length) actAddCard('', []);
+  else activities.forEach(a => actAddCard(a.text, a.items));
+}
+function actRenumber() {
+  document.querySelectorAll('#actList .act-card').forEach((card, i) => {
+    card.querySelector('.act-num').textContent = 'Attività ' + (i+1);
+  });
+}
+function actAddCard(text, items, focus = false) {
+  const card = document.createElement('div');
+  card.className = 'act-card';
+  card.innerHTML = `
+    <div class="act-card-head">
+      <span class="act-num"></span>
+      <button type="button" class="act-postpone-btn" title="Non hai fatto in tempo? Sposta questa attività e il suo materiale alla prossima lezione">↪️ Rimanda</button>
+      <button type="button" class="act-rm-btn" title="Elimina attività">✕</button>
+    </div>
+    <textarea class="act-text" rows="2" placeholder="Cosa fare: reading comprehension, gioco, pagine del libro…"></textarea>
+    <div class="act-mat-label">🎒 Materiale</div>
+    <div class="mat-checklist"></div>`;
+  const ta = card.querySelector('.act-text');
+  ta.value = text || '';
+  ta.addEventListener('input', () => autoResizeTA(ta));
+  card.querySelector('.act-postpone-btn').onclick = () => actPostpone(card);
+  card.querySelector('.act-rm-btn').onclick = () => {
+    const a = actCollect()[[...card.parentNode.children].indexOf(card)];
+    if ((a.text.trim() || a.items.length) && !confirm('Eliminare questa attività e il suo materiale?')) return;
+    card.remove();
+    if (!document.querySelector('#actList .act-card')) actAddCard('', []);
+    actRenumber();
+  };
+  document.getElementById('actList').appendChild(card);
+  matBuildChecklist(items || [], card.querySelector('.mat-checklist'));
+  autoResizeTA(ta);
+  actRenumber();
+  if (focus) ta.focus();
+  return card;
+}
+// Moves one activity (with its material) to the next lesson of the same subject,
+// in front of what is already planned there.
+function actPostpone(card) {
+  if (!modalKey || !modalClass) return;
+  const idx = [...document.querySelectorAll('#actList .act-card')].indexOf(card);
+  const act = actCollect()[idx];
+  if (!act.text.trim() && !act.items.length) { showToast('⚠️ Attività vuota: niente da rimandare.'); return; }
+  const subj = _currentOverride || effectiveSubject(modalKey, modalPatternSubject, modalClass);
+  const nextKey = _nextMatchingSlotAfter(parseDate(modalKey.slice(0,10)), subj, modalClass);
+  if (!nextKey) { alert('Non ho trovato una prossima lezione di questa materia entro la fine dell\'anno scolastico.'); return; }
+  const nextDate = parseDate(nextKey.slice(0,10));
+  const when = `${DAYS_IT[nextDate.getDay()]} ${nextDate.getDate()} ${MONTHS_IT[nextDate.getMonth()]}`;
+  const name = act.text.trim().split('\n')[0] || 'questa attività';
+  if (!confirm(`Rimandare «${name.length>60?name.slice(0,58)+'…':name}» alla prossima lezione di ${subjLabel(subj)} (${when})?\n\nIl suo materiale la segue; le altre attività restano qui.`)) return;
+
+  if (!state.lessons[modalClass]) state.lessons[modalClass] = {};
+  const tgt = state.lessons[modalClass][nextKey] || {};
+  const p = lessonActivities(tgt);
+  const merged = lessonFromActivities(p.title, [act, ...p.activities]);
+  state.lessons[modalClass][nextKey] = { ...tgt, ...merged };
+
+  card.remove();
+  if (!document.querySelector('#actList .act-card')) actAddCard('', []);
+  actRenumber();
+  _persistCurrentSlot();   // saves the lesson without the activity (and persists the target)
+  if (window._todoSyncEnabled && window.syncMaterialToTodo)
+    act.items.forEach(i => window.syncMaterialToTodo(i.linkId, i.text, i.ready, nextDate, false));
+  render();
+  showToast(`↪️ Attività rimandata a ${when}`);
+}
+function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='', focus=true) {
   // insert before the add-button if present
   const addBtn = box.querySelector('.mat-add-btn');
   const row = document.createElement('div');
@@ -4282,7 +4378,7 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='
   rm.onclick = () => { row.remove(); if (!box.querySelector('.mat-check-item')) matAddRow(box,'',false,false); };
   row.appendChild(readyWrap); row.appendChild(chk); row.appendChild(inp); row.appendChild(linkBtn); row.appendChild(rm);
   if (addBtn) box.insertBefore(row, addBtn); else box.appendChild(row);
-  inp.focus();
+  if (focus) inp.focus();
   return row;
 }
 // ── Textbook links (only for the book's owner) ──
@@ -4498,8 +4594,9 @@ function guideSteps() {
       (sample ? '<p class="g-note">Vedi delle classi di esempio (1ª A, 2ª B, 3ª C)? Rinominale o eliminale e metti le tue.</p>' : '') },
     { e:'✏️', t:'2 · Scrivi le lezioni', h:
       '<p>Tocca una lezione nel calendario per aprirla e scrivi:</p><ul>' +
-      _gLi('📖', '<b>Lezione / attività</b>') +
-      _gLi('🎒', '<b>Materiale necessario</b> — spunta ✅ pronto e ☑ stampato') +
+      _gLi('📖', '<b>Lezione</b> — il titolo, se c\'è') +
+      _gLi('🧩', '<b>Attività</b> — una o più per lezione, ognuna con il suo <b>materiale</b> (spunta ✅ pronto e ☑ stampato)') +
+      _gLi('↪️', '<b>Rimanda</b> — non hai fatto in tempo? Quell\'attività e il suo materiale passano alla lezione successiva, le altre restano') +
       _gLi('✏️', '<b>Compiti</b> per la prossima volta: li ritrovi la volta dopo nella stessa classe') +
       _gLi('📝', '<b>Note</b> extra') + '</ul>' +
       '<p>Tutto si <b>salva da solo</b> quando chiudi. Le frecce ‹ › in alto nella finestra passano alla lezione precedente o successiva (da telefono anche scorrendo il dito).</p>' },
