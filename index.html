@@ -950,7 +950,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
       margin-bottom:3px;padding-left:9px;padding-right:9px;">
       <span style="display:flex;gap:18px;">
         <span title="Spunta quando il materiale è pronto/preparato">✅ pronto</span>
-        <span title="Spunta quando hai usato questo materiale">☑ usato</span>
+        <span title="Spunta quando hai stampato questo materiale">☑ stampato</span>
       </span>
       <span id="todoSyncBadge" style="display:none;font-weight:600;" title="I materiali non pronti vengono inviati come task alla tua Todo app">🔗 Todo</span>
     </div>
@@ -4081,7 +4081,7 @@ function renderMaterialsBody(body) {
     const subjLbl = sc ? sc.label : item.subject;
     const parsedMat = matDeserialize(item.material);
     const matHtml = parsedMat.length
-      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Usato':'Non ancora usato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span>${i.link?`<a href="${escAttr(i.link)}" target="_blank" rel="noopener" title="Apri link" style="text-decoration:none;">🔗</a>`:''}</span>`).join('')
+      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Stampato':'Non ancora stampato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span>${i.link?`<a href="${escAttr(i.link)}" target="_blank" rel="noopener" title="Apri link" style="text-decoration:none;">🔗</a>`:''}</span>`).join('')
       : `<span>${item.material}</span>`;
     row.innerHTML = `
       <div class="mi-label">
@@ -4233,7 +4233,7 @@ function matAddRow(box, text='', checked=false, ready=false, linkId=null, link='
   readyWrap.appendChild(readyChk);
 
   const chk = document.createElement('input'); chk.type='checkbox'; chk.className='mat-used-check';
-  chk.checked=checked; chk.title='Spunta quando lo hai usato';
+  chk.checked=checked; chk.title='Spunta quando lo hai stampato';
 
   const inp = document.createElement('input'); inp.type='text'; inp.value=text;
   inp.placeholder='Aggiungi voce…';
@@ -4499,7 +4499,7 @@ function guideSteps() {
     { e:'✏️', t:'2 · Scrivi le lezioni', h:
       '<p>Tocca una lezione nel calendario per aprirla e scrivi:</p><ul>' +
       _gLi('📖', '<b>Lezione / attività</b>') +
-      _gLi('🎒', '<b>Materiale necessario</b> — spunta ✅ pronto e ☑ usato') +
+      _gLi('🎒', '<b>Materiale necessario</b> — spunta ✅ pronto e ☑ stampato') +
       _gLi('✏️', '<b>Compiti</b> per la prossima volta: li ritrovi la volta dopo nella stessa classe') +
       _gLi('📝', '<b>Note</b> extra') + '</ul>' +
       '<p>Tutto si <b>salva da solo</b> quando chiudi. Le frecce ‹ › in alto nella finestra passano alla lezione precedente o successiva (da telefono anche scorrendo il dito).</p>' },
