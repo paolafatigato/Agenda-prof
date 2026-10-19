@@ -562,6 +562,22 @@ body.paste-active .week-cell:not(.no-school):hover{background:#EEF8FF!important;
   background:var(--grape);border-color:var(--grape);color:#fff;
   box-shadow:0 4px 18px rgba(116,79,135,.35);}
 .lesson-nav-btn:disabled{opacity:.22;cursor:default;box-shadow:none;}
+/* Frecce ‹ › nel colore della classe della lezione aperta */
+.lesson-nav-btn.class-colored{background:var(--nav-c);color:#fff;box-shadow:none;
+  border-color:color-mix(in srgb,var(--nav-c) 70%,#000);}
+.lesson-nav-btn.class-colored:hover:not(:disabled){color:#fff;box-shadow:none;
+  background:color-mix(in srgb,var(--nav-c) 70%,#fff);
+  border-color:color-mix(in srgb,var(--nav-c) 85%,#000);}
+
+/* Frecce ▲ ▼ accanto al titolo: scorrono le ore della stessa giornata */
+.modal-title-row{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.modal-title-row h2{margin-bottom:0 !important;}
+.day-nav{display:inline-flex;gap:3px;}
+.day-nav-btn{background:var(--white);border:1.5px solid var(--border);color:var(--grape);
+  border-radius:6px;width:24px;height:22px;font-size:.62rem;line-height:1;padding:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .13s,border-color .13s,color .13s;}
+.day-nav-btn:hover:not(:disabled){background:var(--grape);border-color:var(--grape);color:#fff;}
+.day-nav-btn:disabled{opacity:.25;cursor:default;}
 
 /* Nascondi i bottoni fixed quando il modal è chiuso */
 #overlay:not(.open) .lesson-nav-btn{display:none;}
@@ -939,7 +955,13 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
 <!-- LESSON MODAL -->
 <div id="overlay" onclick="closeModal(event)">
 <div id="modal">
-  <h2 id="modalTitle"></h2>
+  <div class="modal-title-row">
+    <h2 id="modalTitle"></h2>
+    <span class="day-nav">
+      <button class="day-nav-btn" id="dayNavPrev" onclick="navigateDay(-1)" title="Ora precedente (stessa giornata)">▲</button>
+      <button class="day-nav-btn" id="dayNavNext" onclick="navigateDay(1)" title="Ora successiva (stessa giornata)">▼</button>
+    </span>
+  </div>
   <div class="modal-date" id="modalDate"></div>
   <!-- Navigazione lezioni ‹ › -->
   <div class="modal-lesson-nav">
@@ -2562,6 +2584,11 @@ function _updateLessonNavUI() {
   if (!prevBtn || !nextBtn || !info) return;
   prevBtn.disabled = idx <= 0;
   nextBtn.disabled = idx < 0 || idx >= all.length - 1;
+  const navColor = state.classColors && state.classColors[modalClass];
+  [prevBtn, nextBtn].forEach(b => {
+    b.classList.toggle('class-colored', !!navColor);
+    if (navColor) b.style.setProperty('--nav-c', navColor); else b.style.removeProperty('--nav-c');
+  });
   if (idx >= 0) {
     const entry = all[idx];
     const subjLabel_cur = subjLabel(effectiveSubject(entry.key, entry.patternSubj, modalClass));
@@ -2582,6 +2609,36 @@ function navigateLesson(dir) {
   if (!next) return;
   // Riapri il modal con la nuova lezione (senza chiuderlo)
   _openModalInternal(next.key, next.date, next.patternSubj, next.time, null, modalClass);
+}
+
+// ── Frecce ▲ ▼: tutte le lezioni (di tutte le classi) dello stesso giorno, in ordine di ora ──
+function _lessonsOfDay(date) {
+  const results = [];
+  state.classes.forEach(cn => {
+    slotsOnDay(date, cn).forEach(s => results.push({ key: s.slotKey, date: new Date(date), patternSubj: s.subject, time: s.time, cls: cn }));
+  });
+  return results.sort((a,b) => String(a.time).localeCompare(String(b.time)) || a.cls.localeCompare(b.cls));
+}
+
+function _updateDayNavUI() {
+  const prevBtn = document.getElementById('dayNavPrev');
+  const nextBtn = document.getElementById('dayNavNext');
+  if (!prevBtn || !nextBtn) return;
+  const all = modalKey ? _lessonsOfDay(parseDate(String(modalKey).slice(0,10))) : [];
+  const idx = all.findIndex(e => e.key === modalKey && e.cls === modalClass);
+  prevBtn.disabled = idx <= 0;
+  nextBtn.disabled = idx < 0 || idx >= all.length - 1;
+}
+
+// Passa all'ora precedente (-1) o successiva (+1) della stessa giornata, salvando prima
+function navigateDay(dir) {
+  if (!modalKey || !modalClass) return;
+  _persistCurrentSlot();
+  const all = _lessonsOfDay(parseDate(String(modalKey).slice(0,10)));
+  const idx = all.findIndex(e => e.key === modalKey && e.cls === modalClass);
+  const next = idx >= 0 ? all[idx + dir] : null;
+  if (!next) return;
+  _openModalInternal(next.key, next.date, next.patternSubj, next.time, null, next.cls);
 }
 
 // ══════════════════════════════════════════════════════
@@ -2643,6 +2700,7 @@ function _openModalInternal(key, date, patternSubj, time, status, className) {
 
   // Aggiorna le frecce di navigazione
   _updateLessonNavUI();
+  _updateDayNavUI();
 
   document.getElementById('overlay').classList.add('open');
 }
@@ -2728,6 +2786,16 @@ window._applyTodoCompletions = function() {
   });
   if (changed) { persist(); render(); }
 };
+
+// Selecting text inside a modal and releasing the mouse outside it fires a
+// "click" on the overlay background: ignore background clicks whose press
+// didn't start on that same background, so a drag never closes the modal.
+let _pressTarget = null;
+window.addEventListener('pointerdown', e => { _pressTarget = e.target; }, true);
+window.addEventListener('click', e => {
+  const t = e.target;
+  if (t && t.id && /overlay$/i.test(t.id) && _pressTarget && _pressTarget !== t) e.stopImmediatePropagation();
+}, true);
 
 function closeModal(e, skipPersist = false) {
   if (!e||e.target===document.getElementById('overlay')) {
@@ -4079,7 +4147,7 @@ function renderMaterialsBody(body) {
       const data = lessons[s.slotKey];
       if (data && data.material && data.material.trim()) {
         const eff = effectiveSubject(s.slotKey, s.subject, cn);
-        items.push({ className: cn, subject: eff, time: s.time, material: data.material.trim() });
+        items.push({ className: cn, slotKey: s.slotKey, subject: eff, time: s.time, material: data.material.trim() });
       }
     });
   });
@@ -4106,7 +4174,7 @@ function renderMaterialsBody(body) {
     const subjLbl = sc ? sc.label : item.subject;
     const parsedMat = matDeserialize(item.material);
     const matHtml = parsedMat.length
-      ? parsedMat.map(i=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><span style="font-size:.85rem;" title="${i.ready?'Pronto':'Da preparare'}">${i.ready?'✅':'⬜'}</span><span style="font-size:.9rem;" title="${i.checked?'Stampato':'Non ancora stampato'}">${i.checked?'☑':'☐'}</span><span style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span>${i.link?`<a href="${escAttr(i.link)}" target="_blank" rel="noopener" title="Apri link" style="text-decoration:none;">🔗</a>`:''}</span>`).join('')
+      ? parsedMat.map((i,idx)=>`<span style="display:flex;align-items:center;gap:5px;margin-top:3px;"><input type="checkbox" class="mat-ready-check" data-idx="${idx}" data-field="ready" title="Pronto / già preparato" ${i.ready?'checked':''}><input type="checkbox" class="mat-used-check" data-idx="${idx}" data-field="checked" title="Spunta quando lo hai stampato" ${i.checked?'checked':''}><span class="mat-txt" style="${i.checked?'text-decoration:line-through;opacity:.6;':''}">${i.text}</span>${i.link?`<a href="${escAttr(i.link)}" target="_blank" rel="noopener" title="Apri link" style="text-decoration:none;">🔗</a>`:''}</span>`).join('')
       : `<span>${item.material}</span>`;
     row.innerHTML = `
       <div class="mi-label">
@@ -4118,6 +4186,27 @@ function renderMaterialsBody(body) {
       </div>
       <div class="mi-text">🎒 ${matHtml}</div>
     `;
+    // Ticking here updates the lesson's material, like in the lesson modal
+    row.querySelectorAll('input[type=checkbox][data-idx]').forEach(chk => {
+      chk.onchange = () => {
+        const entry = (state.lessons[cn]||{})[item.slotKey];
+        if (!entry) return;
+        const mats = matDeserialize(entry.material || '');
+        const m = mats[+chk.dataset.idx];
+        if (!m) return;
+        m[chk.dataset.field] = chk.checked;
+        entry.material = mats.map(matLine).join('\n');
+        if (chk.dataset.field === 'checked') {
+          const txt = chk.parentElement.querySelector('.mat-txt');
+          txt.style.textDecoration = chk.checked ? 'line-through' : '';
+          txt.style.opacity = chk.checked ? '.6' : '';
+        } else if (window._todoSyncEnabled && window.syncMaterialToTodo) {
+          window._todoCompletion[m.linkId] = m.ready;
+          window.syncMaterialToTodo(m.linkId, m.text, m.ready, date, true);
+        }
+        persist(); render();
+      };
+    });
     body.appendChild(row);
   });
 }
