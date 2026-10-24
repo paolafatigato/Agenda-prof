@@ -378,11 +378,21 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .btn-slip-lesson{background:#EAF3FB;color:var(--blue);border:1.5px solid #B8D8EE;border-radius:9px;padding:7px 13px;font-size:0.84rem;cursor:pointer;}
 
 /* CANCEL MODAL */
-#cancelOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
-#cancelOverlay.open{display:flex;}
-#cancelModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(440px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
-#cancelModal h2{font-size:1rem;font-weight:700;color:var(--coral);margin-bottom:.5rem;}
-#cancelModal p{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;}
+#cancelOverlay,#dayCancelOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
+#cancelOverlay.open,#dayCancelOverlay.open{display:flex;}
+.day-cancel-btn{background:#FFE5E3;color:#B03030;border:1px solid #F5B8B5;border-radius:8px;padding:2px 9px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.day-cancel-btn{opacity:0;pointer-events:none;transition:opacity .15s;}
+.day-cancel-btn.show,.day-banner:hover .day-cancel-btn,.week-dh:hover .day-cancel-btn{opacity:1;pointer-events:auto;}
+.week-dh{position:relative;}
+.week-dh .day-cancel-btn{position:absolute;top:2px;right:2px;padding:0 4px;font-size:.7rem;line-height:1.3;}
+#dayCancelModal{max-height:92vh;overflow-y:auto;}
+#dcPickList{display:none;flex-direction:column;gap:6px;margin-bottom:1rem;}
+#dcPickList.open{display:flex;}
+.dc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8rem;border:1px solid var(--border);border-radius:8px;padding:5px 8px;}
+.dc-row select{font-family:inherit;font-size:.78rem;border:1.5px solid var(--border);border-radius:6px;padding:2px 4px;background:var(--bg);color:var(--text);}
+#cancelModal,#dayCancelModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(440px,95vw);box-shadow:0 8px 40px rgba(0,0,0,.2);}
+#cancelModal h2,#dayCancelModal h2{font-size:1rem;font-weight:700;color:var(--coral);margin-bottom:.5rem;}
+#cancelModal p,#dayCancelModal p{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;}
 .cancel-reason{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;}
 .cancel-reason label{font-size:0.82rem;font-weight:600;color:var(--text);}
 .cancel-reason input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:6px 9px;font-size:0.82rem;font-family:inherit;background:var(--bg);color:var(--text);}
@@ -1064,6 +1074,41 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
   <div class="cancel-modal-actions">
     <button class="btn-cancel" onclick="closeAddLesson()">Annulla</button>
     <button class="btn-confirm-sync" onclick="confirmAddLesson()">➕ Aggiungi</button>
+  </div>
+</div>
+</div>
+
+<!-- CANCEL DAY MODAL -->
+<div id="dayCancelOverlay">
+<div id="dayCancelModal">
+  <h2>🚫 Cancella giornata</h2>
+  <p id="dcDateLabel"></p>
+  <div class="cancel-reason">
+    <label>Motivo (opzionale)</label>
+    <input type="text" id="dcReason" placeholder="Es: Malattia, sciopero, gita…">
+  </div>
+  <div class="cancel-choices">
+    <label class="cancel-choice selected" id="dcSlip">
+      <input type="radio" name="dcMode" value="slip" checked onchange="selectDayCancelMode()">
+      <div><div class="cc-label">📅 Slitta tutte le lezioni</div>
+      <div class="cc-desc">Ogni lezione si sposta alla prossima data della stessa materia.</div></div>
+    </label>
+    <label class="cancel-choice" id="dcKeep">
+      <input type="radio" name="dcMode" value="keep" onchange="selectDayCancelMode()">
+      <div><div class="cc-label">📌 Non slittare nulla</div>
+      <div class="cc-desc">Le ore sono cancellate ma i contenuti futuri non cambiano.</div></div>
+    </label>
+    <label class="cancel-choice" id="dcPick">
+      <input type="radio" name="dcMode" value="pick" onchange="selectDayCancelMode()">
+      <div><div class="cc-label">☑️ Scegli una per una</div>
+      <div class="cc-desc">Decidi per ogni ora se cancellarla e se farla slittare.</div></div>
+    </label>
+  </div>
+  <div id="dcPickList"></div>
+  <div class="cancel-modal-actions">
+    <button class="btn-undo-cancel" id="dcUndoBtn" style="display:none" onclick="undoDayCancel()">↩ Ripristina giornata</button>
+    <button class="btn-cancel" onclick="closeDayCancel()">Annulla</button>
+    <button class="btn-confirm-cancel" onclick="confirmDayCancel()">Conferma</button>
   </div>
 </div>
 </div>
@@ -2325,6 +2370,7 @@ function renderWeek(area) {
     h.className='week-dh'+(isToday(d)?' today-cell':!inSY?' no-school':'');
     h.innerHTML=`<b>${DAYS_IT[d.getDay()]}</b><br><span style="font-size:.8rem">${d.getDate()}</span>`;
     if (inSY){h.style.cursor='pointer';const cd=new Date(d);h.onclick=()=>{cursor=cd;setView('day');};}
+    if (inSY && ((activeClass==='__all__')?state.classes:[activeClass]).some(cn=>slotsOnDay(d,cn).length)) { h.appendChild(makeDayCancelBtn(d,true)); revealOnTap(h); }
     grid.appendChild(h);
   }
   // Collect all unique times (across classes when showing all)
@@ -2439,6 +2485,8 @@ function renderDay(area) {
     } else {
       banner.innerHTML=`<span style="color:var(--border)">Nessuna lezione programmata per ${activeClass}</span>`;
     }
+    banner.className='day-banner';
+    if (slots.length) { banner.appendChild(makeDayCancelBtn(d)); revealOnTap(banner); }
     area.appendChild(banner);
     if (!slots.length) return;
     const grid=document.createElement('div'); grid.className='day-view';
@@ -2458,6 +2506,8 @@ function renderDay(area) {
   // ALL CLASSES — merged hour-by-hour timeline; classes with nothing today
   // are skipped entirely, and hours with no class become editable free notes.
   banner.textContent = 'Tutte le classi';
+  banner.className='day-banner';
+  if (state.classes.some(cn=>slotsOnDay(d,cn).length)) { banner.appendChild(makeDayCancelBtn(d)); revealOnTap(banner); }
   area.appendChild(banner);
   const dateStr = fmtDate(d);
   const {min:minH, max:maxH} = dailyHourRange(dateStr);
@@ -2958,37 +3008,106 @@ function confirmCancel() {
   if (!modalKey) return;
   const reason=document.getElementById('cancelReason').value.trim();
   const mode=document.querySelector('[name=cancelMode]:checked').value;
-  if (!state.cancelled[modalClass]) state.cancelled[modalClass]={};
-  state.cancelled[modalClass][modalKey]={reason,mode};
-  if (mode==='slip') {
-    const currentData=(state.lessons[modalClass]||{})[modalKey];
-    if (currentData&&(currentData.lesson||currentData.homework||currentData.material)) {
-      const dateStr=modalKey.split('-').slice(0,3).join('-');
-      const date=new Date(dateStr);
-      // Use effective subject for the slip
-      const subj=effectiveSubject(modalKey, modalPatternSubject, modalClass);
-      let d=new Date(date); d.setDate(d.getDate()+1);
-      for (let i=0; i<120; i++) {
-        if (isInSchoolYear(d)) {
-          const slots=slotsOnDay(d,modalClass);
-          let found=false;
-          for (const s of slots) {
-            const eff=effectiveSubject(s.slotKey,s.subject,modalClass);
-            if (eff===subj&&!(state.cancelled[modalClass]||{})[s.slotKey]) {
-              if (!state.lessons[modalClass]) state.lessons[modalClass]={};
-              if (!state.lessons[modalClass][s.slotKey]||!state.lessons[modalClass][s.slotKey].lesson) {
-                state.lessons[modalClass][s.slotKey]={...currentData};
-              }
-              found=true; break;
-            }
+  markCancelled(modalClass, modalKey, reason, mode);
+  if (mode==='slip') slipLessonToNext(modalClass, modalKey, effectiveSubject(modalKey, modalPatternSubject, modalClass));
+  persist(); closeCancelModal(); closeModal(); render();
+}
+function markCancelled(cls, key, reason, mode) {
+  if (!state.cancelled[cls]) state.cancelled[cls]={};
+  state.cancelled[cls][key]={reason,mode};
+}
+// Copia i contenuti dello slot sulla prossima ora libera della stessa materia
+function slipLessonToNext(cls, key, subj) {
+  const currentData=(state.lessons[cls]||{})[key];
+  if (!(currentData&&(currentData.lesson||currentData.homework||currentData.material))) return;
+  const d=new Date(key.split('-').slice(0,3).join('-')); d.setDate(d.getDate()+1);
+  for (let i=0; i<120; i++) {
+    if (isInSchoolYear(d)) {
+      for (const s of slotsOnDay(d,cls)) {
+        const eff=effectiveSubject(s.slotKey,s.subject,cls);
+        if (eff===subj&&!(state.cancelled[cls]||{})[s.slotKey]) {
+          if (!state.lessons[cls]) state.lessons[cls]={};
+          if (!state.lessons[cls][s.slotKey]||!state.lessons[cls][s.slotKey].lesson) {
+            state.lessons[cls][s.slotKey]={...currentData};
           }
-          if (found) break;
+          return;
         }
-        d.setDate(d.getDate()+1);
       }
     }
+    d.setDate(d.getDate()+1);
   }
-  persist(); closeCancelModal(); closeModal(); render();
+}
+
+// ── Cancella un'intera giornata (dalla vista giorno o settimana) ──
+let dayCancelItems=[];
+const canHover = () => window.matchMedia('(hover:hover)').matches;
+// Su touch il pulsante compare al primo tap sull'intestazione, al secondo tap sul pulsante
+function revealOnTap(el) {
+  el.addEventListener('click', (e) => {
+    if (canHover() || e.target.closest('.day-cancel-btn')) return;
+    const b = el.querySelector('.day-cancel-btn');
+    if (b && !b.classList.contains('show')) { b.classList.add('show'); e.stopImmediatePropagation(); }
+  }, true);
+}
+function makeDayCancelBtn(date, compact) {
+  const b=document.createElement('button'); b.className='day-cancel-btn';
+  b.textContent=compact?'🚫':'🚫 Cancella giornata';
+  b.title='Cancella tutte le lezioni del giorno (es. malattia)';
+  const dd=new Date(date);
+  b.onclick=(e)=>{ e.stopPropagation(); if (b.classList.contains('show')||canHover()) openDayCancel(dd); };
+  return b;
+}
+function openDayCancel(date) {
+  const classes=(activeClass==='__all__')?state.classes:[activeClass];
+  dayCancelItems=[];
+  classes.forEach(cn=>slotsOnDay(date,cn).forEach(sl=>dayCancelItems.push({cn,s:sl})));
+  if (!dayCancelItems.length) { alert('Nessuna lezione in questa giornata.'); return; }
+  const n=dayCancelItems.length;
+  document.getElementById('dcDateLabel').textContent=`${DAYS_IT[date.getDay()]} ${date.getDate()}/${date.getMonth()+1} — ${n} lezion${n===1?'e':'i'}. Cosa vuoi fare?`;
+  document.getElementById('dcReason').value='';
+  document.querySelectorAll('[name=dcMode]').forEach(r=>r.checked=r.value==='slip');
+  const list=document.getElementById('dcPickList'); list.innerHTML='';
+  dayCancelItems.forEach((it,i)=>{
+    const eff=effectiveSubject(it.s.slotKey,it.s.subject,it.cn);
+    const row=document.createElement('div'); row.className='dc-row';
+    const lab=document.createElement('span');
+    lab.textContent=`${it.s.time} · ${it.cn} · ${subjLabel(eff)}`;
+    const sel=document.createElement('select'); sel.id='dcSel'+i;
+    sel.innerHTML='<option value="slip">Cancella e slitta</option><option value="keep">Cancella, non slittare</option><option value="none">Non cancellare</option>';
+    if ((state.cancelled[it.cn]||{})[it.s.slotKey]) sel.value='none';
+    row.appendChild(lab); row.appendChild(sel); list.appendChild(row);
+  });
+  const anyCanc=dayCancelItems.some(it=>(state.cancelled[it.cn]||{})[it.s.slotKey]);
+  document.getElementById('dcUndoBtn').style.display=anyCanc?'inline-block':'none';
+  selectDayCancelMode();
+  document.getElementById('dayCancelOverlay').classList.add('open');
+}
+function closeDayCancel() { document.getElementById('dayCancelOverlay').classList.remove('open'); }
+function selectDayCancelMode() {
+  const m=document.querySelector('[name=dcMode]:checked').value;
+  document.getElementById('dcSlip').classList.toggle('selected',m==='slip');
+  document.getElementById('dcKeep').classList.toggle('selected',m==='keep');
+  document.getElementById('dcPick').classList.toggle('selected',m==='pick');
+  document.getElementById('dcPickList').classList.toggle('open',m==='pick');
+}
+function confirmDayCancel() {
+  const reason=document.getElementById('dcReason').value.trim();
+  const m=document.querySelector('[name=dcMode]:checked').value;
+  const todo=[];
+  dayCancelItems.forEach((it,i)=>{
+    const mode=(m==='pick')?document.getElementById('dcSel'+i).value:m;
+    if (mode==='none') return;
+    if (m!=='pick' && (state.cancelled[it.cn]||{})[it.s.slotKey]) return;   // già cancellata
+    todo.push({...it,mode});
+  });
+  // prima segna tutto come cancellato, così lo slittamento salta le ore cancellate
+  todo.forEach(t=>markCancelled(t.cn,t.s.slotKey,reason,t.mode));
+  todo.forEach(t=>{ if (t.mode==='slip') slipLessonToNext(t.cn,t.s.slotKey,effectiveSubject(t.s.slotKey,t.s.subject,t.cn)); });
+  persist(); closeDayCancel(); render();
+}
+function undoDayCancel() {
+  dayCancelItems.forEach(it=>{ if (state.cancelled[it.cn]) delete state.cancelled[it.cn][it.s.slotKey]; });
+  persist(); closeDayCancel(); render();
 }
 function undoCancel() {
   if (!modalKey) return;
