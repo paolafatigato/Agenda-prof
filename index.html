@@ -315,6 +315,14 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .act-card:focus-within{border-color:var(--grape);}
 .act-card-head{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
 .act-num{font-size:0.74rem;font-weight:700;color:var(--grape);margin-right:auto;}
+.modal-field .act-card-head input.act-name{flex:1;min-width:0;margin-right:auto;border:none;border-bottom:1.5px dashed transparent;border-radius:0;background:transparent;padding:2px 0;font-size:0.8rem;font-weight:700;color:var(--grape);font-family:inherit;box-shadow:none;}
+.modal-field .act-card-head input.act-name:hover,.modal-field .act-card-head input.act-name:focus{border-bottom-color:var(--grape);outline:none;}
+.modal-field .act-card-head input.act-name::placeholder{color:var(--grape);opacity:1;}
+.act-copy-btn{background:#F3EEFA;color:var(--grape);border:1.5px solid var(--border);border-radius:8px;padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;}
+.act-copy-btn:hover{background:#E8DFF5;}
+.act-mat-show{background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--grape);padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;margin-top:5px;}
+.act-mat-rm{background:none;border:none;color:var(--border);cursor:pointer;font-size:0.9rem;padding:0 4px;line-height:1;}
+.act-mat-rm:hover{color:var(--coral);}
 .act-postpone-btn{background:#EAF3FB;color:var(--blue);border:1.5px solid #B8D8EE;border-radius:8px;padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;}
 .act-postpone-btn:hover{background:#D8EAF8;}
 .act-rm-btn{background:none;border:none;color:var(--border);cursor:pointer;font-size:1rem;padding:0 3px;line-height:1;transition:color .12s;}
@@ -2708,7 +2716,7 @@ function _persistCurrentSlot() {
   if (!modalKey || !modalClass) return;
   if (!state.lessons[modalClass]) state.lessons[modalClass]={};
   const title = (document.getElementById('fLessonTitle').value||'').trim();
-  const { lesson, material, activities } = lessonFromActivities(title, actCollect());
+  const { lesson, material, activities, actNames } = lessonFromActivities(title, actCollect());
   const homework = document.getElementById('fHomework').value.trim();
   const notes    = document.getElementById('fNotes').value.trim();
   const override = _currentOverride||null;
@@ -2717,7 +2725,7 @@ function _persistCurrentSlot() {
   if (!lesson && !material && !homework && !notes && !override && !ready) {
     delete state.lessons[modalClass][modalKey];
   } else {
-    state.lessons[modalClass][modalKey] = { lesson, material, activities, homework, notes, subjectOverride: override, ready };
+    state.lessons[modalClass][modalKey] = { lesson, material, activities, actNames, homework, notes, subjectOverride: override, ready };
   }
   persist();
   _syncAllMaterialRowsToTodo();
@@ -3593,6 +3601,15 @@ function copyLesson(slotKey) {
   closeModal();
   showPasteBar();
 }
+// Copies one activity (name, text, material) of the open lesson; paste adds it to another lesson.
+function actCopy(card) {
+  const idx = [...document.querySelectorAll('#actList .act-card')].indexOf(card);
+  const act = actCollect()[idx];
+  if (!act.text.trim() && !act.items.length) { showToast('⚠️ Attività vuota: niente da copiare.'); return; }
+  clipboard = { singleActivity: true, ...act };
+  closeModal();
+  showPasteBar();
+}
 function showPasteBar() {
   const sel = document.getElementById('pbClassSel');
   sel.innerHTML = '';
@@ -3616,10 +3633,24 @@ function hidePasteBar() {
 //  • Clic su un giorno: si usa la classe scelta nella barra in basso.
 function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!clipboard) return false;
-  const copy = { ...clipboard, ready: false };   // another class: still to prepare
-  if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
+  const single = clipboard.singleActivity;
+  const copy = single ? null : { ...clipboard, ready: false };   // another class: still to prepare
+  if (copy && copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
+
+  // A single activity is added to the lessons already there, not over them
+  const addActivity = (cls, key) => {
+    if (!state.lessons[cls]) state.lessons[cls] = {};
+    const tgt = state.lessons[cls][key] || {};
+    const p = lessonActivities(tgt);
+    const act = JSON.parse(JSON.stringify(single));
+    act.items = act.items.map(i => ({ ...i, ready: false, linkId: _genLinkId() }));
+    state.lessons[cls][key] = { ...tgt, ...lessonFromActivities(p.title, [...p.activities, act]), ready: false };
+    persist(); hidePasteBar();
+    showToast('✅ Attività incollata in ' + cls + '!');
+  };
 
   if (slotKey && slotClass) {
+    if (single) { addActivity(slotClass, slotKey); return true; }
     const ex = (state.lessons[slotClass]||{})[slotKey];
     if (ex && (ex.lesson||ex.homework||ex.material||ex.notes) &&
         !confirm('Questa ora ha già una lezione ('+slotClass+'). Sovrascrivere?')) return true;
@@ -3635,6 +3666,7 @@ function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!slots.length) { showToast('⚠️ Nessuna ora in questo giorno per '+targetClass); return true; }
   const canc = state.cancelled[targetClass]||{};
   const targetSlot = slots.find(s=>!canc[s.slotKey])||slots[0];
+  if (single) { addActivity(targetClass, targetSlot.slotKey); return true; }
   if (!state.lessons[targetClass]) state.lessons[targetClass]={};
   state.lessons[targetClass][targetSlot.slotKey] = copy;
   persist(); hidePasteBar();
@@ -4347,19 +4379,22 @@ function lessonActivities(data) {
   const texts = Array.isArray(data.activities) ? data.activities.slice() : (body.trim() ? [body] : []);
   const mats = matDeserialize(data.material || '');
   mats.forEach(m => { while (m.act >= texts.length) texts.push(''); });
-  return { title, activities: texts.map((text, i) => ({ text, items: mats.filter(m => m.act === i) })) };
+  const names = Array.isArray(data.actNames) ? data.actNames : [];
+  return { title, activities: texts.map((text, i) => ({ name: names[i] || '', text, items: mats.filter(m => m.act === i) })) };
 }
 function lessonFromActivities(title, acts) {
-  acts = acts.filter(a => a.text.trim() || a.items.length);
+  acts = acts.filter(a => a.text.trim() || a.items.length || (a.name || '').trim());
   const body = acts.map(a => a.text.trim()).filter(Boolean).join('\n');
   return {
     lesson: title ? title + '\n' + body : body,
     material: acts.flatMap((a, i) => a.items.map(m => matLine({ ...m, act: i }))).join('\n'),
     activities: acts.map(a => a.text.trim()),
+    actNames: acts.map(a => (a.name || '').trim()),
   };
 }
 function actCollect() {
   return [...document.querySelectorAll('#actList .act-card')].map(card => ({
+    name: card.querySelector('.act-name').value.trim(),
     text: card.querySelector('.act-text').value,
     items: [...card.querySelectorAll('.mat-check-item')].map(matRowData).filter(i => i.text),
   }));
@@ -4367,28 +4402,46 @@ function actCollect() {
 function actBuildList(activities) {
   document.getElementById('actList').innerHTML = '';
   if (!activities.length) actAddCard('', []);
-  else activities.forEach(a => actAddCard(a.text, a.items));
+  else activities.forEach(a => actAddCard(a.text, a.items, false, a.name));
 }
 function actRenumber() {
   document.querySelectorAll('#actList .act-card').forEach((card, i) => {
-    card.querySelector('.act-num').textContent = 'Attività ' + (i+1);
+    card.querySelector('.act-name').placeholder = 'Attività ' + (i+1);
   });
 }
-function actAddCard(text, items, focus = false) {
+function actAddCard(text, items, focus = false, name = '') {
   const card = document.createElement('div');
   card.className = 'act-card';
   card.innerHTML = `
     <div class="act-card-head">
-      <span class="act-num"></span>
+      <input type="text" class="act-name" title="Dai un nome all'attività (se vuoi)">
+      <button type="button" class="act-copy-btn" title="Copia solo questa attività (con il suo materiale): poi incollala in un'altra lezione o classe">📋 Copia</button>
       <button type="button" class="act-postpone-btn" title="Non hai fatto in tempo? Sposta questa attività e il suo materiale alla prossima lezione">↪️ Rimanda</button>
       <button type="button" class="act-rm-btn" title="Elimina attività">✕</button>
     </div>
     <textarea class="act-text" rows="2" placeholder="Cosa fare: reading comprehension, gioco, pagine del libro…"></textarea>
-    <div class="act-mat-label">🎒 Materiale</div>
-    <div class="mat-checklist"></div>`;
+    <button type="button" class="act-mat-show">🎒 + Materiale</button>
+    <div class="act-mat-box">
+      <div class="act-mat-label">🎒 Materiale <button type="button" class="act-mat-rm" title="Questa attività non ha materiale: togli la sezione">✕</button></div>
+      <div class="mat-checklist"></div>
+    </div>`;
   const ta = card.querySelector('.act-text');
   ta.value = text || '';
+  card.querySelector('.act-name').value = name || '';
   ta.addEventListener('input', () => autoResizeTA(ta));
+  // material section: hidden when the activity has none, so it takes no room
+  const matBox = card.querySelector('.act-mat-box'), matShow = card.querySelector('.act-mat-show');
+  const setMat = on => { matBox.style.display = on ? '' : 'none'; matShow.style.display = on ? 'none' : ''; };
+  setMat(!!(items && items.length));
+  matShow.onclick = () => { setMat(true); const i = card.querySelector('.mat-check-item input[type=text]'); if (i) i.focus(); else matAddRow(card.querySelector('.mat-checklist'), '', false, false); };
+  card.querySelector('.act-mat-rm').onclick = () => {
+    const n = [...card.querySelectorAll('.mat-check-item')].map(matRowData).filter(i => i.text).length;
+    if (n && !confirm('Togliere il materiale di questa attività?')) return;
+    card.querySelector('.mat-checklist').innerHTML = '';
+    matAddAddButton(card.querySelector('.mat-checklist'));
+    setMat(false);
+  };
+  card.querySelector('.act-copy-btn').onclick = () => actCopy(card);
   card.querySelector('.act-postpone-btn').onclick = () => actPostpone(card);
   card.querySelector('.act-rm-btn').onclick = () => {
     const a = actCollect()[[...card.parentNode.children].indexOf(card)];
