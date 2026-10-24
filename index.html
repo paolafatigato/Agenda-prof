@@ -380,6 +380,16 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 /* CANCEL MODAL */
 #cancelOverlay,#dayCancelOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
 #cancelOverlay.open,#dayCancelOverlay.open{display:flex;}
+#absOverlay{display:none;position:fixed;inset:0;background:rgba(44,32,24,.5);z-index:400;align-items:center;justify-content:center;}
+#absOverlay.open{display:flex;}
+#absModal{background:var(--white);border-radius:17px;padding:1.5rem;width:min(480px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+#absModal h2{font-size:1rem;font-weight:700;color:var(--coral);margin-bottom:.5rem;}
+#absModal p{font-size:0.84rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;}
+.abs-row{border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:8px;}
+.abs-row .abs-top{display:flex;justify-content:space-between;gap:8px;font-size:.86rem;font-weight:700;color:var(--text);}
+.abs-row .abs-n{font-weight:600;color:var(--muted);white-space:nowrap;}
+.abs-row .abs-dates{font-size:.74rem;color:var(--muted);margin-top:3px;line-height:1.4;}
+.abs-total{font-size:.86rem;font-weight:700;margin:4px 0 1rem;color:var(--text);}
 .day-cancel-btn{background:#FFE5E3;color:#B03030;border:1px solid #F5B8B5;border-radius:8px;padding:2px 9px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;}
 .day-cancel-btn{opacity:0;pointer-events:none;transition:opacity .15s;}
 .day-cancel-btn.show,.day-banner:hover .day-cancel-btn,.week-dh:hover .day-cancel-btn{opacity:1;pointer-events:auto;}
@@ -842,6 +852,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
         <div class="um-name" id="userMenuName">Non connesso</div>
         <div class="um-sub" id="userMenuSub">Accedi per sincronizzare i dati</div>
         <button class="um-btn" id="authBtn" onclick="closeUserMenu();toggleAuth()">Accedi con Google</button>
+        <button class="um-btn" id="absencesBtn" onclick="closeUserMenu();openAbsences()" title="Conta i giorni e le ore cancellate quest'anno, divisi per motivo">📊 Assenze dell'anno</button>
         <button class="um-btn" id="todoConnectBtn" onclick="window.connectTodoAppFromButton()" title="Collega la tua Todo app per inviare i materiali da preparare come task" style="display:none;">🔗 Collega a Todo</button>
       </div>
     </div>
@@ -1074,6 +1085,18 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
   <div class="cancel-modal-actions">
     <button class="btn-cancel" onclick="closeAddLesson()">Annulla</button>
     <button class="btn-confirm-sync" onclick="confirmAddLesson()">➕ Aggiungi</button>
+  </div>
+</div>
+</div>
+
+<!-- ABSENCES MODAL -->
+<div id="absOverlay" onclick="if(event.target===this)closeAbsences()">
+<div id="absModal">
+  <h2>📊 Assenze dell'anno</h2>
+  <p id="absRange"></p>
+  <div id="absBody"></div>
+  <div class="cancel-modal-actions">
+    <button class="btn-cancel" onclick="closeAbsences()">Chiudi</button>
   </div>
 </div>
 </div>
@@ -3037,6 +3060,54 @@ function slipLessonToNext(cls, key, subj) {
     d.setDate(d.getDate()+1);
   }
 }
+
+// ── Conteggio assenze (lezioni cancellate) dell'anno scolastico in corso, per motivo ──
+function openAbsences() {
+  const now=new Date();
+  const y0=now.getMonth()>=8?now.getFullYear():now.getFullYear()-1;   // anno scolastico: 1 set – 31 ago
+  const from=`${y0}-09-01`, to=`${y0+1}-08-31`;
+  const byReason={};   // motivo → {hours, days:Set}
+  let hours=0; const allDays=new Set();
+  Object.keys(state.cancelled||{}).forEach(cn=>{
+    Object.entries(state.cancelled[cn]||{}).forEach(([key,c])=>{
+      const ds=key.split('-').slice(0,3).join('-');
+      if (ds<from||ds>to) return;
+      const reason=((c&&c.reason)||'').trim()||'Senza motivo';
+      const k=reason.toLowerCase();
+      const r=byReason[k]||(byReason[k]={label:reason,hours:0,days:new Set()});
+      r.hours++; r.days.add(ds); hours++; allDays.add(ds);
+    });
+  });
+  document.getElementById('absRange').textContent=`Anno scolastico ${y0}/${y0+1} — ore e giorni con lezioni cancellate, divisi per motivo.`;
+  const body=document.getElementById('absBody'); body.innerHTML='';
+  const rows=Object.values(byReason).sort((a,b)=>b.days.size-a.days.size||b.hours-a.hours);
+  if (!rows.length) { body.textContent='Nessuna lezione cancellata quest\'anno.'; }
+  else {
+    const tot=document.createElement('div'); tot.className='abs-total';
+    tot.textContent=`Totale: ${allDays.size} giorn${allDays.size===1?'o':'i'} · ${hours} or${hours===1?'a':'e'}`;
+    body.appendChild(tot);
+    rows.forEach(r=>{
+      const row=document.createElement('div'); row.className='abs-row';
+      const top=document.createElement('div'); top.className='abs-top';
+      const l=document.createElement('span'); l.textContent=r.label;
+      const n=document.createElement('span'); n.className='abs-n';
+      n.textContent=`${r.days.size} giorn${r.days.size===1?'o':'i'} · ${r.hours} or${r.hours===1?'a':'e'}`;
+      top.appendChild(l); top.appendChild(n);
+      const dt=document.createElement('div'); dt.className='abs-dates';
+      [...r.days].sort().forEach((d,i,arr)=>{
+        const p=d.split('-');
+        const a=document.createElement('a'); a.textContent=`${+p[2]}/${+p[1]}`;
+        a.href='#'; a.style.cssText='color:var(--grape);font-weight:600;text-decoration:underline;cursor:pointer;';
+        a.onclick=(e)=>{ e.preventDefault(); closeAbsences(); cursor=parseDate(d); setView('day'); };
+        dt.appendChild(a);
+        if (i<arr.length-1) dt.appendChild(document.createTextNode(', '));
+      });
+      row.appendChild(top); row.appendChild(dt); body.appendChild(row);
+    });
+  }
+  document.getElementById('absOverlay').classList.add('open');
+}
+function closeAbsences() { document.getElementById('absOverlay').classList.remove('open'); }
 
 // ── Cancella un'intera giornata (dalla vista giorno o settimana) ──
 let dayCancelItems=[];
