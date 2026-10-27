@@ -320,7 +320,22 @@ header{background:var(--white);border-bottom:1.5px solid var(--border);padding:0
 .modal-field .act-card-head input.act-name::placeholder{color:var(--grape);opacity:1;}
 .act-copy-btn{background:#F3EEFA;color:var(--grape);border:1.5px solid var(--border);border-radius:8px;padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;}
 .act-copy-btn:hover{background:#E8DFF5;}
-.act-mat-show{background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--grape);padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;margin-top:5px;}
+.act-text-row{position:relative;}
+.act-text-row textarea{overflow:hidden;}
+/* the button is a notch cut into the textarea's bottom-right corner: same bg as the card, border only on its inner sides */
+.act-mat-show{position:absolute;right:0;bottom:0;display:flex;align-items:center;justify-content:center;height:34px;min-width:34px;padding:0 4px 0 5px;
+  background:var(--bg);border:1.5px solid var(--border);border-right:none;border-bottom:none;border-radius:11px 0 11px 0;
+  color:var(--grape);font-size:0.74rem;cursor:pointer;font-family:inherit;white-space:nowrap;transition:border-color .15s;}
+.act-mat-show .dot{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--grape);font-size:0.7rem;flex:none;}
+.act-mat-show .lbl{max-width:0;overflow:hidden;transition:max-width .18s,margin .18s;}
+/* rounded fillets where the textarea border meets the notch (top-right and bottom-left of the button) */
+.act-mat-show::before,.act-mat-show::after{content:"";position:absolute;width:9px;height:9px;pointer-events:none;
+  background:radial-gradient(circle at 0 0,transparent 7.5px,var(--border) 7.5px,var(--border) 9px,var(--bg) 9px);}
+.act-mat-show::before{right:0;bottom:calc(100% - 1.5px);}
+.act-mat-show::after{right:calc(100% - 1.5px);bottom:0;}
+.act-mat-show:hover::before,.act-mat-show:hover::after{background:radial-gradient(circle at 0 0,transparent 7.5px,var(--grape) 7.5px,var(--grape) 9px,var(--bg) 9px);}
+.act-mat-show:hover{border-color:var(--grape);}
+.act-mat-show:hover .lbl{max-width:80px;margin:0 6px 0 3px;}
 .act-mat-rm{background:none;border:none;color:var(--border);cursor:pointer;font-size:0.9rem;padding:0 4px;line-height:1;}
 .act-mat-rm:hover{color:var(--coral);}
 .act-postpone-btn{background:#EAF3FB;color:var(--blue);border:1.5px solid #B8D8EE;border-radius:8px;padding:3px 9px;font-size:0.74rem;cursor:pointer;font-family:inherit;}
@@ -4509,8 +4524,14 @@ document.addEventListener('click', function(e) {
 // ══════════════════════════════════════════════════════
 function autoResizeTA(el) {
   el.style.height = 'auto';
-  el.style.height = el.scrollHeight + 'px';
+  if (!el.scrollHeight) return; // hidden (e.g. modal closed): refitted when shown
+  el.style.height = (el.scrollHeight + el.offsetHeight - el.clientHeight) + 'px'; // border-box: add borders
 }
+// refit the form textareas when the modal opens or the width changes (they are measured while hidden)
+['fLessonTitle', 'fHomework', 'fNotes'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) { el.style.overflow = 'hidden'; new ResizeObserver(() => autoResizeTA(el)).observe(el); }
+});
 
 // ══════════════════════════════════════════════════════
 //  MATERIAL CHECKLIST
@@ -4609,8 +4630,10 @@ function actAddCard(text, items, focus = false, name = '') {
       <button type="button" class="act-postpone-btn" title="Non hai fatto in tempo? Sposta questa attività e il suo materiale alla prossima lezione">↪️ Rimanda</button>
       <button type="button" class="act-rm-btn" title="Elimina attività">✕</button>
     </div>
-    <textarea class="act-text" rows="2" placeholder="Cosa fare: reading comprehension, gioco, pagine del libro…"></textarea>
-    <button type="button" class="act-mat-show">🎒 + Materiale</button>
+    <div class="act-text-row">
+      <textarea class="act-text" rows="2" placeholder="Cosa fare: reading comprehension, gioco, pagine del libro…"></textarea>
+      <button type="button" class="act-mat-show" title="Aggiungi materiale"><span class="dot">🎒</span><span class="lbl">Materials</span></button>
+    </div>
     <div class="act-mat-box">
       <div class="act-mat-label">🎒 Materiale <button type="button" class="act-mat-rm" title="Questa attività non ha materiale: togli la sezione">✕</button></div>
       <div class="mat-checklist"></div>
@@ -4619,7 +4642,7 @@ function actAddCard(text, items, focus = false, name = '') {
   ta.value = text || '';
   card.querySelector('.act-name').value = name || '';
   ta.addEventListener('input', () => autoResizeTA(ta));
-  // material section: hidden when the activity has none, so it takes no room
+  new ResizeObserver(() => autoResizeTA(ta)).observe(ta); // refit when shown or when the width changes section: hidden when the activity has none, so it takes no room
   const matBox = card.querySelector('.act-mat-box'), matShow = card.querySelector('.act-mat-show');
   const setMat = on => { matBox.style.display = on ? '' : 'none'; matShow.style.display = on ? 'none' : ''; };
   setMat(!!(items && items.length));
