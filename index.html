@@ -1047,7 +1047,7 @@ body[data-view="year"]{--n1:#4C924C;--n2:#8FCB6B;--sh:rgba(76,146,76,.35);}     
       </span>
     </div>
     <div id="actList"></div>
-    <button type="button" class="act-add-btn" onclick="actAddCard('', [], true)">➕ Aggiungi attività</button>
+    <button type="button" class="act-add-btn" onclick="actAddOrPaste()">➕ Aggiungi attività</button>
   </div>
   <div class="modal-field">
     <label>✏️ Compiti per la prossima volta</label>
@@ -3806,15 +3806,6 @@ function copyLesson(slotKey) {
   closeModal();
   showPasteBar();
 }
-// Copies one activity (name, text, material) of the open lesson; paste adds it to another lesson.
-function actCopy(card) {
-  const idx = [...document.querySelectorAll('#actList .act-card')].indexOf(card);
-  const act = actCollect()[idx];
-  if (!act.text.trim() && !act.items.length) { showToast('⚠️ Attività vuota: niente da copiare.'); return; }
-  clipboard = { singleActivity: true, ...act };
-  closeModal();
-  showPasteBar();
-}
 function showPasteBar() {
   const sel = document.getElementById('pbClassSel');
   sel.innerHTML = '';
@@ -3838,24 +3829,10 @@ function hidePasteBar() {
 //  • Clic su un giorno: si usa la classe scelta nella barra in basso.
 function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!clipboard) return false;
-  const single = clipboard.singleActivity;
-  const copy = single ? null : { ...clipboard, ready: false };   // another class: still to prepare
-  if (copy && copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
-
-  // A single activity is added to the lessons already there, not over them
-  const addActivity = (cls, key) => {
-    if (!state.lessons[cls]) state.lessons[cls] = {};
-    const tgt = state.lessons[cls][key] || {};
-    const p = lessonActivities(tgt);
-    const act = JSON.parse(JSON.stringify(single));
-    act.items = act.items.map(i => ({ ...i, ready: false, linkId: _genLinkId() }));
-    state.lessons[cls][key] = { ...tgt, ...lessonFromActivities(p.title, [...p.activities, act]), ready: false };
-    persist(); hidePasteBar();
-    showToast('✅ Attività incollata in ' + cls + '!');
-  };
+  const copy = { ...clipboard, ready: false };   // another class: still to prepare
+  if (copy.material) copy.material = regenerateMaterialLinkIds(copy.material);
 
   if (slotKey && slotClass) {
-    if (single) { addActivity(slotClass, slotKey); return true; }
     const ex = (state.lessons[slotClass]||{})[slotKey];
     if (ex && (ex.lesson||ex.homework||ex.material||ex.notes) &&
         !confirm('Questa ora ha già una lezione ('+slotClass+'). Sovrascrivere?')) return true;
@@ -3871,7 +3848,6 @@ function pasteOnDay(targetDate, slotKey, slotClass) {
   if (!slots.length) { showToast('⚠️ Nessuna ora in questo giorno per '+targetClass); return true; }
   const canc = state.cancelled[targetClass]||{};
   const targetSlot = slots.find(s=>!canc[s.slotKey])||slots[0];
-  if (single) { addActivity(targetClass, targetSlot.slotKey); return true; }
   if (!state.lessons[targetClass]) state.lessons[targetClass]={};
   state.lessons[targetClass][targetSlot.slotKey] = copy;
   persist(); hidePasteBar();
@@ -4619,6 +4595,25 @@ function actRenumber() {
   document.querySelectorAll('#actList .act-card').forEach((card, i) => {
     card.querySelector('.act-name').placeholder = 'Attività ' + (i+1);
   });
+}
+// "📋 Copia" on an activity only remembers it; the next "➕ Aggiungi attività" (in any lesson) pastes it.
+let actClipboard = null;
+function actCopy(card) {
+  const idx = [...document.querySelectorAll('#actList .act-card')].indexOf(card);
+  const act = actCollect()[idx];
+  if (!act.text.trim() && !act.items.length) { showToast('⚠️ Attività vuota: niente da copiare.'); return; }
+  actClipboard = JSON.parse(JSON.stringify(act));
+  showToast('📋 Attività copiata: apri un\'altra lezione e premi «Aggiungi attività»');
+}
+function actAddOrPaste() {
+  if (!actClipboard) { actAddCard('', [], true); return; }
+  const a = actClipboard;
+  actClipboard = null;
+  // an untouched blank card makes way for the pasted one
+  const cards = [...document.querySelectorAll('#actList .act-card')];
+  if (cards.length === 1 && !actCollect()[0].text.trim() && !actCollect()[0].items.length && !actCollect()[0].name) cards[0].remove();
+  actAddCard(a.text, a.items.map(i => ({ ...i, ready: false, linkId: null })), false, a.name);
+  showToast('✅ Attività incollata');
 }
 function actAddCard(text, items, focus = false, name = '') {
   const card = document.createElement('div');
