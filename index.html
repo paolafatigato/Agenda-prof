@@ -3047,33 +3047,27 @@ function confirmCancel() {
   const reason=document.getElementById('cancelReason').value.trim();
   const mode=document.querySelector('[name=cancelMode]:checked').value;
   markCancelled(modalClass, modalKey, reason, mode);
-  if (mode==='slip') slipLessonToNext(modalClass, modalKey, effectiveSubject(modalKey, modalPatternSubject, modalClass));
+  const ok = mode!=='slip' || slipLessonToNext(modalClass, modalKey, effectiveSubject(modalKey, modalPatternSubject, modalClass));
   persist(); closeCancelModal(); closeModal(); render();
+  if (!ok) alert('Non ci sono abbastanza slot liberi entro la fine dell\'anno scolastico: la lezione è stata cancellata ma non fatta slittare.');
 }
 function markCancelled(cls, key, reason, mode) {
   if (!state.cancelled[cls]) state.cancelled[cls]={};
   state.cancelled[cls][key]={reason,mode};
 }
-// Copia i contenuti dello slot sulla prossima ora libera della stessa materia
+// Sposta di uno slot in avanti (a catena) i contenuti della stessa materia, saltando le ore cancellate.
+// Lo slot cancellato conserva il suo contenuto. Restituisce false se gli slot liberi non bastano.
 function slipLessonToNext(cls, key, subj) {
-  const currentData=(state.lessons[cls]||{})[key];
-  if (!(currentData&&(currentData.lesson||currentData.homework||currentData.material))) return;
-  const d=new Date(key.split('-').slice(0,3).join('-')); d.setDate(d.getDate()+1);
-  for (let i=0; i<120; i++) {
-    if (isInSchoolYear(d)) {
-      for (const s of slotsOnDay(d,cls)) {
-        const eff=effectiveSubject(s.slotKey,s.subject,cls);
-        if (eff===subj&&!(state.cancelled[cls]||{})[s.slotKey]) {
-          if (!state.lessons[cls]) state.lessons[cls]={};
-          if (!state.lessons[cls][s.slotKey]||!state.lessons[cls][s.slotKey].lesson) {
-            state.lessons[cls][s.slotKey]={...currentData};
-          }
-          return;
-        }
-      }
-    }
-    d.setDate(d.getDate()+1);
+  if (!_hasLessonContent(cls, key)) return true;
+  const { chain, ranOut } = _buildSlipChain(key, subj, cls);
+  if (ranOut) return false;
+  if (!state.lessons[cls]) state.lessons[cls]={};
+  for (let i=chain.length-1; i>=1; i--) {
+    const src=state.lessons[cls][chain[i-1]];
+    if (src) state.lessons[cls][chain[i]]={...src};
+    else delete state.lessons[cls][chain[i]];
   }
+  return true;
 }
 
 // ── Conteggio assenze (lezioni cancellate) dell'anno scolastico in corso, per motivo ──
@@ -3188,8 +3182,11 @@ function confirmDayCancel() {
   });
   // prima segna tutto come cancellato, così lo slittamento salta le ore cancellate
   todo.forEach(t=>markCancelled(t.cn,t.s.slotKey,reason,t.mode));
-  todo.forEach(t=>{ if (t.mode==='slip') slipLessonToNext(t.cn,t.s.slotKey,effectiveSubject(t.s.slotKey,t.s.subject,t.cn)); });
+  // dall'ultima ora alla prima, così più ore della stessa materia nello stesso giorno restano in ordine
+  let failed=false;
+  todo.slice().reverse().forEach(t=>{ if (t.mode==='slip' && !slipLessonToNext(t.cn,t.s.slotKey,effectiveSubject(t.s.slotKey,t.s.subject,t.cn))) failed=true; });
   persist(); closeDayCancel(); render();
+  if (failed) alert('Per alcune lezioni non ci sono abbastanza slot liberi entro la fine dell\'anno scolastico: non sono state fatte slittare.');
 }
 function undoDayCancel() {
   dayCancelItems.forEach(it=>{ if (state.cancelled[it.cn]) delete state.cancelled[it.cn][it.s.slotKey]; });
